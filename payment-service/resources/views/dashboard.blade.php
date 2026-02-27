@@ -796,12 +796,15 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-1">Business Name <span class="text-red-500">*</span></label>
                                         <input type="text" x-model="kycForm.business_name"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            :class="kycErrors.business_name ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        <p x-show="kycErrors.business_name" x-text="kycErrors.business_name" class="text-xs text-red-500 mt-1"></p>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-1">Business Type</label>
                                         <select x-model="kycForm.business_type"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            :class="kycErrors.business_type ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                                             <option value="">Select type...</option>
                                             <option value="sole_proprietorship">Sole Proprietorship</option>
                                             <option value="partnership">Partnership</option>
@@ -839,7 +842,8 @@
                                     <div>
                                         <label class="block text-sm font-medium text-gray-600 mb-1">Country <span class="text-red-500">*</span></label>
                                         <select x-model="kycForm.country"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            :class="kycErrors.country ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                                             <option value="">Select country...</option>
                                             <option value="Tanzania">Tanzania</option>
                                             <option value="Kenya">Kenya</option>
@@ -895,7 +899,7 @@
                             </div>
 
                             <div class="flex justify-end mt-6">
-                                <button type="button" @click="kycStep = 2"
+                                <button type="button" @click="validateKycStep1() && (kycStep = 2)"
                                     class="px-6 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium transition">
                                     Next: ID Verification &rarr;
                                 </button>
@@ -910,19 +914,23 @@
                             <div class="space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">ID Type</label>
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">ID Type <span class="text-red-500">*</span></label>
                                         <select x-model="kycForm.id_type"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            :class="kycErrors.id_type ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                                             <option value="">Select ID type...</option>
                                             <option value="national_id">National ID (NIDA)</option>
                                             <option value="passport">Passport</option>
                                             <option value="drivers_license">Driver's License</option>
                                         </select>
+                                        <p x-show="kycErrors.id_type" x-text="kycErrors.id_type" class="text-xs text-red-500 mt-1"></p>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-600 mb-1">ID Number</label>
+                                        <label class="block text-sm font-medium text-gray-600 mb-1">ID Number <span class="text-red-500">*</span></label>
                                         <input type="text" x-model="kycForm.id_number" placeholder="ID document number"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            :class="kycErrors.id_number ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                            class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        <p x-show="kycErrors.id_number" x-text="kycErrors.id_number" class="text-xs text-red-500 mt-1"></p>
                                     </div>
                                 </div>
                             </div>
@@ -932,7 +940,7 @@
                                     class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition">
                                     &larr; Back
                                 </button>
-                                <button type="button" @click="kycStep = 3"
+                                <button type="button" @click="validateKycStep2() && (kycStep = 3)"
                                     class="px-6 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium transition">
                                     Next: Documents &rarr;
                                 </button>
@@ -975,7 +983,7 @@
                                     class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition">
                                     &larr; Back
                                 </button>
-                                <button type="button" @click="kycStep = 4"
+                                <button type="button" @click="validateKycStep3() && (kycStep = 4)"
                                     class="px-6 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium transition">
                                     Next: Crypto Wallet &rarr;
                                 </button>
@@ -1617,6 +1625,7 @@ function dashboard() {
         kycMsg: '', kycMsgType: '',
         kycForm: { business_name: '', business_type: '', registration_number: '', tin_number: '', address: '', city: '', country: 'Tanzania', bank_name: '', bank_account_name: '', bank_account_number: '', bank_swift: '', bank_branch: '', id_type: '', id_number: '', crypto_wallet_address: '', crypto_network: '', crypto_currency: '' },
         kycIdFile: null, kycLicenseFile: null,
+        kycErrors: {},
 
         // My Charges
         myCharges: {},
@@ -1747,7 +1756,39 @@ function dashboard() {
             this.kycFormLoading = false;
         },
 
+        validateKycStep1() {
+            this.kycErrors = {};
+            if (!this.kycForm.business_name.trim()) this.kycErrors.business_name = 'Business name is required.';
+            if (!this.kycForm.country) this.kycErrors.country = 'Country is required.';
+            if (Object.keys(this.kycErrors).length) { this.kycMsg = 'Please fix the errors below before continuing.'; this.kycMsgType = 'error'; return false; }
+            this.kycMsg = ''; return true;
+        },
+
+        validateKycStep2() {
+            this.kycErrors = {};
+            if (!this.kycForm.id_type) this.kycErrors.id_type = 'ID type is required.';
+            if (!this.kycForm.id_number.trim()) this.kycErrors.id_number = 'ID number is required.';
+            if (Object.keys(this.kycErrors).length) { this.kycMsg = 'Please fix the errors below before continuing.'; this.kycMsgType = 'error'; return false; }
+            this.kycMsg = ''; return true;
+        },
+
+        validateKycStep3() {
+            this.kycErrors = {};
+            if (this.kycIdFile && this.kycIdFile.size > 5 * 1024 * 1024) this.kycErrors.id_document = 'ID document must be under 5MB.';
+            if (this.kycLicenseFile && this.kycLicenseFile.size > 5 * 1024 * 1024) this.kycErrors.business_license = 'Business license must be under 5MB.';
+            if (Object.keys(this.kycErrors).length) { this.kycMsg = 'Please fix the errors below before continuing.'; this.kycMsgType = 'error'; return false; }
+            this.kycMsg = ''; return true;
+        },
+
+        validateKycAll() {
+            if (!this.validateKycStep1()) { this.kycStep = 1; return false; }
+            if (!this.validateKycStep2()) { this.kycStep = 2; return false; }
+            if (!this.validateKycStep3()) { this.kycStep = 3; return false; }
+            return true;
+        },
+
         async saveKyc() {
+            if (!this.validateKycAll()) return;
             this.kycSaving = true;
             this.kycMsg = '';
             try {

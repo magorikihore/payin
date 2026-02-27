@@ -211,7 +211,7 @@ class AuthController extends Controller
         }
 
         $request->validate([
-            'business_name' => 'sometimes|string|max:191',
+            'business_name' => 'required|string|max:191',
             'business_type' => 'nullable|string|max:191',
             'registration_number' => 'nullable|string|max:191',
             'tin_number' => 'nullable|string|max:191',
@@ -227,8 +227,8 @@ class AuthController extends Controller
             'crypto_wallet_address' => 'nullable|string|max:500',
             'crypto_network' => 'nullable|string|max:191',
             'crypto_currency' => 'nullable|string|max:191',
-            'id_type' => 'nullable|in:national_id,passport,drivers_license',
-            'id_number' => 'nullable|string|max:191',
+            'id_type' => 'required|in:national_id,passport,drivers_license',
+            'id_number' => 'required|string|max:191',
             'id_document' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'business_license' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);

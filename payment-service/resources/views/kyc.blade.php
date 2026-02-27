@@ -84,12 +84,15 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Business Name <span class="text-red-500">*</span></label>
                                 <input type="text" x-model="form.business_name" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    :class="errors.business_name ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                <p x-show="errors.business_name" x-text="errors.business_name" class="text-xs text-red-500 mt-1"></p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Business Type <span class="text-red-500">*</span></label>
                                 <select x-model="form.business_type" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    :class="errors.business_type ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                                     <option value="">Select type...</option>
                                     <option value="sole_proprietorship">Sole Proprietorship</option>
                                     <option value="partnership">Partnership</option>
@@ -99,24 +102,31 @@
                                     <option value="government">Government</option>
                                     <option value="other">Other</option>
                                 </select>
+                                <p x-show="errors.business_type" x-text="errors.business_type" class="text-xs text-red-500 mt-1"></p>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">Registration Number <span class="text-red-500">*</span></label>
                                 <input type="text" x-model="form.registration_number" required placeholder="Business registration no."
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    :class="errors.registration_number ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                <p x-show="errors.registration_number" x-text="errors.registration_number" class="text-xs text-red-500 mt-1"></p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">TIN Number <span class="text-red-500">*</span></label>
                                 <input type="text" x-model="form.tin_number" required placeholder="Tax Identification Number"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    :class="errors.tin_number ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                <p x-show="errors.tin_number" x-text="errors.tin_number" class="text-xs text-red-500 mt-1"></p>
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Phone Number <span class="text-red-500">*</span></label>
                             <input type="text" x-model="form.phone" required placeholder="+255..."
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                :class="errors.phone ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <p x-show="errors.phone" x-text="errors.phone" class="text-xs text-red-500 mt-1"></p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Street Address</label>
@@ -186,7 +196,7 @@
                     </div>
 
                     <div class="flex justify-end mt-6">
-                        <button type="button" @click="kycStep = 2"
+                        <button type="button" @click="validateStep1() && (kycStep = 2)"
                             class="px-6 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium transition">
                             Next: ID Verification &rarr;
                         </button>
@@ -203,17 +213,21 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">ID Type <span class="text-red-500">*</span></label>
                                 <select x-model="form.id_type" required
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    :class="errors.id_type ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                                     <option value="">Select...</option>
                                     <option value="national_id">National ID (NIDA)</option>
                                     <option value="passport">Passport</option>
                                     <option value="drivers_license">Driver's License</option>
                                 </select>
+                                <p x-show="errors.id_type" x-text="errors.id_type" class="text-xs text-red-500 mt-1"></p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-600 mb-1">ID Number <span class="text-red-500">*</span></label>
                                 <input type="text" x-model="form.id_number" required placeholder="ID number"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    :class="errors.id_number ? 'border-red-400 ring-1 ring-red-400' : 'border-gray-300'"
+                                    class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                <p x-show="errors.id_number" x-text="errors.id_number" class="text-xs text-red-500 mt-1"></p>
                             </div>
                         </div>
                     </div>
@@ -223,7 +237,7 @@
                             class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition">
                             &larr; Back
                         </button>
-                        <button type="button" @click="kycStep = 3"
+                        <button type="button" @click="validateStep2() && (kycStep = 3)"
                             class="px-6 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium transition">
                             Next: Documents &rarr;
                         </button>
@@ -237,14 +251,16 @@
 
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">ID Document (JPG, PNG or PDF, max 5MB)</label>
-                            <input type="file" @change="idFile = $event.target.files[0]" accept=".jpg,.jpeg,.png,.pdf"
+                            <label class="block text-sm font-medium text-gray-600 mb-1">ID Document (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <input type="file" @change="idFile = $event.target.files[0]; delete errors.id_document" accept=".jpg,.jpeg,.png,.pdf"
                                 class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
+                            <p x-show="errors.id_document" x-text="errors.id_document" class="text-xs text-red-500 mt-1"></p>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Business License (JPG, PNG or PDF, max 5MB)</label>
-                            <input type="file" @change="licenseFile = $event.target.files[0]" accept=".jpg,.jpeg,.png,.pdf"
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Business License (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <input type="file" @change="licenseFile = $event.target.files[0]; delete errors.business_license" accept=".jpg,.jpeg,.png,.pdf"
                                 class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
+                            <p x-show="errors.business_license" x-text="errors.business_license" class="text-xs text-red-500 mt-1"></p>
                         </div>
                     </div>
 
@@ -253,7 +269,7 @@
                             class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition">
                             &larr; Back
                         </button>
-                        <button type="button" @click="kycStep = 4"
+                        <button type="button" @click="validateStep3() && (kycStep = 4)"
                             class="px-6 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium transition">
                             Next: Crypto Wallet &rarr;
                         </button>
@@ -335,6 +351,7 @@ function kycPage() {
             id_type: '', id_number: '',
             crypto_wallet_address: '', crypto_network: '', crypto_currency: ''
         },
+        errors: {},
 
         init() {
             const token = localStorage.getItem('auth_token');
@@ -367,7 +384,45 @@ function kycPage() {
             } catch (e) { console.error(e); }
         },
 
+        validateStep1() {
+            this.errors = {};
+            if (!this.form.business_name.trim()) this.errors.business_name = 'Business name is required.';
+            if (!this.form.business_type) this.errors.business_type = 'Business type is required.';
+            if (!this.form.registration_number.trim()) this.errors.registration_number = 'Registration number is required.';
+            if (!this.form.tin_number.trim()) this.errors.tin_number = 'TIN number is required.';
+            if (!this.form.phone.trim()) this.errors.phone = 'Phone number is required.';
+            if (this.form.phone.trim() && !/^\+?[0-9]{9,15}$/.test(this.form.phone.trim())) this.errors.phone = 'Enter a valid phone number (e.g. +255...).';
+            if (Object.keys(this.errors).length) { this.msg = 'Please fix the errors below before continuing.'; this.msgType = 'error'; return false; }
+            this.msg = ''; return true;
+        },
+
+        validateStep2() {
+            this.errors = {};
+            if (!this.form.id_type) this.errors.id_type = 'ID type is required.';
+            if (!this.form.id_number.trim()) this.errors.id_number = 'ID number is required.';
+            if (Object.keys(this.errors).length) { this.msg = 'Please fix the errors below before continuing.'; this.msgType = 'error'; return false; }
+            this.msg = ''; return true;
+        },
+
+        validateStep3() {
+            this.errors = {};
+            if (!this.idFile) this.errors.id_document = 'Please upload your ID document.';
+            if (!this.licenseFile) this.errors.business_license = 'Please upload your business license.';
+            if (this.idFile && this.idFile.size > 5 * 1024 * 1024) this.errors.id_document = 'ID document must be under 5MB.';
+            if (this.licenseFile && this.licenseFile.size > 5 * 1024 * 1024) this.errors.business_license = 'Business license must be under 5MB.';
+            if (Object.keys(this.errors).length) { this.msg = 'Please fix the errors below before continuing.'; this.msgType = 'error'; return false; }
+            this.msg = ''; return true;
+        },
+
+        validateAll() {
+            if (!this.validateStep1()) { this.kycStep = 1; return false; }
+            if (!this.validateStep2()) { this.kycStep = 2; return false; }
+            if (!this.validateStep3()) { this.kycStep = 3; return false; }
+            return true;
+        },
+
         async saveKyc() {
+            if (!this.validateAll()) return;
             this.saving = true;
             this.msg = '';
             try {
