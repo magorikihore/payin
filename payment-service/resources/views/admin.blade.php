@@ -1922,7 +1922,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-800">Email Templates</h3>
-                        <p class="text-sm text-gray-500">Customize the content of each notification email. Use <code class="bg-gray-100 px-1 rounded text-xs">{{name}}</code> for placeholders.</p>
+                        <p class="text-sm text-gray-500">Customize the content of each notification email. Use <code class="bg-gray-100 px-1 rounded text-xs">@{{name}}</code> for placeholders.</p>
                     </div>
                     <button @click="fetchEmailTemplates()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Refresh</button>
                 </div>
@@ -1953,10 +1953,10 @@
                                 <!-- Placeholders info -->
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
                                     <strong>Available placeholders:</strong>
-                                    <span x-show="tpl.key === 'welcome'"><code>{{name}}</code></span>
-                                    <span x-show="tpl.key === 'password_reset'"><code>{{name}}</code>, <code>{{code}}</code></span>
-                                    <span x-show="tpl.key === 'kyc_approved'"><code>{{name}}</code></span>
-                                    <span x-show="tpl.key === 'kyc_rejected'"><code>{{name}}</code>, <code>{{reason}}</code></span>
+                                    <span x-show="tpl.key === 'welcome'"><code>@{{name}}</code></span>
+                                    <span x-show="tpl.key === 'password_reset'"><code>@{{name}}</code>, <code>@{{code}}</code></span>
+                                    <span x-show="tpl.key === 'kyc_approved'"><code>@{{name}}</code></span>
+                                    <span x-show="tpl.key === 'kyc_rejected'"><code>@{{name}}</code>, <code>@{{reason}}</code></span>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
