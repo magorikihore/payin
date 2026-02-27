@@ -64,8 +64,11 @@ class AuthController extends Controller
 
         // Check account status (skip for super_admin)
         if (!$user->isSuperAdmin() && $user->account) {
-            // KYC not yet submitted — force user to complete KYC first
-            if (is_null($user->account->kyc_submitted_at)) {
+            // If account is already active, skip KYC checks
+            if ($user->account->status === 'active') {
+                // Account approved — proceed to normal login
+            } elseif (is_null($user->account->kyc_submitted_at)) {
+                // KYC not yet submitted — force user to complete KYC first
                 $token = $user->createToken('authToken')->accessToken;
                 $user->load('account');
                 return response()->json([
@@ -74,9 +77,8 @@ class AuthController extends Controller
                     'kyc_required' => true,
                     'message' => 'Please complete your KYC information to activate your account.'
                 ], 200);
-            }
-            // KYC submitted but still pending approval
-            if ($user->account->status === 'pending') {
+            } elseif ($user->account->status === 'pending') {
+                // KYC submitted but still pending approval
                 $token = $user->createToken('authToken')->accessToken;
                 $user->load('account');
                 return response()->json([
@@ -85,8 +87,8 @@ class AuthController extends Controller
                     'pending' => true,
                     'message' => 'Your account is pending KYC approval. Please wait for admin verification.'
                 ], 200);
-            }
-            if ($user->account->status !== 'active') {
+            } else {
+                // suspended / closed
                 Auth::logout();
                 return response()->json(['message' => 'Your account has been suspended. Contact support.'], 403);
             }
