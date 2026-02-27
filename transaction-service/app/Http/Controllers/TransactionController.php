@@ -196,6 +196,32 @@ class TransactionController extends Controller
         return response()->json($transactions);
     }
 
+    /**
+     * Get transaction stats (status counts) for the authenticated user's account.
+     */
+    public function stats(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        $query = Transaction::query();
+        if ($accountId) {
+            $query->where('account_id', $accountId);
+        }
+
+        $total = (clone $query)->count();
+        $completed = (clone $query)->where('status', 'completed')->count();
+        $pending = (clone $query)->where('status', 'pending')->count();
+        $failed = (clone $query)->where('status', 'failed')->count();
+
+        return response()->json([
+            'total' => $total,
+            'completed' => $completed,
+            'pending' => $pending,
+            'failed' => $failed,
+        ]);
+    }
+
     public function show(Request $request, $id): JsonResponse
     {
         $user = $request->user();

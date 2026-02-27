@@ -307,7 +307,24 @@ function dashboard() {
             }
 
             this.user = userData ? JSON.parse(userData) : null;
+            this.fetchStats();
             this.fetchTransactions();
+        },
+
+        async fetchStats() {
+            const token = localStorage.getItem('auth_token');
+            try {
+                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/transactions/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.stats = data;
+                }
+            } catch (e) {}
         },
 
         async fetchTransactions() {
@@ -349,11 +366,7 @@ function dashboard() {
                     next_page_url: data.next_page_url,
                 };
 
-                // Calculate stats from all transactions (not filtered)
-                this.stats.total = data.total || 0;
-                this.stats.completed = this.transactions.filter(t => t.status === 'completed').length;
-                this.stats.pending = this.transactions.filter(t => t.status === 'pending').length;
-                this.stats.failed = this.transactions.filter(t => t.status === 'failed').length;
+
             } catch (e) {
                 this.txnError = 'Failed to load transactions. Make sure the transaction service is running.';
             } finally {

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth.service')->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/transactions/stats', [TransactionController::class, 'stats']);
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
     Route::get('/my-charges', [TransactionController::class, 'myCharges']);

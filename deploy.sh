@@ -54,7 +54,7 @@ done
 # Restart PHP-FPM to pick up changes
 echo ""
 echo ">> Restarting PHP-FPM..."
-sudo systemctl restart php8.2-fpm
+sudo systemctl restart php8.3-fpm 2>/dev/null || sudo systemctl restart php-fpm 2>/dev/null || true
 
 # Reload Nginx
 echo ">> Reloading Nginx..."

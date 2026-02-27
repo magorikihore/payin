@@ -1033,8 +1033,6 @@
             </div>
         </div>
 
-    </div>
-
     <!-- ==================== KYC DETAIL MODAL ==================== -->
     <div x-show="showKycModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @keydown.escape.window="showKycModal = false">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">

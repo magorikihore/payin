@@ -1656,6 +1656,7 @@ function dashboard() {
             this.refreshUser();
             this.fetchTransactions();
             this.fetchMyCharges();
+            this.fetchStats();
         },
 
         /**
@@ -1684,6 +1685,16 @@ function dashboard() {
                 view_settings: 'View Settings',
             };
             return labels[perm] || perm;
+        },
+
+        async fetchStats() {
+            try {
+                const res = await fetch('{{ config("services.transaction_service.url") }}/api/transactions/stats', { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.stats = data;
+                }
+            } catch (e) { /* silent */ }
         },
 
         async refreshUser() {
@@ -1923,10 +1934,6 @@ function dashboard() {
                 const data = await res.json();
                 this.transactions = data.data || [];
                 this.pagination = { current_page: data.current_page, last_page: data.last_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
-                this.stats.total = data.total || 0;
-                this.stats.completed = this.transactions.filter(t => t.status === 'completed').length;
-                this.stats.pending = this.transactions.filter(t => t.status === 'pending').length;
-                this.stats.failed = this.transactions.filter(t => t.status === 'failed').length;
             } catch (e) { this.txnError = 'Failed to load transactions.'; }
             finally { this.loadingTxns = false; }
         },
