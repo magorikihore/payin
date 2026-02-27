@@ -14,9 +14,6 @@ Route::get('/forgot-password', function () {
     return view('auth.forgot-password');
 })->name('password.request');
 
-Route::get('/api-docs', function () {
-    return view('api-docs');
-})->name('api.docs');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

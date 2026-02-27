@@ -68,6 +68,10 @@
                 </button>
                 <button x-show="hasPerm('view_users') || hasPerm('add_user')" @click="activeTab = 'users'; fetchAccountUsers()" :class="activeTab === 'users' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Users</button>
+                <button @click="activeTab = 'api-docs'" :class="activeTab === 'api-docs' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
+                    <span class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>API Docs</span>
+                </button>
             </nav>
         </div>
     </div>
@@ -1309,6 +1313,262 @@
             </form>
         </div>
     </div>
+        <!-- ==================== API DOCS TAB ==================== -->
+        <div x-show="activeTab === 'api-docs'" x-cloak class="mt-6">
+
+            <!-- Overview -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">API Overview</h3>
+                <p class="text-gray-600 mb-4">Integrate Payin into your application using our REST API. All requests use JSON over HTTPS.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-gblue-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gblue-700 mb-1">Base URL</h4>
+                        <code class="text-sm text-gblue-600 break-all">https://api.payin.co.tz/api/v1</code>
+                    </div>
+                    <div class="bg-ggreen-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-ggreen-700 mb-1">Format</h4>
+                        <code class="text-sm text-ggreen-600">JSON over HTTPS</code>
+                    </div>
+                    <div class="bg-gyellow-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gyellow-700 mb-1">Auth</h4>
+                        <code class="text-sm text-gyellow-600">API Key + Secret</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authentication -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Authentication</h3>
+                <p class="text-gray-600 mb-4">All API requests require two headers. Generate your credentials from <strong>Settings → API Keys</strong>.</p>
+                <div class="overflow-x-auto mb-4">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-left border-b border-gray-200"><th class="pb-2 font-semibold text-gray-700">Header</th><th class="pb-2 font-semibold text-gray-700">Description</th></tr></thead>
+                        <tbody class="text-gray-600">
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">X-API-Key</code></td><td class="py-2">Your API key (public identifier)</td></tr>
+                            <tr><td class="py-2"><code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">X-API-Secret</code></td><td class="py-2">Your API secret (keep confidential)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                    <p class="text-gray-400 text-xs mb-2">Example request headers</p>
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">curl -X POST https://api.payin.co.tz/api/v1/collection \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: your_api_key_here" \
+  -H "X-API-Secret: your_api_secret_here" \
+  -d '{ ... }'</pre>
+                </div>
+                <div class="mt-4 bg-gyellow-50 border border-gyellow-200 rounded-lg p-4">
+                    <p class="text-sm text-gyellow-800"><strong>IP Whitelisting:</strong> For added security, whitelist your server IPs in <strong>Settings → IP Whitelist</strong>. Requests from non-whitelisted IPs will be rejected once enabled.</p>
+                </div>
+            </div>
+
+            <!-- Collection -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Collection (Payin)</h3>
+                <p class="text-gray-600 mb-2">Initiate a mobile money collection. The customer receives a USSD prompt to confirm.</p>
+                <div class="flex items-center space-x-2 mb-4"><span class="bg-ggreen-500 text-white text-xs font-bold px-2 py-1 rounded">POST</span><code class="text-sm text-gray-700">/v1/collection</code></div>
+                <div class="overflow-x-auto mb-4">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-left border-b border-gray-200"><th class="pb-2 font-semibold text-gray-700">Field</th><th class="pb-2 font-semibold text-gray-700">Type</th><th class="pb-2 font-semibold text-gray-700">Required</th><th class="pb-2 font-semibold text-gray-700">Description</th></tr></thead>
+                        <tbody class="text-gray-600">
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">phone</code></td><td>string</td><td>Yes</td><td>Customer phone (e.g. <code class="text-xs">255712345678</code>)</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">amount</code></td><td>number</td><td>Yes</td><td>Amount to collect (min: 100)</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">operator</code></td><td>string</td><td>Yes</td><td>Operator code (e.g. <code class="text-xs">mpesa</code>, <code class="text-xs">tigopesa</code>)</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">reference</code></td><td>string</td><td>No</td><td>Your internal reference (max 50 chars)</td></tr>
+                            <tr><td class="py-2"><code class="text-xs">callback_url</code></td><td>string</td><td>No</td><td>Override default callback URL</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                    <p class="text-gray-400 text-xs mb-2">Example request</p>
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">{
+  "phone": "255712345678",
+  "amount": 10000,
+  "operator": "mpesa",
+  "reference": "ORDER-001"
+}</pre>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto mt-3">
+                    <p class="text-gray-400 text-xs mb-2">Success response (201)</p>
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">{
+  "message": "Collection initiated",
+  "request_ref": "PAY-A1B2C3D4E5F6",
+  "status": "pending",
+  "amount": 10000,
+  "charge": 200,
+  "operator": "mpesa"
+}</pre>
+                </div>
+            </div>
+
+            <!-- Disbursement -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Disbursement (Payout)</h3>
+                <p class="text-gray-600 mb-2">Send money from your wallet to a customer's mobile money account.</p>
+                <div class="flex items-center space-x-2 mb-4"><span class="bg-ggreen-500 text-white text-xs font-bold px-2 py-1 rounded">POST</span><code class="text-sm text-gray-700">/v1/disbursement</code></div>
+                <div class="overflow-x-auto mb-4">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-left border-b border-gray-200"><th class="pb-2 font-semibold text-gray-700">Field</th><th class="pb-2 font-semibold text-gray-700">Type</th><th class="pb-2 font-semibold text-gray-700">Required</th><th class="pb-2 font-semibold text-gray-700">Description</th></tr></thead>
+                        <tbody class="text-gray-600">
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">phone</code></td><td>string</td><td>Yes</td><td>Recipient phone number</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">amount</code></td><td>number</td><td>Yes</td><td>Amount to send (min: 100)</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">operator</code></td><td>string</td><td>Yes</td><td>Operator code</td></tr>
+                            <tr><td class="py-2"><code class="text-xs">reference</code></td><td>string</td><td>No</td><td>Your internal reference (max 50 chars)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                    <p class="text-gray-400 text-xs mb-2">Example request</p>
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">{
+  "phone": "255712345678",
+  "amount": 5000,
+  "operator": "mpesa",
+  "reference": "PAYOUT-001"
+}</pre>
+                </div>
+            </div>
+
+            <!-- Transaction Status -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Transaction Status</h3>
+                <div class="flex items-center space-x-2 mb-4"><span class="bg-gblue-500 text-white text-xs font-bold px-2 py-1 rounded">GET</span><code class="text-sm text-gray-700">/v1/status/{request_ref}</code></div>
+                <div class="overflow-x-auto mb-4">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-left border-b border-gray-200"><th class="pb-2 font-semibold text-gray-700">Status</th><th class="pb-2 font-semibold text-gray-700">Description</th></tr></thead>
+                        <tbody class="text-gray-600">
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="bg-gyellow-100 text-gyellow-700 px-1.5 py-0.5 rounded text-xs">pending</code></td><td>Waiting for operator/customer</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="bg-ggreen-100 text-ggreen-700 px-1.5 py-0.5 rounded text-xs">completed</code></td><td>Payment successful</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="bg-gred-100 text-gred-700 px-1.5 py-0.5 rounded text-xs">failed</code></td><td>Payment failed</td></tr>
+                            <tr><td class="py-2"><code class="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-xs">reversed</code></td><td>Transaction reversed</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Active Operators -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Active Operators</h3>
+                <div class="flex items-center space-x-2 mb-4"><span class="bg-gblue-500 text-white text-xs font-bold px-2 py-1 rounded">GET</span><code class="text-sm text-gray-700">/v1/operators</code></div>
+                <p class="text-gray-600 mb-2">Lists available mobile money operators and their supported transaction types.</p>
+            </div>
+
+            <!-- Callbacks -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Callbacks (Webhooks)</h3>
+                <p class="text-gray-600 mb-4">When a payment completes or fails, Payin sends a POST to your callback URL. Set it in <strong>Account Info → Callback URL</strong>.</p>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                    <p class="text-gray-400 text-xs mb-2">Callback payload</p>
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">{
+  "request_ref": "PAY-A1B2C3D4E5F6",
+  "type": "collection",
+  "status": "completed",
+  "amount": 10000,
+  "charge": 200,
+  "phone": "255712345678",
+  "operator": "mpesa",
+  "operator_ref": "MPESA123456",
+  "reference": "ORDER-001",
+  "completed_at": "2026-01-15T10:30:45.000000Z"
+}</pre>
+                </div>
+                <div class="mt-4 bg-gblue-50 border border-gblue-200 rounded-lg p-4">
+                    <p class="text-sm text-gblue-800"><strong>Important:</strong> Always verify payment status via <code class="text-xs">/v1/status/{request_ref}</code> before fulfilling orders — never trust callback data alone.</p>
+                </div>
+            </div>
+
+            <!-- Code Examples -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Code Examples</h3>
+
+                <h4 class="font-semibold text-gray-700 mb-2">PHP</h4>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto mb-4">
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">$ch = curl_init('https://api.payin.co.tz/api/v1/collection');
+curl_setopt_array($ch, [
+    CURLOPT_POST           => true,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER     => [
+        'Content-Type: application/json',
+        'X-API-Key: YOUR_API_KEY',
+        'X-API-Secret: YOUR_API_SECRET',
+    ],
+    CURLOPT_POSTFIELDS => json_encode([
+        'phone'     => '255712345678',
+        'amount'    => 10000,
+        'operator'  => 'mpesa',
+        'reference' => 'ORDER-001',
+    ]),
+]);
+$response = curl_exec($ch);
+$data = json_decode($response, true);
+echo $data['request_ref'];</pre>
+                </div>
+
+                <h4 class="font-semibold text-gray-700 mb-2">Python</h4>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto mb-4">
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">import requests
+
+response = requests.post(
+    'https://api.payin.co.tz/api/v1/collection',
+    headers={
+        'X-API-Key': 'YOUR_API_KEY',
+        'X-API-Secret': 'YOUR_API_SECRET',
+    },
+    json={
+        'phone': '255712345678',
+        'amount': 10000,
+        'operator': 'mpesa',
+        'reference': 'ORDER-001',
+    }
+)
+print(response.json()['request_ref'])</pre>
+                </div>
+
+                <h4 class="font-semibold text-gray-700 mb-2">JavaScript (Node.js / Fetch)</h4>
+                <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                    <pre class="text-green-400 text-sm font-mono whitespace-pre">const response = await fetch('https://api.payin.co.tz/api/v1/collection', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': 'YOUR_API_KEY',
+        'X-API-Secret': 'YOUR_API_SECRET',
+    },
+    body: JSON.stringify({
+        phone: '255712345678',
+        amount: 10000,
+        operator: 'mpesa',
+        reference: 'ORDER-001',
+    }),
+});
+const data = await response.json();
+console.log(data.request_ref);</pre>
+                </div>
+            </div>
+
+            <!-- Error Handling -->
+            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Error Handling</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-left border-b border-gray-200"><th class="pb-2 font-semibold text-gray-700">Code</th><th class="pb-2 font-semibold text-gray-700">Meaning</th></tr></thead>
+                        <tbody class="text-gray-600">
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">200</code></td><td>Success</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">201</code></td><td>Created (payment initiated)</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">401</code></td><td>Unauthorized — invalid API key/secret</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">403</code></td><td>Forbidden — IP not whitelisted or account inactive</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-2"><code class="text-xs">422</code></td><td>Validation error</td></tr>
+                            <tr><td class="py-2"><code class="text-xs">429</code></td><td>Rate limit exceeded</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="bg-gblue-50 border border-gblue-200 rounded-xl p-6 text-center">
+                <h3 class="text-lg font-semibold text-gblue-800 mb-2">Need Help?</h3>
+                <p class="text-gblue-600 text-sm">Contact us at <a href="mailto:support@payin.co.tz" class="underline font-medium">support@payin.co.tz</a> for integration support.</p>
+            </div>
+        </div>
+
 </div>
 
 <script>
