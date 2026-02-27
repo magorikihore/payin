@@ -6,11 +6,19 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\IpWhitelistController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('throttle:5,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+});
+
+// Password reset (throttled separately — 5 attempts per minute)
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+    Route::post('/verify-reset-code', [PasswordResetController::class, 'verifyCode']);
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
 });
 
 // Internal: API key validation (called by other services)

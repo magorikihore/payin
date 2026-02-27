@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\User;
+use App\Notifications\KycApprovedNotification;
+use App\Notifications\KycRejectedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -136,6 +138,28 @@ class AdminController extends Controller
                 'kyc_approved_at' => now(),
                 'kyc_approved_by' => $request->user()->id,
             ]);
+
+            // Notify account owner
+            try {
+                $owner = $account->owner;
+                if ($owner) {
+                    $owner->notify(new KycApprovedNotification());
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('KYC approval email failed: ' . $e->getMessage());
+            }
+        }
+
+        // Notify on suspension/rejection
+        if ($request->status === 'suspended' && $oldStatus !== 'suspended') {
+            try {
+                $owner = $account->owner;
+                if ($owner) {
+                    $owner->notify(new KycRejectedNotification($account->kyc_notes ?? ''));
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('KYC rejection email failed: ' . $e->getMessage());
+            }
         }
 
         return response()->json([

@@ -42,6 +42,9 @@
                 <input type="password" x-model="password" required
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
                     placeholder="••••••••">
+                <div class="text-right mt-1">
+                    <a href="/forgot-password" class="text-sm text-gblue-500 hover:underline">Forgot your password?</a>
+                </div>
             </div>
             <button type="submit" :disabled="loading"
                 class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
@@ -61,6 +64,25 @@
                 <input type="text" x-model="business_name" required
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
                     placeholder="Your company or business name">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                <select x-model="country"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition bg-white">
+                    <option value="Tanzania">Tanzania</option>
+                    <option value="Kenya">Kenya</option>
+                    <option value="Uganda">Uganda</option>
+                    <option value="Rwanda">Rwanda</option>
+                    <option value="Burundi">Burundi</option>
+                    <option value="DRC">DR Congo</option>
+                    <option value="Mozambique">Mozambique</option>
+                    <option value="Malawi">Malawi</option>
+                    <option value="Zambia">Zambia</option>
+                    <option value="South Africa">South Africa</option>
+                    <option value="Nigeria">Nigeria</option>
+                    <option value="Ghana">Ghana</option>
+                    <option value="Other">Other</option>
+                </select>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -91,6 +113,16 @@
                 <a href="#" @click.prevent="showRegister = false; error = ''" class="text-gblue-500 hover:underline">Sign In</a>
             </p>
         </form>
+
+        <!-- API Documentation Link -->
+        <div class="mt-6 pt-4 border-t border-gray-200 text-center">
+            <a href="/api-docs" class="inline-flex items-center text-sm text-gray-500 hover:text-gblue-500 transition">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                API Documentation
+            </a>
+        </div>
     </div>
 </div>
 
@@ -100,6 +132,7 @@ function loginForm() {
         email: '',
         password: '',
         business_name: '',
+        country: 'Tanzania',
         password_confirmation: '',
         error: '',
         success: '',
@@ -155,6 +188,7 @@ function loginForm() {
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({
                         business_name: this.business_name,
+                        country: this.country,
                         email: this.email,
                         password: this.password,
                         password_confirmation: this.password_confirmation

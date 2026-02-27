@@ -6,6 +6,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\Account;
 use App\Models\User;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +24,7 @@ class AuthController extends Controller
             'account_ref' => 'ACC-' . strtoupper(Str::random(8)),
             'business_name' => $validated['business_name'],
             'email' => $validated['email'],
-            'country' => 'Tanzania',
+            'country' => $validated['country'] ?? 'Tanzania',
             'kyc_submitted_at' => null,
             'status' => 'pending',
         ]);
@@ -39,6 +40,14 @@ class AuthController extends Controller
 
         $token = $user->createToken('authToken')->accessToken;
         $user->load('account');
+
+        // Send welcome notification
+        try {
+            $user->notify(new WelcomeNotification());
+        } catch (\Throwable $e) {
+            // Don't fail registration if email fails
+            \Log::warning('Welcome email failed: ' . $e->getMessage());
+        }
 
         return response()->json(['user' => $user, 'token' => $token], 201);
     }
