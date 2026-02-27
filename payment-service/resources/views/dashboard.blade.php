@@ -752,7 +752,7 @@
                     </div>
 
                     <!-- Stepper Progress -->
-                    <div class="flex items-center mb-8">
+                    <div x-show="kycData.status !== 'active'" class="flex items-center mb-8">
                         <template x-for="(step, idx) in [{n:1, label:'Business Info'}, {n:2, label:'ID Verification'}, {n:3, label:'Documents'}, {n:4, label:'Crypto Wallet'}]" :key="step.n">
                             <div class="flex items-center" :class="idx < 3 ? 'flex-1' : ''">
                                 <button type="button" @click="kycStep = step.n" class="flex items-center space-x-2 group">
@@ -768,10 +768,137 @@
                         </template>
                     </div>
 
-                    <!-- Alerts -->
-                    <div x-show="kycData.kyc_approved_at" x-cloak class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
-                        KYC approved on <span x-text="formatDate(kycData.kyc_approved_at)"></span>
+                    <!-- ===== APPROVED: Read-only KYC Summary ===== -->
+                    <div x-show="kycData.status === 'active' && !kycFormLoading" x-cloak>
+                        <div class="mb-6 p-4 bg-ggreen-50 border border-ggreen-200 rounded-xl flex items-center">
+                            <svg class="w-6 h-6 text-ggreen-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div>
+                                <p class="text-sm font-semibold text-ggreen-800">KYC Verified</p>
+                                <p class="text-xs text-ggreen-600">Approved on <span x-text="formatDate(kycData.kyc_approved_at)"></span>. Your account is fully active.</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Business Information -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                    Business Information
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Business Name</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.business_name || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Business Type</p>
+                                        <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycData.business_type || '—').replace('_', ' ')"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Registration Number</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.registration_number || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">TIN Number</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.tin_number || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Address</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="[kycData.address, kycData.city, kycData.country].filter(Boolean).join(', ') || '—'"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ID Verification -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"></path></svg>
+                                    ID Verification
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">ID Type</p>
+                                        <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycData.id_type || '—').replace('_', ' ')"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">ID Number</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.id_number || '—'"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Bank Settlement -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                    Bank Settlement
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Bank Name</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.bank_name || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Account Name</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.bank_account_name || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Account Number</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.bank_account_number || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">SWIFT / Branch</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="[kycData.bank_swift, kycData.bank_branch].filter(Boolean).join(' / ') || '—'"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Crypto Wallet -->
+                            <div x-show="kycData.crypto_wallet_address">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Crypto Wallet
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Currency</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_currency || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                        <p class="text-xs text-gray-500">Network</p>
+                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_network || '—'"></p>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3 md:col-span-3">
+                                        <p class="text-xs text-gray-500">Wallet Address</p>
+                                        <p class="text-sm font-medium text-gray-800 font-mono break-all" x-text="kycData.crypto_wallet_address"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Documents -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    Documents
+                                </h4>
+                                <div class="flex flex-wrap gap-3">
+                                    <div x-show="kycData.id_document_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
+                                        <a :href="'{{ config('services.auth_service.url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View ID Document &rarr;</a>
+                                    </div>
+                                    <div x-show="kycData.business_license_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
+                                        <a :href="'{{ config('services.auth_service.url') }}' + kycData.business_license_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View Business License &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- ===== NOT APPROVED: Show KYC Form ===== -->
+                    <div x-show="kycData.status !== 'active'">
+
+                    <!-- Alerts -->
                     <div x-show="kycData.kyc_notes && kycData.status !== 'active'" x-cloak class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
                         <strong>Admin Notes:</strong> <span x-text="kycData.kyc_notes"></span>
                     </div>
@@ -1049,6 +1176,7 @@
                             </div>
                         </div>
                     </form>
+                    </div><!-- end not-approved wrapper -->
                 </div>
             </div>
         </div>
