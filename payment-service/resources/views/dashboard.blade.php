@@ -1840,6 +1840,11 @@ function dashboard() {
                     const data = await res.json();
                     this.user = data;
                     localStorage.setItem('auth_user', JSON.stringify(data));
+                    // Clear pending state if account is now active
+                    if (data.account && data.account.status === 'active') {
+                        this.accountPending = false;
+                        localStorage.removeItem('account_pending');
+                    }
                 }
             } catch (e) { console.error(e); }
         },
