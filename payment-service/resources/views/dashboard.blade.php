@@ -27,6 +27,9 @@
                     <span x-show="user?.account" class="text-xs bg-gblue-50 text-gblue-700 px-2 py-1 rounded-full" x-text="user?.account?.business_name"></span>
                     <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize" x-text="user?.role || ''"></span>
                     <button @click="showPasswordModal = true" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">Change Password</button>
+                    <button x-show="hasPerm('view_settings')" @click="activeTab = 'settings'; fetchCallback()" :class="activeTab === 'settings' ? 'text-gblue-600' : 'text-gray-500 hover:text-gray-700'" class="flex items-center text-sm font-medium transition" title="Settings">
+                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.11 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Settings
+                    </button>
                     <button @click="logout()" class="text-sm text-gred-500 hover:text-gred-700 font-medium">Logout</button>
                 </div>
             </div>
@@ -62,10 +65,7 @@
                     class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Settlements</button>
                 <button x-show="hasPerm('view_account_info')" @click="activeTab = 'account'; fetchKyc()" :class="activeTab === 'account' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Account Info</button>
-                <button x-show="hasPerm('view_settings')" @click="activeTab = 'settings'; fetchCallback()" :class="activeTab === 'settings' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
-                    <span class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.11 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Settings</span>
-                </button>
+
                 <button x-show="hasPerm('view_users') || hasPerm('add_user')" @click="activeTab = 'users'; fetchAccountUsers()" :class="activeTab === 'users' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Users</button>
                 <button @click="activeTab = 'api-docs'" :class="activeTab === 'api-docs' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
