@@ -13,7 +13,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b">
+    <nav class="bg-white shadow border-b">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -114,7 +114,7 @@
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
+                <div class="bg-white rounded-xl shadow-md p-6 border">
                     <div class="flex items-center">
                         <div class="p-3 bg-gblue-50 rounded-lg">
                             <svg class="w-6 h-6 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
@@ -125,7 +125,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
+                <div class="bg-white rounded-xl shadow-md p-6 border">
                     <div class="flex items-center">
                         <div class="p-3 bg-ggreen-50 rounded-lg">
                             <svg class="w-6 h-6 text-ggreen-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -136,7 +136,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
+                <div class="bg-white rounded-xl shadow-md p-6 border">
                     <div class="flex items-center">
                         <div class="p-3 bg-gyellow-50 rounded-lg">
                             <svg class="w-6 h-6 text-gyellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -147,7 +147,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border">
+                <div class="bg-white rounded-xl shadow-md p-6 border">
                     <div class="flex items-center">
                         <div class="p-3 bg-gred-50 rounded-lg">
                             <svg class="w-6 h-6 text-gred-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -161,7 +161,7 @@
             </div>
 
             <!-- Search & Filters -->
-            <div class="bg-white rounded-xl shadow-sm p-4 border mb-6">
+            <div class="bg-white rounded-xl shadow-md p-4 border mb-6">
                 <div class="flex flex-wrap items-center gap-4">
                     <div class="flex-1 min-w-[200px]">
                         <div class="relative">
@@ -197,7 +197,7 @@
             </div>
 
             <!-- Transactions Table -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                 <div class="px-6 py-4 border-b"><h3 class="text-lg font-semibold text-gray-800">Recent Transactions</h3></div>
                 <div x-show="loadingTxns" class="p-8 text-center text-gray-500">
                     <svg class="animate-spin h-8 w-8 mx-auto text-gblue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
@@ -297,7 +297,7 @@
             <div x-show="walletSubTab === 'collection'">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <template x-for="w in collectionWallets" :key="w.id">
-                        <div class="bg-white rounded-xl shadow-sm border p-5">
+                        <div class="bg-white rounded-xl shadow-md border p-5">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center space-x-2">
                                     <div class="w-3 h-3 rounded-full" :class="operatorColor(w.operator)"></div>
@@ -311,7 +311,7 @@
                 </div>
 
                 <!-- Transfer to Disbursement -->
-                <div x-show="hasPerm('wallet_transfer')" class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <div x-show="hasPerm('wallet_transfer')" class="bg-white rounded-xl shadow-md border p-6 mb-6">
                     <h3 class="text-md font-semibold text-gray-700 mb-1">Transfer to Disbursement</h3>
                     <p class="text-xs text-gyellow-600 mb-4">Requires admin approval before funds are moved.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -342,7 +342,7 @@
             <div x-show="walletSubTab === 'disbursement'">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <template x-for="w in disbursementWallets" :key="w.id">
-                        <div class="bg-white rounded-xl shadow-sm border p-5">
+                        <div class="bg-white rounded-xl shadow-md border p-5">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center space-x-2">
                                     <div class="w-3 h-3 rounded-full" :class="operatorColor(w.operator)"></div>
@@ -358,7 +358,7 @@
             </div>
 
             <!-- Pending Transfer Requests -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden mt-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden mt-6 mb-6">
                 <div class="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
                     <h3 class="text-md font-semibold text-gray-700">Transfer Requests (Collection → Disbursement)</h3>
                     <button @click="fetchMyTransfers()" class="text-xs text-gblue-500 hover:text-gblue-700 font-medium">Refresh</button>
@@ -406,7 +406,7 @@
             </div>
 
             <!-- Wallet Transactions -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                 <div class="px-6 py-4 border-b flex flex-wrap items-center justify-between gap-2">
                     <h3 class="text-lg font-semibold text-gray-800">Wallet Transactions</h3>
                     <div class="flex space-x-2">
@@ -479,7 +479,7 @@
         <!-- ==================== SETTLEMENTS TAB ==================== -->
         <div x-show="activeTab === 'settlements'">
             <!-- New Settlement Form -->
-            <div x-show="hasPerm('create_settlement')" class="bg-white rounded-xl shadow-sm border p-6 mb-8">
+            <div x-show="hasPerm('create_settlement')" class="bg-white rounded-xl shadow-md border p-6 mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Request Settlement</h3>
                 <p class="text-sm text-gray-500 mb-4">Settlement debits from the selected operator's <span class="font-medium text-ggreen-600">Collection wallet</span>. Make sure you have enough balance.</p>
                 <div x-show="settlementMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="settlementMsgType==='success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="settlementMsg"></div>
@@ -524,7 +524,7 @@
             </div>
 
             <!-- Settlements Table -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                 <div class="px-6 py-4 border-b flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-gray-800">Settlement History</h3>
                     <select x-model="stlFilterStatus" @change="fetchSettlements()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
@@ -586,7 +586,7 @@
         <!-- ==================== USERS TAB ==================== -->
         <div x-show="activeTab === 'users'" x-cloak>
             <!-- Add User Form (owner/admin only) -->
-            <div x-show="hasPerm('add_user')" class="bg-white rounded-xl shadow-sm border p-6 mb-8">
+            <div x-show="hasPerm('add_user')" class="bg-white rounded-xl shadow-md border p-6 mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Add User to Account</h3>
                 <div x-show="addUserMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="addUserMsgType==='success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="addUserMsg"></div>
                 <form @submit.prevent="addUser()">
@@ -638,7 +638,7 @@
             </div>
 
             <!-- Account Users Table -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                 <div class="px-6 py-4 border-b">
                     <h3 class="text-lg font-semibold text-gray-800">Account Users</h3>
                 </div>
@@ -737,7 +737,7 @@
         <!-- ==================== ACCOUNT INFO TAB ==================== -->
         <div x-show="activeTab === 'account'" x-cloak class="mt-6">
             <div class="max-w-2xl">
-                <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="bg-white rounded-xl shadow-md border p-6">
                     <!-- Header -->
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center">
@@ -1185,7 +1185,7 @@
         <div x-show="activeTab === 'settings'" x-cloak class="mt-6">
             <div class="max-w-2xl">
                 <!-- Callback URL Configuration -->
-                <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                     <div class="flex items-center mb-4">
                         <svg class="w-6 h-6 text-gblue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
@@ -1214,7 +1214,7 @@
                 </div>
 
                 <!-- Webhook Events Reference -->
-                <div class="bg-white rounded-xl shadow-sm border p-6">
+                <div class="bg-white rounded-xl shadow-md border p-6">
                     <h4 class="text-md font-semibold text-gray-800 mb-3">Webhook Events</h4>
                     <p class="text-sm text-gray-600 mb-4">Your callback URL will receive POST requests with the following event types:</p>
                     <div class="space-y-3">
@@ -1264,7 +1264,7 @@
                 </div>
 
                 <!-- IP Whitelist -->
-                <div class="bg-white rounded-xl shadow-sm border p-6 mt-6">
+                <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
                     <div class="flex items-center mb-4">
                         <svg class="w-6 h-6 text-gyellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
@@ -1345,7 +1345,7 @@
                 </div>
 
                 <!-- IP Whitelist -->
-                <div class="bg-white rounded-xl shadow-sm border p-6 mt-6">
+                <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
                     <div class="flex items-center mb-4">
                         <svg class="w-6 h-6 text-gred-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -1450,7 +1450,7 @@
         <div x-show="activeTab === 'api-docs'" x-cloak class="mt-6">
 
             <!-- Overview -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">API Overview</h3>
                 <p class="text-gray-600 mb-4">Integrate Payin into your application using our REST API. All requests use JSON over HTTPS.</p>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1470,7 +1470,7 @@
             </div>
 
             <!-- Authentication -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Authentication</h3>
                 <p class="text-gray-600 mb-4">All API requests require two headers. Generate your credentials from <strong>Settings → API Keys</strong>.</p>
                 <div class="overflow-x-auto mb-4">
@@ -1496,7 +1496,7 @@
             </div>
 
             <!-- Collection -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Collection (Payin)</h3>
                 <p class="text-gray-600 mb-2">Initiate a mobile money collection. The customer receives a USSD prompt to confirm.</p>
                 <div class="flex items-center space-x-2 mb-4"><span class="bg-ggreen-500 text-white text-xs font-bold px-2 py-1 rounded">POST</span><code class="text-sm text-gray-700">/v1/collection</code></div>
@@ -1535,7 +1535,7 @@
             </div>
 
             <!-- Disbursement -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Disbursement (Payout)</h3>
                 <p class="text-gray-600 mb-2">Send money from your wallet to a customer's mobile money account.</p>
                 <div class="flex items-center space-x-2 mb-4"><span class="bg-ggreen-500 text-white text-xs font-bold px-2 py-1 rounded">POST</span><code class="text-sm text-gray-700">/v1/disbursement</code></div>
@@ -1562,7 +1562,7 @@
             </div>
 
             <!-- Transaction Status -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Transaction Status</h3>
                 <div class="flex items-center space-x-2 mb-4"><span class="bg-gblue-500 text-white text-xs font-bold px-2 py-1 rounded">GET</span><code class="text-sm text-gray-700">/v1/status/{request_ref}</code></div>
                 <div class="overflow-x-auto mb-4">
@@ -1579,14 +1579,14 @@
             </div>
 
             <!-- Active Operators -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Active Operators</h3>
                 <div class="flex items-center space-x-2 mb-4"><span class="bg-gblue-500 text-white text-xs font-bold px-2 py-1 rounded">GET</span><code class="text-sm text-gray-700">/v1/operators</code></div>
                 <p class="text-gray-600 mb-2">Lists available mobile money operators and their supported transaction types.</p>
             </div>
 
             <!-- Callbacks -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Callbacks (Webhooks)</h3>
                 <p class="text-gray-600 mb-4">When a payment completes or fails, Payin sends a POST to your callback URL. Set it in <strong>Account Info → Callback URL</strong>.</p>
                 <div class="bg-gray-900 rounded-lg p-4 overflow-x-auto">
@@ -1610,7 +1610,7 @@
             </div>
 
             <!-- Code Examples -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Code Examples</h3>
 
                 <h4 class="font-semibold text-gray-700 mb-2">PHP</h4>
@@ -1678,7 +1678,7 @@ console.log(data.request_ref);</pre>
             </div>
 
             <!-- Error Handling -->
-            <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Error Handling</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
