@@ -18,27 +18,19 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
-        // Create account (pending until admin approves KYC)
+        // Create account (KYC not yet submitted — user must complete after login)
         $account = Account::create([
             'account_ref' => 'ACC-' . strtoupper(Str::random(8)),
             'business_name' => $validated['business_name'],
-            'business_type' => $validated['business_type'] ?? null,
-            'registration_number' => $validated['registration_number'] ?? null,
-            'tin_number' => $validated['tin_number'] ?? null,
             'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'address' => $validated['address'] ?? null,
-            'city' => $validated['city'] ?? null,
             'country' => 'Tanzania',
-            'id_type' => $validated['id_type'] ?? null,
-            'id_number' => $validated['id_number'] ?? null,
-            'kyc_submitted_at' => now(),
+            'kyc_submitted_at' => null,
             'status' => 'pending',
         ]);
 
-        // Create owner user
+        // Create owner user (use business name as user name)
         $user = User::create([
-            'name' => $validated['name'],
+            'name' => $validated['business_name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'account_id' => $account->id,
@@ -63,6 +55,18 @@ class AuthController extends Controller
 
         // Check account status (skip for super_admin)
         if (!$user->isSuperAdmin() && $user->account) {
+            // KYC not yet submitted — force user to complete KYC first
+            if (is_null($user->account->kyc_submitted_at)) {
+                $token = $user->createToken('authToken')->accessToken;
+                $user->load('account');
+                return response()->json([
+                    'user' => $user,
+                    'token' => $token,
+                    'kyc_required' => true,
+                    'message' => 'Please complete your KYC information to activate your account.'
+                ], 200);
+            }
+            // KYC submitted but still pending approval
             if ($user->account->status === 'pending') {
                 $token = $user->createToken('authToken')->accessToken;
                 $user->load('account');
@@ -202,6 +206,7 @@ class AuthController extends Controller
             'business_type' => 'nullable|string|max:191',
             'registration_number' => 'nullable|string|max:191',
             'tin_number' => 'nullable|string|max:191',
+            'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'city' => 'nullable|string|max:191',
             'country' => 'nullable|string|max:191',
@@ -221,7 +226,7 @@ class AuthController extends Controller
 
         $data = $request->only([
             'business_name', 'business_type', 'registration_number', 'tin_number',
-            'address', 'city', 'country',
+            'phone', 'address', 'city', 'country',
             'bank_name', 'bank_account_name', 'bank_account_number', 'bank_swift', 'bank_branch',
             'crypto_wallet_address', 'crypto_network', 'crypto_currency',
             'id_type', 'id_number',

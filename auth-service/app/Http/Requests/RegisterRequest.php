@@ -24,27 +24,8 @@ class RegisterRequest extends FormRequest
     {
         return [
             'business_name' => ['required', 'string', 'max:255'],
-            'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => [
-                'required',
-                'string',
-                'confirmed',
-                Password::min(8)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols(),
-            ],
-            // Optional KYC fields submitted during registration
-            'business_type' => ['nullable', 'string', 'max:100'],
-            'registration_number' => ['nullable', 'string', 'max:100'],
-            'tin_number' => ['nullable', 'string', 'max:50'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'id_type' => ['nullable', 'string', 'in:national_id,passport,drivers_license'],
-            'id_number' => ['nullable', 'string', 'max:50'],
+            'password' => ['required', 'string', 'confirmed', 'min:6'],
         ];
     }
 }

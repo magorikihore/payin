@@ -56,110 +56,29 @@
 
         <!-- Register Form -->
         <form x-show="showRegister" @submit.prevent="register" x-cloak>
-            <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Business Details</h3>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Business Name *</label>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
                 <input type="text" x-model="business_name" required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none text-sm"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
                     placeholder="Your company or business name">
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Business Type</label>
-                    <select x-model="business_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                        <option value="">Select...</option>
-                        <option value="sole_proprietorship">Sole Proprietorship</option>
-                        <option value="partnership">Partnership</option>
-                        <option value="limited_company">Limited Company</option>
-                        <option value="ngo">NGO</option>
-                        <option value="government">Government</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <input type="text" x-model="phone"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none"
-                        placeholder="+255...">
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Registration No.</label>
-                    <input type="text" x-model="registration_number"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none"
-                        placeholder="e.g. BRELA No.">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">TIN Number</label>
-                    <input type="text" x-model="tin_number"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none"
-                        placeholder="Tax ID">
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">City</label>
-                    <input type="text" x-model="city"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none"
-                        placeholder="e.g. Dar es Salaam">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                    <input type="text" x-model="address"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none"
-                        placeholder="Street address">
-                </div>
-            </div>
-
-            <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 mt-5">Identity Verification</h3>
-            <div class="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
-                    <select x-model="id_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                        <option value="">Select...</option>
-                        <option value="national_id">National ID (NIDA)</option>
-                        <option value="passport">Passport</option>
-                        <option value="drivers_license">Driver's License</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
-                    <input type="text" x-model="id_number"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none"
-                        placeholder="ID number">
-                </div>
-            </div>
-
-            <h3 class="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3 mt-5">Account Owner</h3>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Your Name *</label>
-                <input type="text" x-model="name" required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none text-sm"
-                    placeholder="Your full name">
-            </div>
-            <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input type="email" x-model="email" required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none text-sm"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
                     placeholder="you@example.com">
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-                    <input type="password" x-model="password" required minlength="8"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none text-sm"
-                        placeholder="••••••••">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm *</label>
-                    <input type="password" x-model="password_confirmation" required minlength="8"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none text-sm"
-                        placeholder="••••••••">
-                </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" x-model="password" required minlength="6"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    placeholder="••••••••">
             </div>
-
-            <div class="bg-gyellow-50 border border-gyellow-200 rounded-lg p-3 mb-4 text-xs text-gyellow-800">
-                <strong>Note:</strong> Your account will be reviewed by our team before activation. Please provide as much KYC information as possible to speed up approval.
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <input type="password" x-model="password_confirmation" required minlength="6"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    placeholder="••••••••">
             </div>
 
             <button type="submit" :disabled="loading"
@@ -180,16 +99,7 @@ function loginForm() {
     return {
         email: '',
         password: '',
-        name: '',
         business_name: '',
-        business_type: '',
-        phone: '',
-        registration_number: '',
-        tin_number: '',
-        city: '',
-        address: '',
-        id_type: '',
-        id_number: '',
         password_confirmation: '',
         error: '',
         success: '',
@@ -212,14 +122,21 @@ function loginForm() {
                 }
                 localStorage.setItem('auth_token', data.token);
                 localStorage.setItem('auth_user', JSON.stringify(data.user));
-                if (data.pending) {
+                if (data.kyc_required) {
+                    localStorage.setItem('kyc_required', 'true');
+                    localStorage.removeItem('account_pending');
+                    window.location.href = '/kyc';
+                } else if (data.pending) {
                     localStorage.setItem('account_pending', 'true');
+                    localStorage.removeItem('kyc_required');
                     window.location.href = '/dashboard';
                 } else if (data.user.role === 'super_admin' || data.user.role === 'admin_user') {
                     localStorage.removeItem('account_pending');
+                    localStorage.removeItem('kyc_required');
                     window.location.href = '/admin';
                 } else {
                     localStorage.removeItem('account_pending');
+                    localStorage.removeItem('kyc_required');
                     window.location.href = '/dashboard';
                 }
             } catch (e) {
@@ -238,15 +155,6 @@ function loginForm() {
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({
                         business_name: this.business_name,
-                        business_type: this.business_type || undefined,
-                        registration_number: this.registration_number || undefined,
-                        tin_number: this.tin_number || undefined,
-                        phone: this.phone || undefined,
-                        address: this.address || undefined,
-                        city: this.city || undefined,
-                        id_type: this.id_type || undefined,
-                        id_number: this.id_number || undefined,
-                        name: this.name,
                         email: this.email,
                         password: this.password,
                         password_confirmation: this.password_confirmation
@@ -260,8 +168,8 @@ function loginForm() {
                 }
                 localStorage.setItem('auth_token', data.token);
                 localStorage.setItem('auth_user', JSON.stringify(data.user));
-                localStorage.setItem('account_pending', 'true');
-                window.location.href = '/dashboard';
+                localStorage.setItem('kyc_required', 'true');
+                window.location.href = '/kyc';
             } catch (e) {
                 this.error = 'Unable to connect to authentication service.';
             } finally {

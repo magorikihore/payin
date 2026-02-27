@@ -1384,6 +1384,9 @@ function dashboard() {
             if (!token) { window.location.href = '/login'; return; }
             this.user = JSON.parse(localStorage.getItem('auth_user') || 'null');
             if (this.user?.role === 'super_admin') { window.location.href = '/admin'; return; }
+            // If KYC not yet submitted, force redirect to KYC page
+            const kycRequired = localStorage.getItem('kyc_required');
+            if (kycRequired === 'true') { window.location.href = '/kyc'; return; }
             // Check if account is pending
             const pendingFlag = localStorage.getItem('account_pending');
             if (pendingFlag === 'true' || this.user?.account?.status === 'pending') {
