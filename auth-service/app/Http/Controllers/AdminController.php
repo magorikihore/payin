@@ -536,4 +536,124 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'Template reset to default.', 'template' => $tpl->fresh()]);
     }
+
+    /**
+     * Create a new custom email template.
+     */
+    public function createEmailTemplate(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $request->validate([
+            'key' => 'required|string|max:50|unique:email_templates,key|regex:/^[a-z0-9_]+$/',
+            'name' => 'required|string|max:100',
+            'subject' => 'required|string|max:255',
+            'greeting' => 'required|string|max:500',
+            'body' => 'required|string|max:5000',
+            'action_text' => 'nullable|string|max:100',
+            'action_url' => 'nullable|string|max:500',
+            'footer' => 'nullable|string|max:500',
+        ]);
+
+        $tpl = EmailTemplate::create([
+            'key' => $request->key,
+            'name' => $request->name,
+            'subject' => $request->subject,
+            'greeting' => $request->greeting,
+            'body' => $request->body,
+            'action_text' => $request->action_text,
+            'action_url' => $request->action_url,
+            'footer' => $request->footer ?? '— Payin Team',
+            'is_active' => true,
+        ]);
+
+        return response()->json(['message' => 'Template created.', 'template' => $tpl], 201);
+    }
+
+    /**
+     * Delete a custom email template (cannot delete system templates).
+     */
+    public function deleteEmailTemplate(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $tpl = EmailTemplate::find($id);
+        if (!$tpl) return response()->json(['message' => 'Template not found.'], 404);
+
+        $systemKeys = ['welcome', 'password_reset', 'kyc_approved', 'kyc_rejected'];
+        if (in_array($tpl->key, $systemKeys)) {
+            return response()->json(['message' => 'Cannot delete system templates. You can disable them instead.'], 422);
+        }
+
+        $tpl->delete();
+        return response()->json(['message' => 'Template deleted.']);
+    }
+
+    /**
+     * Send a custom notification email using a template.
+     * Can send to: specific emails, all users, or all account owners.
+     */
+    public function sendTemplateEmail(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $request->validate([
+            'template_id' => 'required|exists:email_templates,id',
+            'send_to' => 'required|in:emails,all_users,all_owners',
+            'emails' => 'required_if:send_to,emails|array',
+            'emails.*' => 'email',
+        ]);
+
+        $tpl = EmailTemplate::find($request->template_id);
+        if (!$tpl) return response()->json(['message' => 'Template not found.'], 404);
+
+        $recipients = collect();
+
+        if ($request->send_to === 'emails') {
+            $recipients = User::whereIn('email', $request->emails)->get();
+            // Also include emails not in users table
+            $foundEmails = $recipients->pluck('email')->toArray();
+            $extraEmails = array_diff($request->emails, $foundEmails);
+        } elseif ($request->send_to === 'all_users') {
+            $recipients = User::whereNotNull('account_id')->get();
+        } elseif ($request->send_to === 'all_owners') {
+            $recipients = User::where('role', 'owner')->get();
+        }
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($recipients as $user) {
+            try {
+                $user->notify(new \App\Notifications\CustomTemplateNotification($tpl));
+                $sent++;
+            } catch (\Throwable $e) {
+                $failed++;
+                \Log::warning("Failed to send template email to {$user->email}: " . $e->getMessage());
+            }
+        }
+
+        // Send to extra emails (not in users table)
+        if (!empty($extraEmails)) {
+            foreach ($extraEmails as $email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::raw(
+                        $tpl->body,
+                        function ($message) use ($email, $tpl) {
+                            $message->to($email)->subject($tpl->subject);
+                        }
+                    );
+                    $sent++;
+                } catch (\Throwable $e) {
+                    $failed++;
+                }
+            }
+        }
+
+        return response()->json([
+            'message' => "Sent to {$sent} recipient(s)." . ($failed ? " {$failed} failed." : ''),
+            'sent' => $sent,
+            'failed' => $failed,
+        ]);
+    }
 }

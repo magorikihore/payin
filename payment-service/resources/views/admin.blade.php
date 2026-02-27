@@ -1924,7 +1924,58 @@
                         <h3 class="text-lg font-semibold text-gray-800">Email Templates</h3>
                         <p class="text-sm text-gray-500">Customize the content of each notification email. Use <code class="bg-gray-100 px-1 rounded text-xs">@{{name}}</code> for placeholders.</p>
                     </div>
-                    <button @click="fetchEmailTemplates()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Refresh</button>
+                    <div class="flex items-center space-x-3">
+                        <button @click="showNewTplForm = !showNewTplForm" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">+ New Template</button>
+                        <button @click="fetchEmailTemplates()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Create New Template Form -->
+                <div x-show="showNewTplForm" x-cloak class="mb-6 border border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <h4 class="font-medium text-gray-800 mb-3">Create New Template</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Template Key <span class="text-gray-400">(lowercase, underscores only)</span></label>
+                            <input type="text" x-model="newTplForm.key" placeholder="e.g. operator_downtime" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Display Name</label>
+                            <input type="text" x-model="newTplForm.name" placeholder="e.g. Operator Downtime Notice" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Subject</label>
+                            <input type="text" x-model="newTplForm.subject" placeholder="e.g. Payin — Service Notice" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Greeting</label>
+                            <input type="text" x-model="newTplForm.greeting" placeholder="e.g. Hello @{{name}}," class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Body</label>
+                        <textarea x-model="newTplForm.body" rows="4" placeholder="Enter the email body content..." class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Button Text <span class="text-gray-400">(optional)</span></label>
+                            <input type="text" x-model="newTplForm.action_text" placeholder="e.g. View Status" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Button URL <span class="text-gray-400">(optional)</span></label>
+                            <input type="text" x-model="newTplForm.action_url" placeholder="https://login.payin.co.tz/dashboard" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Footer</label>
+                            <input type="text" x-model="newTplForm.footer" placeholder="— Payin Team" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button @click="createEmailTemplate()" :disabled="tplSaving" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
+                            <span x-show="!tplSaving">Create Template</span>
+                            <span x-show="tplSaving">Creating...</span>
+                        </button>
+                        <button @click="showNewTplForm = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">Cancel</button>
+                    </div>
                 </div>
 
                 <div x-show="tplMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="tplMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="tplMsg"></div>
@@ -2014,7 +2065,7 @@
                                 </div>
 
                                 <!-- Actions -->
-                                <div class="flex items-center space-x-3 pt-2">
+                                <div class="flex items-center space-x-3 pt-2 flex-wrap gap-y-2">
                                     <button @click="saveEmailTemplate(tpl)" :disabled="tplSaving" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
                                         <span x-show="!tplSaving">Save Template</span>
                                         <span x-show="tplSaving">Saving...</span>
@@ -2022,10 +2073,68 @@
                                     <button @click="if(confirm('Reset this template to its default content?')) resetEmailTemplate(tpl)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">
                                         Reset to Default
                                     </button>
+                                    <button @click="openSendModal(tpl)" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium">
+                                        &#9993; Send
+                                    </button>
+                                    <template x-if="!['welcome','password_reset','kyc_approved','kyc_rejected'].includes(tpl.key)">
+                                        <button @click="if(confirm('Delete this custom template permanently?')) deleteEmailTemplate(tpl)" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
+                                            Delete
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         </div>
                     </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Send Template Modal ===== -->
+        <div x-show="showSendModal" x-cloak class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" @click.self="showSendModal = false">
+            <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg mx-4">
+                <h3 class="text-lg font-bold text-gray-800 mb-1">Send Email Notification</h3>
+                <p class="text-sm text-gray-500 mb-4" x-text="'Template: ' + (sendTplName || '')"></p>
+
+                <!-- Recipient Selection -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Send To</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" x-model="sendTo" value="emails" class="text-blue-600">
+                            <span class="text-sm">Specific email addresses</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" x-model="sendTo" value="all_users" class="text-blue-600">
+                            <span class="text-sm">All registered users</span>
+                        </label>
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="radio" x-model="sendTo" value="all_owners" class="text-blue-600">
+                            <span class="text-sm">All account owners</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Specific Emails Input -->
+                <div x-show="sendTo === 'emails'" class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Addresses</label>
+                    <textarea x-model="sendEmails" rows="3" placeholder="Enter emails separated by commas..." class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+
+                <!-- Warning for broadcast -->
+                <div x-show="sendTo !== 'emails'" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-sm text-yellow-800">&#9888; This will send the email to <strong x-text="sendTo === 'all_users' ? 'ALL registered users' : 'ALL account owners'"></strong>. Please confirm before sending.</p>
+                </div>
+
+                <!-- Result Message -->
+                <div x-show="sendResult" class="mb-4 p-3 rounded-lg text-sm" :class="sendResultType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="sendResult"></div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-end space-x-3">
+                    <button @click="showSendModal = false; sendResult = '';" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">Cancel</button>
+                    <button @click="sendTemplateNotification()" :disabled="sendLoading" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50">
+                        <span x-show="!sendLoading">Send Now</span>
+                        <span x-show="sendLoading">Sending...</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -2132,6 +2241,10 @@ function adminPanel() {
 
         // Email Templates
         emailTemplates: [], tplLoading: false, tplSaving: false, tplMsg: '', tplMsgType: 'success',
+        showNewTplForm: false,
+        newTplForm: { key: '', name: '', subject: '', greeting: 'Hello @{{name}},', body: '', action_text: '', action_url: '', footer: '— Payin Team' },
+        // Send modal
+        showSendModal: false, sendTplId: null, sendTplName: '', sendTo: 'emails', sendEmails: '', sendLoading: false, sendResult: '', sendResultType: 'success',
         logServiceUrls: {
             auth: '{{ config("services.auth_service.url") }}/api/admin/logs',
             payment: '/api/admin/logs',
@@ -3192,6 +3305,86 @@ function adminPanel() {
                 }
             } catch (e) { this.tplMsg = 'Network error.'; this.tplMsgType = 'error'; }
             this.tplSaving = false;
+        },
+
+        async createEmailTemplate() {
+            this.tplSaving = true;
+            this.tplMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(this.newTplForm)
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.tplMsg = data.message || (res.ok ? 'Created.' : 'Failed.');
+                this.tplMsgType = res.ok ? 'success' : 'error';
+                if (res.ok) {
+                    this.showNewTplForm = false;
+                    this.newTplForm = { key: '', name: '', subject: '', greeting: 'Hello @{{name}},', body: '', action_text: '', action_url: '', footer: '— Payin Team' };
+                    await this.fetchEmailTemplates();
+                }
+            } catch (e) { this.tplMsg = 'Network error.'; this.tplMsgType = 'error'; }
+            this.tplSaving = false;
+        },
+
+        async deleteEmailTemplate(tpl) {
+            this.tplSaving = true;
+            this.tplMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/' + tpl.id, {
+                    method: 'DELETE', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.tplMsg = data.message || (res.ok ? 'Deleted.' : 'Failed.');
+                this.tplMsgType = res.ok ? 'success' : 'error';
+                if (res.ok) {
+                    this.emailTemplates = this.emailTemplates.filter(t => t.id !== tpl.id);
+                }
+            } catch (e) { this.tplMsg = 'Network error.'; this.tplMsgType = 'error'; }
+            this.tplSaving = false;
+        },
+
+        openSendModal(tpl) {
+            this.sendTplId = tpl.id;
+            this.sendTplName = tpl.name;
+            this.sendTo = 'emails';
+            this.sendEmails = '';
+            this.sendResult = '';
+            this.sendResultType = 'success';
+            this.showSendModal = true;
+        },
+
+        async sendTemplateNotification() {
+            this.sendLoading = true;
+            this.sendResult = '';
+            try {
+                const payload = { template_id: this.sendTplId, send_to: this.sendTo };
+                if (this.sendTo === 'emails') {
+                    payload.emails = this.sendEmails.split(',').map(e => e.trim()).filter(e => e);
+                    if (!payload.emails.length) {
+                        this.sendResult = 'Please enter at least one email address.';
+                        this.sendResultType = 'error';
+                        this.sendLoading = false;
+                        return;
+                    }
+                }
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/send', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    this.sendResult = `Successfully sent to ${data.sent || 0} recipient(s)` + (data.failed ? `, ${data.failed} failed.` : '.');
+                    this.sendResultType = 'success';
+                } else {
+                    this.sendResult = data.message || 'Failed to send.';
+                    this.sendResultType = 'error';
+                }
+            } catch (e) { this.sendResult = 'Network error.'; this.sendResultType = 'error'; }
+            this.sendLoading = false;
         },
     }
 }

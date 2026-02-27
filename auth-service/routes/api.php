@@ -83,8 +83,11 @@ Route::middleware('auth:api')->group(function () {
 
         // Email templates (super_admin only)
         Route::get('/email-templates', [AdminController::class, 'emailTemplates']);
+        Route::post('/email-templates', [AdminController::class, 'createEmailTemplate']);
         Route::get('/email-templates/{id}', [AdminController::class, 'emailTemplate']);
         Route::put('/email-templates/{id}', [AdminController::class, 'updateEmailTemplate']);
         Route::post('/email-templates/{id}/reset', [AdminController::class, 'resetEmailTemplate']);
+        Route::delete('/email-templates/{id}', [AdminController::class, 'deleteEmailTemplate']);
+        Route::post('/email-templates/send', [AdminController::class, 'sendTemplateEmail']);
     });
 });
