@@ -369,4 +369,95 @@ class AdminController extends Controller
 
         return response()->json(['message' => "Admin user {$user->name} deleted successfully."]);
     }
+
+    /**
+     * Get current mail configuration.
+     * Only super_admin.
+     */
+    public function getMailConfig(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $envPath = base_path('.env');
+        $env = file_exists($envPath) ? file_get_contents($envPath) : '';
+
+        $keys = ['MAIL_MAILER', 'MAIL_HOST', 'MAIL_PORT', 'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_ENCRYPTION', 'MAIL_FROM_ADDRESS', 'MAIL_FROM_NAME'];
+        $config = [];
+        foreach ($keys as $key) {
+            if (preg_match('/^' . preg_quote($key, '/') . '=(.*)$/m', $env, $m)) {
+                $config[$key] = trim($m[1]);
+            } else {
+                $config[$key] = '';
+            }
+        }
+
+        return response()->json(['config' => $config]);
+    }
+
+    /**
+     * Update mail configuration in .env.
+     * Only super_admin.
+     */
+    public function updateMailConfig(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $request->validate([
+            'MAIL_MAILER' => 'required|string|in:smtp,sendmail,log',
+            'MAIL_HOST' => 'nullable|string|max:255',
+            'MAIL_PORT' => 'nullable|integer|min:1|max:65535',
+            'MAIL_USERNAME' => 'nullable|string|max:500',
+            'MAIL_PASSWORD' => 'nullable|string|max:500',
+            'MAIL_ENCRYPTION' => 'nullable|string|in:tls,ssl,null',
+            'MAIL_FROM_ADDRESS' => 'nullable|string|max:255',
+            'MAIL_FROM_NAME' => 'nullable|string|max:255',
+        ]);
+
+        $envPath = base_path('.env');
+        $env = file_exists($envPath) ? file_get_contents($envPath) : '';
+
+        $keys = ['MAIL_MAILER', 'MAIL_HOST', 'MAIL_PORT', 'MAIL_USERNAME', 'MAIL_PASSWORD', 'MAIL_ENCRYPTION', 'MAIL_FROM_ADDRESS', 'MAIL_FROM_NAME'];
+        foreach ($keys as $key) {
+            $value = $request->input($key, '');
+            // Quote value if it contains spaces
+            $envValue = (str_contains((string) $value, ' ')) ? '"' . $value . '"' : $value;
+
+            if (preg_match('/^' . preg_quote($key, '/') . '=.*$/m', $env)) {
+                $env = preg_replace('/^' . preg_quote($key, '/') . '=.*$/m', $key . '=' . $envValue, $env);
+            } else {
+                $env .= "\n" . $key . '=' . $envValue;
+            }
+        }
+
+        file_put_contents($envPath, $env);
+
+        // Clear config cache so changes take effect
+        \Artisan::call('config:clear');
+
+        return response()->json(['message' => 'Mail configuration updated successfully.']);
+    }
+
+    /**
+     * Send a test email to verify mail configuration.
+     * Only super_admin.
+     */
+    public function sendTestEmail(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw('This is a test email from Payin to verify your mail configuration is working correctly.', function ($message) use ($request) {
+                $message->to($request->email)
+                    ->subject('Payin — Test Email');
+            });
+
+            return response()->json(['message' => 'Test email sent to ' . $request->email]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Failed to send test email: ' . $e->getMessage()], 422);
+        }
+    }
 }

@@ -75,5 +75,10 @@ Route::middleware('auth:api')->group(function () {
         // Logs (super_admin only)
         Route::get('/logs', [LogController::class, 'index']);
         Route::delete('/logs', [LogController::class, 'clear']);
+
+        // Mail configuration (super_admin only)
+        Route::get('/mail-config', [AdminController::class, 'getMailConfig']);
+        Route::put('/mail-config', [AdminController::class, 'updateMailConfig']);
+        Route::post('/mail-config/test', [AdminController::class, 'sendTestEmail']);
     });
 });

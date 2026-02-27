@@ -62,11 +62,12 @@
                 </button>
                 <!-- More dropdown for last 4 items -->
                 <div class="relative" x-data="{ moreOpen: false }" @click.away="moreOpen = false"
-                     x-show="hasPerm('admin_users') || hasPerm('admin_operators') || hasPerm('admin_payments') || user?.role === 'super_admin'">
+                     x-show="hasPerm('admin_users') || hasPerm('admin_operators') || hasPerm('admin_payments') || user?.role === 'super_admin'"
+                     >
                     <button @click="moreOpen = !moreOpen"
                         :class="['users','operators','payments','admin_users','logs'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                         class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap inline-flex items-center">
-                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'logs' ? 'Error Logs' : 'More'"></span>
+                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : 'More'"></span>
                         <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="moreOpen" x-transition class="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border z-50">
@@ -85,6 +86,9 @@
                         <button x-show="user?.role === 'super_admin'" @click="activeTab = 'logs'; fetchLogs(); moreOpen = false"
                             :class="activeTab === 'logs' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Error Logs</button>
+                        <button x-show="user?.role === 'super_admin'" @click="activeTab = 'mail_config'; fetchMailConfig(); moreOpen = false"
+                            :class="activeTab === 'mail_config' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
+                            class="block w-full text-left px-4 py-2 text-sm">Mail Config</button>
                     </div>
                 </div>
             </nav>
@@ -1822,6 +1826,98 @@
             </div>
         </div>
 
+        <!-- ==================== MAIL CONFIG TAB ==================== -->
+        <div x-show="activeTab === 'mail_config'" x-cloak class="mt-6">
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-1">Mail Configuration</h3>
+                <p class="text-sm text-gray-500 mb-6">Configure SMTP settings for sending emails (signup welcome, password reset, KYC notifications).</p>
+
+                <!-- Status Messages -->
+                <div x-show="mailMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="mailMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="mailMsg"></div>
+
+                <div x-show="mailLoading" class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>
+
+                <form x-show="!mailLoading" @submit.prevent="saveMailConfig()" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Mailer -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mail Driver</label>
+                            <select x-model="mailForm.MAIL_MAILER" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="smtp">SMTP</option>
+                                <option value="sendmail">Sendmail</option>
+                                <option value="log">Log (debug only)</option>
+                            </select>
+                        </div>
+                        <!-- Host -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Host</label>
+                            <input type="text" x-model="mailForm.MAIL_HOST" placeholder="smtp.mailgun.org" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <!-- Port -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Port</label>
+                            <input type="number" x-model="mailForm.MAIL_PORT" placeholder="587" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <!-- Encryption -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Encryption</label>
+                            <select x-model="mailForm.MAIL_ENCRYPTION" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="tls">TLS</option>
+                                <option value="ssl">SSL</option>
+                                <option value="null">None</option>
+                            </select>
+                        </div>
+                        <!-- Username -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Username</label>
+                            <input type="text" x-model="mailForm.MAIL_USERNAME" placeholder="postmaster@mg.example.com" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <!-- Password -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMTP Password</label>
+                            <input type="password" x-model="mailForm.MAIL_PASSWORD" placeholder="••••••••" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <!-- From Address -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From Address</label>
+                            <input type="email" x-model="mailForm.MAIL_FROM_ADDRESS" placeholder="noreply@payin.co.tz" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <!-- From Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From Name</label>
+                            <input type="text" x-model="mailForm.MAIL_FROM_NAME" placeholder="Payin" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3 pt-2">
+                        <button type="submit" :disabled="mailSaving" class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
+                            <span x-show="!mailSaving">Save Configuration</span>
+                            <span x-show="mailSaving">Saving...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Test Email -->
+            <div class="bg-white rounded-xl shadow-md border p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-1">Send Test Email</h3>
+                <p class="text-sm text-gray-500 mb-4">Verify your mail configuration by sending a test email.</p>
+
+                <div x-show="testMailMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="testMailMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="testMailMsg"></div>
+
+                <form @submit.prevent="sendTestEmail()" class="flex items-end space-x-3">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Recipient Email</label>
+                        <input type="email" x-model="testMailAddress" placeholder="you@example.com" required class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <button type="submit" :disabled="testMailSending" class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50 whitespace-nowrap">
+                        <span x-show="!testMailSending">Send Test</span>
+                        <span x-show="testMailSending">Sending...</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
     </div>
 
 </div>
@@ -1916,6 +2012,11 @@ function adminPanel() {
         // Error Logs (super_admin only)
         logEntries: [], logLoading: false, logService: 'auth', logLevel: '', logSearch: '', logLines: '200',
         logFileSize: '', logTotalEntries: 0, logError: '', logAutoRefresh: false, logAutoRefreshTimer: null,
+
+        // Mail Config (super_admin only)
+        mailForm: { MAIL_MAILER: 'smtp', MAIL_HOST: '', MAIL_PORT: '587', MAIL_USERNAME: '', MAIL_PASSWORD: '', MAIL_ENCRYPTION: 'tls', MAIL_FROM_ADDRESS: '', MAIL_FROM_NAME: 'Payin' },
+        mailLoading: false, mailSaving: false, mailMsg: '', mailMsgType: 'success',
+        testMailAddress: '', testMailSending: false, testMailMsg: '', testMailMsgType: 'success',
         logServiceUrls: {
             auth: '{{ config("services.auth_service.url") }}/api/admin/logs',
             payment: '/api/admin/logs',
@@ -2875,6 +2976,51 @@ function adminPanel() {
                 if (this.logAutoRefreshTimer) clearInterval(this.logAutoRefreshTimer);
                 this.logAutoRefreshTimer = null;
             }
+        },
+
+        // ==================== MAIL CONFIG ====================
+        async fetchMailConfig() {
+            this.mailLoading = true;
+            this.mailMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/mail-config', { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok && data.config) {
+                    this.mailForm = { ...this.mailForm, ...data.config };
+                }
+            } catch (e) { this.mailMsg = 'Failed to load mail config.'; this.mailMsgType = 'error'; }
+            this.mailLoading = false;
+        },
+
+        async saveMailConfig() {
+            this.mailSaving = true;
+            this.mailMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/mail-config', {
+                    method: 'PUT', headers: this.getHeaders(), body: JSON.stringify(this.mailForm)
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.mailMsg = data.message || (res.ok ? 'Saved.' : 'Failed.');
+                this.mailMsgType = res.ok ? 'success' : 'error';
+            } catch (e) { this.mailMsg = 'Network error.'; this.mailMsgType = 'error'; }
+            this.mailSaving = false;
+        },
+
+        async sendTestEmail() {
+            this.testMailSending = true;
+            this.testMailMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/mail-config/test', {
+                    method: 'POST', headers: this.getHeaders(), body: JSON.stringify({ email: this.testMailAddress })
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.testMailMsg = data.message || (res.ok ? 'Sent.' : 'Failed.');
+                this.testMailMsgType = res.ok ? 'success' : 'error';
+            } catch (e) { this.testMailMsg = 'Network error.'; this.testMailMsgType = 'error'; }
+            this.testMailSending = false;
         },
     }
 }
