@@ -107,7 +107,7 @@ class PaymentController extends Controller
         $request->validate([
             'phone'       => 'required|string|min:10|max:15',
             'amount'      => 'required|numeric|min:100',
-            'operator'    => 'required|string',
+            'operator'    => 'nullable|string',
             'reference'   => 'nullable|string|max:100',
             'description' => 'nullable|string|max:255',
             'currency'    => 'nullable|string|max:10',
@@ -120,13 +120,17 @@ class PaymentController extends Controller
             return response()->json(['message' => 'No account associated.'], 403);
         }
 
-        // Find the operator
-        $operator = Operator::where('code', strtolower($request->operator))
-            ->where('status', 'active')
-            ->first();
+        // Auto-detect operator from phone if not provided
+        if ($request->filled('operator')) {
+            $operator = Operator::where('code', strtolower($request->operator))
+                ->where('status', 'active')
+                ->first();
+        } else {
+            $operator = Operator::detectByPhone($request->phone);
+        }
 
         if (!$operator) {
-            return response()->json(['message' => 'Operator not found or inactive.'], 422);
+            return response()->json(['message' => 'Could not detect operator from phone number. Please check the number.'], 422);
         }
 
         // Check wallet balance (has enough for disbursement + charges)
@@ -448,7 +452,7 @@ class PaymentController extends Controller
             'items'             => 'required|array|min:1|max:500',
             'items.*.phone'     => 'required|string|min:10|max:15',
             'items.*.amount'    => 'required|numeric|min:100',
-            'items.*.operator'  => 'required|string',
+            'items.*.operator'  => 'nullable|string',
             'items.*.reference' => 'nullable|string|max:100',
             'items.*.description' => 'nullable|string|max:255',
         ]);
@@ -465,10 +469,15 @@ class PaymentController extends Controller
         $failCount = 0;
 
         foreach ($request->items as $index => $item) {
-            $operatorCode = strtolower($item['operator']);
-            $operator = Operator::where('code', $operatorCode)
-                ->where('status', 'active')
-                ->first();
+            // Auto-detect operator from phone if not provided
+            if (!empty($item['operator'])) {
+                $operatorCode = strtolower($item['operator']);
+                $operator = Operator::where('code', $operatorCode)
+                    ->where('status', 'active')
+                    ->first();
+            } else {
+                $operator = Operator::detectByPhone($item['phone']);
+            }
 
             if (!$operator) {
                 $results[] = [
@@ -476,7 +485,7 @@ class PaymentController extends Controller
                     'phone' => $item['phone'],
                     'amount' => $item['amount'],
                     'success' => false,
-                    'error' => 'Operator not found or inactive.',
+                    'error' => 'Could not detect operator from phone number.',
                 ];
                 $failCount++;
                 continue;
@@ -572,9 +581,37 @@ class PaymentController extends Controller
     {
         $operators = Operator::where('status', 'active')
             ->orderBy('name')
-            ->get(['id', 'name', 'code']);
+            ->get(['id', 'name', 'code', 'prefixes']);
 
         return response()->json(['operators' => $operators]);
+    }
+
+    /**
+     * Detect operator from phone number.
+     */
+    public function detectOperator(Request $request): JsonResponse
+    {
+        $request->validate([
+            'phone' => 'required|string|min:10|max:15',
+        ]);
+
+        $operator = Operator::detectByPhone($request->phone);
+
+        if (!$operator) {
+            return response()->json([
+                'detected' => false,
+                'message'  => 'Could not detect operator from this phone number.',
+            ]);
+        }
+
+        return response()->json([
+            'detected' => true,
+            'operator' => [
+                'id'   => $operator->id,
+                'name' => $operator->name,
+                'code' => $operator->code,
+            ],
+        ]);
     }
 
     /**

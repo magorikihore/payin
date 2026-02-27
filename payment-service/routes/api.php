@@ -44,6 +44,9 @@ Route::middleware('auth.service')->group(function () {
     // Active operators (for dashboard send-money form)
     Route::get('/operators', [PaymentController::class, 'activeOperators']);
 
+    // Detect operator from phone number
+    Route::post('/detect-operator', [PaymentController::class, 'detectOperator']);
+
     // Admin: payment requests
     Route::get('/admin/payment-requests', [PaymentController::class, 'adminIndex']);
 

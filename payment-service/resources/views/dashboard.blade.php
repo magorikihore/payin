@@ -1212,17 +1212,24 @@
 
                     <form @submit.prevent="sendSinglePayout()" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
-                            <select x-model="payoutForm.operator" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                <option value="">Select Operator</option>
-                                <template x-for="op in payoutOperators" :key="op.code">
-                                    <option :value="op.code" x-text="op.name"></option>
-                                </template>
-                            </select>
-                        </div>
-                        <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                            <input type="text" x-model="payoutForm.phone" required placeholder="e.g. 0712345678 or 255712345678" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <input type="text" x-model="payoutForm.phone" @input.debounce.400ms="detectOperator(payoutForm.phone)" required placeholder="e.g. 0712345678 or 255712345678" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <!-- Detected Operator Badge -->
+                            <div class="mt-2" x-show="detectedOperator.name" x-cloak>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700 border border-green-200">
+                                    <svg class="w-4 h-4 mr-1.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    <span x-text="detectedOperator.name"></span>
+                                </span>
+                            </div>
+                            <div class="mt-2" x-show="payoutForm.phone.length >= 10 && !detectedOperator.name && !detectingOp" x-cloak>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700 border border-red-200">
+                                    <svg class="w-4 h-4 mr-1.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    Unknown operator
+                                </span>
+                            </div>
+                            <div class="mt-1" x-show="detectingOp" x-cloak>
+                                <span class="text-xs text-gray-400">Detecting operator...</span>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Amount (TZS, min 100)</label>
@@ -1275,14 +1282,14 @@
                     <!-- CSV Format Info -->
                     <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <h4 class="text-sm font-semibold text-blue-800 mb-2">CSV Format</h4>
-                        <p class="text-xs text-blue-700 mb-2">Your CSV must have columns: <strong>phone, amount, operator</strong>. Optional: <strong>reference, description</strong></p>
+                        <p class="text-xs text-blue-700 mb-2">Your CSV must have columns: <strong>phone, amount</strong>. Optional: <strong>reference, description</strong>. Operator is auto-detected from the phone number.</p>
                         <div class="bg-white rounded p-2 text-xs font-mono text-gray-700 overflow-x-auto">
-                            phone,amount,operator,reference,description<br>
-                            0712345678,5000,mpesa,REF001,Salary Jan<br>
-                            0652345678,3000,tigopesa,REF002,Bonus<br>
-                            0782345678,10000,airtelmoney,REF003,Commission
+                            phone,amount,reference,description<br>
+                            0712345678,5000,REF001,Salary Jan<br>
+                            0652345678,3000,REF002,Bonus<br>
+                            0782345678,10000,REF003,Commission
                         </div>
-                        <p class="text-xs text-blue-600 mt-2">Operator codes: <strong>mpesa, tigopesa, airtelmoney, halopesa</strong> (lowercase, no spaces)</p>
+                        <p class="text-xs text-blue-600 mt-2">Operator is detected automatically from the phone prefix (e.g. 074/075/076 = M-Pesa, 065/067/071 = Tigo Pesa)</p>
                     </div>
 
                     <!-- Upload CSV File -->
@@ -1294,7 +1301,7 @@
                     <!-- Or Paste CSV -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Or Paste CSV Data</label>
-                        <textarea x-model="batchCsvText" rows="6" placeholder="phone,amount,operator,reference,description&#10;0712345678,5000,mpesa,REF001,Salary" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-gblue-500 outline-none"></textarea>
+                        <textarea x-model="batchCsvText" rows="6" placeholder="phone,amount,reference,description&#10;0712345678,5000,REF001,Salary" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-gblue-500 outline-none"></textarea>
                     </div>
 
                     <div class="flex items-center space-x-3 mb-4">
@@ -1313,7 +1320,6 @@
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -1326,9 +1332,6 @@
                                             <td class="px-4 py-2 text-sm text-gray-500" x-text="idx + 1"></td>
                                             <td class="px-4 py-2 text-sm font-mono" x-text="item.phone"></td>
                                             <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(item.amount) + ' TZS'"></td>
-                                            <td class="px-4 py-2">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700" x-text="item.operator"></span>
-                                            </td>
                                             <td class="px-4 py-2 text-sm text-gray-600" x-text="item.reference || '—'"></td>
                                             <td class="px-4 py-2 text-sm text-gray-600" x-text="item.description || '—'"></td>
                                             <td class="px-4 py-2">
@@ -1394,16 +1397,10 @@
                     <!-- Add Single Row Manually -->
                     <div class="mt-6 p-4 border border-dashed border-gray-300 rounded-lg">
                         <h4 class="text-sm font-semibold text-gray-700 mb-3">Add Recipient Manually</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
-                            <input type="text" x-model="manualRow.phone" placeholder="Phone" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <input type="text" x-model="manualRow.phone" placeholder="Phone (e.g. 0712345678)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <input type="number" x-model="manualRow.amount" placeholder="Amount" min="100" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                            <select x-model="manualRow.operator" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                <option value="">Operator</option>
-                                <template x-for="op in payoutOperators" :key="op.code">
-                                    <option :value="op.code" x-text="op.name"></option>
-                                </template>
-                            </select>
-                            <input type="text" x-model="manualRow.reference" placeholder="Reference" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <input type="text" x-model="manualRow.reference" placeholder="Reference (optional)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <button @click="addManualRow()" class="px-4 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium">+ Add</button>
                         </div>
                     </div>
@@ -2014,14 +2011,15 @@ function dashboard() {
         // Send Money (Payout)
         sendMoneySubTab: 'single',
         payoutOperators: [],
-        payoutForm: { operator: '', phone: '', amount: '', reference: '', description: '' },
+        detectedOperator: { name: '', code: '' }, detectingOp: false,
+        payoutForm: { phone: '', amount: '', reference: '', description: '' },
         payoutLoading: false, payoutMsg: '', payoutMsgType: 'success',
         lastPayoutResult: null,
         // Batch
         batchCsvText: '', batchItems: [], batchLoading: false,
         batchMsg: '', batchMsgType: 'success',
         batchResults: [], batchResultSummary: { sent: 0, failed: 0, total: 0 },
-        manualRow: { phone: '', amount: '', operator: '', reference: '', description: '' },
+        manualRow: { phone: '', amount: '', reference: '', description: '' },
         recentDisbursements: [], recentDisbLoading: false,
 
         // Password
@@ -2573,14 +2571,53 @@ function dashboard() {
             this.fetchRecentDisbursements();
         },
 
+        async detectOperator(phone) {
+            if (!phone || phone.replace(/[\s\-\.]/g, '').length < 10) {
+                this.detectedOperator = { name: '', code: '' };
+                return;
+            }
+            // Try local detection first using prefixes from payoutOperators
+            const normalized = phone.replace(/[\s\-\.+]/g, '').replace(/^0/, '255');
+            if (normalized.startsWith('255') && normalized.length >= 12) {
+                const prefix = normalized.substring(3, 5);
+                for (const op of this.payoutOperators) {
+                    if (op.prefixes && op.prefixes.includes(prefix)) {
+                        this.detectedOperator = { name: op.name, code: op.code };
+                        return;
+                    }
+                }
+            }
+            // Fallback to API detection
+            this.detectingOp = true;
+            try {
+                const res = await fetch('/api/detect-operator', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+                if (data.detected) {
+                    this.detectedOperator = { name: data.operator.name, code: data.operator.code };
+                } else {
+                    this.detectedOperator = { name: '', code: '' };
+                }
+            } catch (e) { this.detectedOperator = { name: '', code: '' }; }
+            this.detectingOp = false;
+        },
+
         async sendSinglePayout() {
             this.payoutLoading = true;
             this.payoutMsg = '';
             this.lastPayoutResult = null;
+            if (!this.detectedOperator.code) {
+                this.payoutMsg = 'Could not detect operator. Please check the phone number.';
+                this.payoutMsgType = 'error';
+                this.payoutLoading = false;
+                return;
+            }
             try {
                 const res = await fetch('/api/disbursement', {
                     method: 'POST', headers: this.getHeaders(),
-                    body: JSON.stringify(this.payoutForm)
+                    body: JSON.stringify({ ...this.payoutForm, operator: this.detectedOperator.code })
                 });
                 const data = await res.json();
                 if (!res.ok) {
@@ -2591,7 +2628,8 @@ function dashboard() {
                     this.payoutMsg = data.message || 'Payout sent successfully!';
                     this.payoutMsgType = 'success';
                     this.lastPayoutResult = data;
-                    this.payoutForm = { operator: '', phone: '', amount: '', reference: '', description: '' };
+                    this.payoutForm = { phone: '', amount: '', reference: '', description: '' };
+                    this.detectedOperator = { name: '', code: '' };
                     this.fetchRecentDisbursements();
                 }
             } catch (e) { this.payoutMsg = 'Network error.'; this.payoutMsgType = 'error'; }
@@ -2618,16 +2656,14 @@ function dashboard() {
                 this.batchMsgType = 'error';
                 return;
             }
-            // Parse header
             const header = lines[0].toLowerCase().split(',').map(h => h.trim());
             const phoneIdx = header.indexOf('phone');
             const amountIdx = header.indexOf('amount');
-            const operatorIdx = header.indexOf('operator');
             const refIdx = header.indexOf('reference');
             const descIdx = header.indexOf('description');
 
-            if (phoneIdx === -1 || amountIdx === -1 || operatorIdx === -1) {
-                this.batchMsg = 'CSV header must contain: phone, amount, operator';
+            if (phoneIdx === -1 || amountIdx === -1) {
+                this.batchMsg = 'CSV header must contain: phone, amount';
                 this.batchMsgType = 'error';
                 return;
             }
@@ -2637,16 +2673,14 @@ function dashboard() {
                 const cols = lines[i].split(',').map(c => c.trim());
                 const phone = cols[phoneIdx] || '';
                 const amount = parseFloat(cols[amountIdx]) || 0;
-                const operator = cols[operatorIdx] || '';
-                if (!phone || amount < 100 || !operator) {
-                    this.batchMsg = `Row ${i + 1}: invalid data (phone, amount >= 100, operator required).`;
+                if (!phone || amount < 100) {
+                    this.batchMsg = `Row ${i + 1}: invalid data (phone and amount >= 100 required).`;
                     this.batchMsgType = 'error';
                     continue;
                 }
                 items.push({
                     phone,
                     amount,
-                    operator: operator.toLowerCase().replace(/[\s_-]/g, ''),
                     reference: refIdx !== -1 ? (cols[refIdx] || '') : '',
                     description: descIdx !== -1 ? (cols[descIdx] || '') : '',
                     _status: 'ready'
@@ -2660,8 +2694,8 @@ function dashboard() {
         },
 
         addManualRow() {
-            if (!this.manualRow.phone || !this.manualRow.amount || !this.manualRow.operator) {
-                this.batchMsg = 'Phone, amount, and operator are required.';
+            if (!this.manualRow.phone || !this.manualRow.amount) {
+                this.batchMsg = 'Phone and amount are required.';
                 this.batchMsgType = 'error';
                 return;
             }
@@ -2670,7 +2704,7 @@ function dashboard() {
                 amount: parseFloat(this.manualRow.amount),
                 _status: 'ready'
             });
-            this.manualRow = { phone: '', amount: '', operator: '', reference: '', description: '' };
+            this.manualRow = { phone: '', amount: '', reference: '', description: '' };
             this.batchMsg = '';
         },
 
@@ -2684,7 +2718,6 @@ function dashboard() {
                     items: this.batchItems.map(i => ({
                         phone: i.phone,
                         amount: i.amount,
-                        operator: i.operator,
                         reference: i.reference || null,
                         description: i.description || null,
                     }))
@@ -2697,7 +2730,6 @@ function dashboard() {
                 if (data.results) {
                     this.batchResults = data.results;
                     this.batchResultSummary = { sent: data.sent || 0, failed: data.failed || 0, total: data.total || 0 };
-                    // Update item statuses
                     data.results.forEach(r => {
                         if (this.batchItems[r.index]) {
                             this.batchItems[r.index]._status = r.success ? 'success' : 'failed';
