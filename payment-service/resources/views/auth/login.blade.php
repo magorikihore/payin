@@ -3,8 +3,8 @@
 @section('title', 'Login - Payin')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center" x-data="loginForm()">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+<div class="min-h-screen flex items-center justify-center py-8" x-data="loginForm()">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg">
         <!-- Google-style color strip -->
         <div class="flex h-1 rounded-t-xl overflow-hidden mb-6 -mx-8 -mt-8">
             <div class="flex-1 bg-gblue-500"></div>
