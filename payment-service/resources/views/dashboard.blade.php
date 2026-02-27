@@ -261,7 +261,6 @@
                 </div>
             </div>
         </div>
-        </div>
 
         <!-- ==================== WALLET TAB ==================== -->
         <div x-show="activeTab === 'wallet'">
