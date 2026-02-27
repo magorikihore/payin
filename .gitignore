@@ -1,0 +1,28 @@
+# Environment files
+.env
+
+# Vendor directories (install via composer on server)
+*/vendor/
+*/node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Laravel compiled
+*/storage/framework/cache/data/*
+*/storage/framework/sessions/*
+*/storage/framework/views/*
+*/bootstrap/cache/*
+
+# Logs
+*/storage/logs/*.log
+
+# PDF docs
+*.pdf
