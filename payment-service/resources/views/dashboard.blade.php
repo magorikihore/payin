@@ -61,6 +61,10 @@
                     class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Transactions</button>
                 <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'wallet'; fetchWallet()" :class="activeTab === 'wallet' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Wallet</button>
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'send-money'; fetchPayoutOperators()" :class="activeTab === 'send-money' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
+                    <span class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>Send Money</span>
+                </button>
                 <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="activeTab = 'settlements'; fetchSettlements()" :class="activeTab === 'settlements' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
                     class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Settlements</button>
                 <button x-show="hasPerm('view_account_info')" @click="activeTab = 'account'; fetchKyc()" :class="activeTab === 'account' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
@@ -1181,6 +1185,280 @@
             </div>
         </div>
 
+        <!-- ==================== SEND MONEY TAB ==================== -->
+        <div x-show="activeTab === 'send-money'" x-cloak>
+            <!-- Sub-tabs: Single / Batch -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="flex space-x-6">
+                    <button @click="sendMoneySubTab = 'single'" :class="sendMoneySubTab === 'single' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                        class="py-2 px-1 border-b-2 font-medium text-sm transition">Single Payout</button>
+                    <button @click="sendMoneySubTab = 'batch'" :class="sendMoneySubTab === 'batch' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                        class="py-2 px-1 border-b-2 font-medium text-sm transition">Batch Payout</button>
+                </nav>
+            </div>
+
+            <!-- ======= SINGLE PAYOUT ======= -->
+            <div x-show="sendMoneySubTab === 'single'">
+                <div class="bg-white rounded-xl shadow-md border p-6 max-w-xl">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-6 h-6 text-gblue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-800">Send Money to Phone</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Send a payout (disbursement) directly to a mobile money number. Funds are debited from your disbursement wallet.</p>
+
+                    <div x-show="payoutMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="payoutMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="payoutMsg"></div>
+
+                    <form @submit.prevent="sendSinglePayout()" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
+                            <select x-model="payoutForm.operator" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                <option value="">Select Operator</option>
+                                <template x-for="op in payoutOperators" :key="op.code">
+                                    <option :value="op.code" x-text="op.name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="text" x-model="payoutForm.phone" required placeholder="e.g. 0712345678 or 255712345678" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount (TZS, min 100)</label>
+                            <input type="number" x-model="payoutForm.amount" min="100" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Reference (optional)</label>
+                            <input type="text" x-model="payoutForm.reference" placeholder="Your internal reference" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                            <input type="text" x-model="payoutForm.description" placeholder="e.g. Salary payment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <button type="submit" :disabled="payoutLoading" class="w-full bg-gblue-500 text-white px-6 py-2.5 rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
+                            <span x-show="!payoutLoading">Send Money</span>
+                            <span x-show="payoutLoading">Sending...</span>
+                        </button>
+                    </form>
+
+                    <!-- Last payout result -->
+                    <div x-show="lastPayoutResult" x-cloak class="mt-4 p-4 bg-gray-50 border rounded-lg">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Last Payout Result</h4>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <span class="text-gray-500">Reference:</span>
+                            <span class="font-mono text-gray-800" x-text="lastPayoutResult.request_ref"></span>
+                            <span class="text-gray-500">Phone:</span>
+                            <span x-text="lastPayoutResult.phone"></span>
+                            <span class="text-gray-500">Amount:</span>
+                            <span x-text="formatAmount(lastPayoutResult.amount) + ' TZS'"></span>
+                            <span class="text-gray-500">Status:</span>
+                            <span class="capitalize font-medium" :class="lastPayoutResult.status === 'processing' ? 'text-gblue-600' : 'text-gred-600'" x-text="lastPayoutResult.status"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= BATCH PAYOUT ======= -->
+            <div x-show="sendMoneySubTab === 'batch'">
+                <div class="bg-white rounded-xl shadow-md border p-6">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-6 h-6 text-gblue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-800">Batch Payout (CSV Upload)</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Upload a CSV file or paste data to send money to multiple recipients at once. Maximum 500 recipients per batch.</p>
+
+                    <div x-show="batchMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="batchMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="batchMsg"></div>
+
+                    <!-- CSV Format Info -->
+                    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h4 class="text-sm font-semibold text-blue-800 mb-2">CSV Format</h4>
+                        <p class="text-xs text-blue-700 mb-2">Your CSV must have columns: <strong>phone, amount, operator</strong>. Optional: <strong>reference, description</strong></p>
+                        <div class="bg-white rounded p-2 text-xs font-mono text-gray-700 overflow-x-auto">
+                            phone,amount,operator,reference,description<br>
+                            0712345678,5000,mpesa,REF001,Salary Jan<br>
+                            0652345678,3000,tigopesa,REF002,Bonus<br>
+                            0782345678,10000,airtelmoney,REF003,Commission
+                        </div>
+                        <p class="text-xs text-blue-600 mt-2">Operator codes: <strong>mpesa, tigopesa, airtelmoney, halopesa</strong> (lowercase, no spaces)</p>
+                    </div>
+
+                    <!-- Upload CSV File -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Upload CSV File</label>
+                        <input type="file" accept=".csv,.txt" @change="handleBatchFileUpload($event)" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    </div>
+
+                    <!-- Or Paste CSV -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Or Paste CSV Data</label>
+                        <textarea x-model="batchCsvText" rows="6" placeholder="phone,amount,operator,reference,description&#10;0712345678,5000,mpesa,REF001,Salary" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-gblue-500 outline-none"></textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-3 mb-4">
+                        <button @click="parseBatchCsv()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">
+                            Preview &amp; Validate
+                        </button>
+                        <span x-show="batchItems.length > 0" class="text-sm text-gray-500" x-text="batchItems.length + ' recipient(s) ready'"></span>
+                    </div>
+
+                    <!-- Preview Table -->
+                    <div x-show="batchItems.length > 0" x-cloak class="mb-4">
+                        <div class="overflow-x-auto border rounded-lg">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">Remove</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <template x-for="(item, idx) in batchItems" :key="idx">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-2 text-sm text-gray-500" x-text="idx + 1"></td>
+                                            <td class="px-4 py-2 text-sm font-mono" x-text="item.phone"></td>
+                                            <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(item.amount) + ' TZS'"></td>
+                                            <td class="px-4 py-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700" x-text="item.operator"></span>
+                                            </td>
+                                            <td class="px-4 py-2 text-sm text-gray-600" x-text="item.reference || '—'"></td>
+                                            <td class="px-4 py-2 text-sm text-gray-600" x-text="item.description || '—'"></td>
+                                            <td class="px-4 py-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                    :class="item._status === 'success' ? 'bg-green-50 text-green-700' : item._status === 'failed' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-600'"
+                                                    x-text="item._status || 'ready'"></span>
+                                            </td>
+                                            <td class="px-4 py-2 text-center">
+                                                <button @click="batchItems.splice(idx, 1)" class="text-red-500 hover:text-red-700 text-sm" title="Remove">&times;</button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="flex items-center justify-between mt-3">
+                            <p class="text-sm text-gray-600">Total: <strong x-text="formatAmount(batchItems.reduce((s, i) => s + Number(i.amount), 0)) + ' TZS'"></strong> to <strong x-text="batchItems.length"></strong> recipient(s)</p>
+                            <button @click="sendBatchPayout()" :disabled="batchLoading" class="px-6 py-2.5 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
+                                <span x-show="!batchLoading">Send Batch</span>
+                                <span x-show="batchLoading">Sending...</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Batch Results -->
+                    <div x-show="batchResults.length > 0" x-cloak class="mt-4">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Batch Results</h4>
+                        <div class="p-3 rounded-lg text-sm mb-3" :class="batchResultSummary.failed === 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'">
+                            <span x-text="batchResultSummary.sent + ' sent, ' + batchResultSummary.failed + ' failed out of ' + batchResultSummary.total + ' total'"></span>
+                        </div>
+                        <div class="overflow-x-auto border rounded-lg">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <template x-for="(r, idx) in batchResults" :key="idx">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-2 text-sm text-gray-500" x-text="r.index + 1"></td>
+                                            <td class="px-4 py-2 text-sm font-mono" x-text="r.phone"></td>
+                                            <td class="px-4 py-2 text-sm" x-text="formatAmount(r.amount) + ' TZS'"></td>
+                                            <td class="px-4 py-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                    :class="r.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
+                                                    x-text="r.success ? 'Sent' : 'Failed'"></span>
+                                            </td>
+                                            <td class="px-4 py-2 text-sm font-mono text-gray-600" x-text="r.request_ref || '—'"></td>
+                                            <td class="px-4 py-2 text-sm text-red-600" x-text="r.error || '—'"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Add Single Row Manually -->
+                    <div class="mt-6 p-4 border border-dashed border-gray-300 rounded-lg">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Add Recipient Manually</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                            <input type="text" x-model="manualRow.phone" placeholder="Phone" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <input type="number" x-model="manualRow.amount" placeholder="Amount" min="100" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <select x-model="manualRow.operator" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                <option value="">Operator</option>
+                                <template x-for="op in payoutOperators" :key="op.code">
+                                    <option :value="op.code" x-text="op.name"></option>
+                                </template>
+                            </select>
+                            <input type="text" x-model="manualRow.reference" placeholder="Reference" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <button @click="addManualRow()" class="px-4 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium">+ Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Disbursement Transactions -->
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden mt-6">
+                <div class="px-6 py-4 border-b flex items-center justify-between">
+                    <h3 class="text-md font-semibold text-gray-700">Recent Disbursements</h3>
+                    <button @click="fetchRecentDisbursements()" class="text-xs text-gblue-500 hover:text-gblue-700 font-medium">Refresh</button>
+                </div>
+                <div x-show="recentDisbLoading" class="p-6 text-center text-gray-500">
+                    <svg class="animate-spin h-6 w-6 mx-auto text-gblue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                </div>
+                <div x-show="!recentDisbLoading && recentDisbursements.length === 0" x-cloak class="p-6 text-center text-gray-500 text-sm">No disbursements yet.</div>
+                <div x-show="!recentDisbLoading && recentDisbursements.length > 0" x-cloak>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <template x-for="d in recentDisbursements" :key="d.id">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 text-sm font-mono text-gray-700" x-text="d.request_ref"></td>
+                                        <td class="px-4 py-3 text-sm" x-text="d.phone"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-red-600" x-text="'-' + formatAmount(d.amount) + ' TZS'"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                :class="operatorBadgeColor(d.operator_name)"
+                                                x-text="d.operator_name"></span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                :class="{'bg-gyellow-50 text-gyellow-700': d.status==='pending'||d.status==='processing', 'bg-ggreen-50 text-ggreen-700': d.status==='completed'||d.status==='successful', 'bg-gred-50 text-gred-700': d.status==='failed'}"
+                                                x-text="d.status"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-500" x-text="formatDate(d.created_at)"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== SETTINGS TAB ==================== -->
         <div x-show="activeTab === 'settings'" x-cloak class="mt-6">
             <div class="max-w-2xl">
@@ -1733,6 +2011,19 @@ function dashboard() {
         stlForm: { operator: '', amount: '', bank_name: '', account_number: '', account_name: '', description: '' },
         settlementMsg: '', settlementMsgType: '',
 
+        // Send Money (Payout)
+        sendMoneySubTab: 'single',
+        payoutOperators: [],
+        payoutForm: { operator: '', phone: '', amount: '', reference: '', description: '' },
+        payoutLoading: false, payoutMsg: '', payoutMsgType: 'success',
+        lastPayoutResult: null,
+        // Batch
+        batchCsvText: '', batchItems: [], batchLoading: false,
+        batchMsg: '', batchMsgType: 'success',
+        batchResults: [], batchResultSummary: { sent: 0, failed: 0, total: 0 },
+        manualRow: { phone: '', amount: '', operator: '', reference: '', description: '' },
+        recentDisbursements: [], recentDisbLoading: false,
+
         // Password
         showPasswordModal: false, currentPassword: '', newPassword: '', confirmPassword: '',
         pwError: '', pwSuccess: '', pwLoading: false,
@@ -2268,6 +2559,168 @@ function dashboard() {
                 this.fetchTransactions();
             } catch (e) { this.settlementMsg = 'Service unavailable.'; this.settlementMsgType = 'error'; }
             finally { this.stlLoading = false; }
+        },
+
+        // ---- Send Money (Payout) ----
+        async fetchPayoutOperators() {
+            try {
+                const res = await fetch('/api/operators', { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.payoutOperators = data.operators || [];
+                }
+            } catch (e) { console.error('Failed to fetch operators', e); }
+            this.fetchRecentDisbursements();
+        },
+
+        async sendSinglePayout() {
+            this.payoutLoading = true;
+            this.payoutMsg = '';
+            this.lastPayoutResult = null;
+            try {
+                const res = await fetch('/api/disbursement', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(this.payoutForm)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+                    this.payoutMsg = errors || 'Failed to send.';
+                    this.payoutMsgType = 'error';
+                } else {
+                    this.payoutMsg = data.message || 'Payout sent successfully!';
+                    this.payoutMsgType = 'success';
+                    this.lastPayoutResult = data;
+                    this.payoutForm = { operator: '', phone: '', amount: '', reference: '', description: '' };
+                    this.fetchRecentDisbursements();
+                }
+            } catch (e) { this.payoutMsg = 'Network error.'; this.payoutMsgType = 'error'; }
+            this.payoutLoading = false;
+        },
+
+        handleBatchFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.batchCsvText = e.target.result;
+                this.parseBatchCsv();
+            };
+            reader.readAsText(file);
+        },
+
+        parseBatchCsv() {
+            this.batchMsg = '';
+            this.batchItems = [];
+            const lines = this.batchCsvText.trim().split('\n').map(l => l.trim()).filter(l => l);
+            if (lines.length < 2) {
+                this.batchMsg = 'CSV must have a header row and at least one data row.';
+                this.batchMsgType = 'error';
+                return;
+            }
+            // Parse header
+            const header = lines[0].toLowerCase().split(',').map(h => h.trim());
+            const phoneIdx = header.indexOf('phone');
+            const amountIdx = header.indexOf('amount');
+            const operatorIdx = header.indexOf('operator');
+            const refIdx = header.indexOf('reference');
+            const descIdx = header.indexOf('description');
+
+            if (phoneIdx === -1 || amountIdx === -1 || operatorIdx === -1) {
+                this.batchMsg = 'CSV header must contain: phone, amount, operator';
+                this.batchMsgType = 'error';
+                return;
+            }
+
+            const items = [];
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',').map(c => c.trim());
+                const phone = cols[phoneIdx] || '';
+                const amount = parseFloat(cols[amountIdx]) || 0;
+                const operator = cols[operatorIdx] || '';
+                if (!phone || amount < 100 || !operator) {
+                    this.batchMsg = `Row ${i + 1}: invalid data (phone, amount >= 100, operator required).`;
+                    this.batchMsgType = 'error';
+                    continue;
+                }
+                items.push({
+                    phone,
+                    amount,
+                    operator: operator.toLowerCase().replace(/[\s_-]/g, ''),
+                    reference: refIdx !== -1 ? (cols[refIdx] || '') : '',
+                    description: descIdx !== -1 ? (cols[descIdx] || '') : '',
+                    _status: 'ready'
+                });
+            }
+            this.batchItems = items;
+            if (items.length > 0 && !this.batchMsg) {
+                this.batchMsg = items.length + ' recipient(s) parsed successfully.';
+                this.batchMsgType = 'success';
+            }
+        },
+
+        addManualRow() {
+            if (!this.manualRow.phone || !this.manualRow.amount || !this.manualRow.operator) {
+                this.batchMsg = 'Phone, amount, and operator are required.';
+                this.batchMsgType = 'error';
+                return;
+            }
+            this.batchItems.push({
+                ...this.manualRow,
+                amount: parseFloat(this.manualRow.amount),
+                _status: 'ready'
+            });
+            this.manualRow = { phone: '', amount: '', operator: '', reference: '', description: '' };
+            this.batchMsg = '';
+        },
+
+        async sendBatchPayout() {
+            if (this.batchItems.length === 0) return;
+            this.batchLoading = true;
+            this.batchMsg = '';
+            this.batchResults = [];
+            try {
+                const payload = {
+                    items: this.batchItems.map(i => ({
+                        phone: i.phone,
+                        amount: i.amount,
+                        operator: i.operator,
+                        reference: i.reference || null,
+                        description: i.description || null,
+                    }))
+                };
+                const res = await fetch('/api/disbursement/batch', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.results) {
+                    this.batchResults = data.results;
+                    this.batchResultSummary = { sent: data.sent || 0, failed: data.failed || 0, total: data.total || 0 };
+                    // Update item statuses
+                    data.results.forEach(r => {
+                        if (this.batchItems[r.index]) {
+                            this.batchItems[r.index]._status = r.success ? 'success' : 'failed';
+                        }
+                    });
+                }
+                this.batchMsg = data.message || (res.ok ? 'Batch sent.' : 'Batch failed.');
+                this.batchMsgType = data.failed === 0 ? 'success' : 'error';
+                this.fetchRecentDisbursements();
+            } catch (e) { this.batchMsg = 'Network error.'; this.batchMsgType = 'error'; }
+            this.batchLoading = false;
+        },
+
+        async fetchRecentDisbursements() {
+            this.recentDisbLoading = true;
+            try {
+                const res = await fetch('/api/payment-requests?type=disbursement&per_page=20', { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.recentDisbursements = data.data || [];
+                }
+            } catch (e) { console.error(e); }
+            this.recentDisbLoading = false;
         },
 
         // ---- Helpers ----

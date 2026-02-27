@@ -439,6 +439,145 @@ class PaymentController extends Controller
     }
 
     /**
+     * Batch Disbursement: Send money to multiple recipients at once.
+     * Accepts an array of disbursement items or a CSV-style input.
+     */
+    public function batchDisbursement(Request $request): JsonResponse
+    {
+        $request->validate([
+            'items'             => 'required|array|min:1|max:500',
+            'items.*.phone'     => 'required|string|min:10|max:15',
+            'items.*.amount'    => 'required|numeric|min:100',
+            'items.*.operator'  => 'required|string',
+            'items.*.reference' => 'nullable|string|max:100',
+            'items.*.description' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        $results = [];
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($request->items as $index => $item) {
+            $operatorCode = strtolower($item['operator']);
+            $operator = Operator::where('code', $operatorCode)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$operator) {
+                $results[] = [
+                    'index' => $index,
+                    'phone' => $item['phone'],
+                    'amount' => $item['amount'],
+                    'success' => false,
+                    'error' => 'Operator not found or inactive.',
+                ];
+                $failCount++;
+                continue;
+            }
+
+            // Check wallet balance
+            $charges = $this->calculateCharges($accountId, $item['amount'], $operator->code, 'disbursement');
+            $totalDebit = $item['amount'] + ($charges['platform_charge'] ?? 0) + ($charges['operator_charge'] ?? 0);
+
+            $balanceCheck = $this->checkWalletBalance($accountId, $totalDebit, $request->bearerToken());
+            if (!$balanceCheck['sufficient']) {
+                $results[] = [
+                    'index' => $index,
+                    'phone' => $item['phone'],
+                    'amount' => $item['amount'],
+                    'success' => false,
+                    'error' => 'Insufficient wallet balance.',
+                    'required' => $totalDebit,
+                    'available' => $balanceCheck['balance'] ?? 0,
+                ];
+                $failCount++;
+                continue;
+            }
+
+            // Create payment request
+            $requestRef = 'PAY-' . strtoupper(Str::random(12));
+            $paymentRequest = PaymentRequest::create([
+                'account_id'      => $accountId,
+                'request_ref'     => $requestRef,
+                'external_ref'    => $item['reference'] ?? null,
+                'type'            => 'disbursement',
+                'phone'           => $this->normalizePhone($item['phone']),
+                'amount'          => $item['amount'],
+                'platform_charge' => $charges['platform_charge'] ?? 0,
+                'operator_charge' => $charges['operator_charge'] ?? 0,
+                'currency'        => 'TZS',
+                'operator_code'   => $operator->code,
+                'operator_name'   => $operator->name,
+                'status'          => 'pending',
+                'description'     => $item['description'] ?? null,
+            ]);
+
+            // Push to operator
+            $pushResult = $this->pushToOperator($operator, $paymentRequest, 'disbursement');
+
+            $paymentRequest->update([
+                'operator_request'  => $pushResult['request_payload'],
+                'operator_response' => $pushResult['response'],
+                'operator_ref'      => $pushResult['operator_ref'] ?? null,
+                'gateway_id'        => $pushResult['gateway_id'] ?? null,
+                'status'            => $pushResult['success'] ? 'processing' : 'failed',
+                'error_message'     => $pushResult['error'] ?? null,
+            ]);
+
+            if ($pushResult['success']) {
+                $successCount++;
+                $results[] = [
+                    'index' => $index,
+                    'phone' => $paymentRequest->phone,
+                    'amount' => $paymentRequest->amount,
+                    'success' => true,
+                    'request_ref' => $requestRef,
+                    'operator_ref' => $pushResult['operator_ref'] ?? null,
+                    'status' => 'processing',
+                ];
+            } else {
+                $failCount++;
+                $results[] = [
+                    'index' => $index,
+                    'phone' => $item['phone'],
+                    'amount' => $item['amount'],
+                    'success' => false,
+                    'error' => $pushResult['error'] ?? 'Operator rejected the request.',
+                    'request_ref' => $requestRef,
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => $failCount === 0,
+            'message' => "Batch complete: {$successCount} sent, {$failCount} failed.",
+            'sent' => $successCount,
+            'failed' => $failCount,
+            'total' => count($request->items),
+            'results' => $results,
+        ], $successCount > 0 ? 201 : 422);
+    }
+
+    /**
+     * List active operators for dashboard use.
+     */
+    public function activeOperators(Request $request): JsonResponse
+    {
+        $operators = Operator::where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'code']);
+
+        return response()->json(['operators' => $operators]);
+    }
+
+    /**
      * User: List own payment requests.
      */
     public function myRequests(Request $request): JsonResponse
