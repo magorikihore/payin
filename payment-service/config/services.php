@@ -36,19 +36,19 @@ return [
     ],
 
     'auth_service' => [
-        'url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),
+        'url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),  // prod: https://auth.yourdomain.com
     ],
 
     'transaction_service' => [
-        'url' => env('TRANSACTION_SERVICE_URL', 'http://127.0.0.1:8003'),
+        'url' => env('TRANSACTION_SERVICE_URL', 'http://127.0.0.1:8003'),  // prod: https://tx.yourdomain.com
     ],
 
     'wallet_service' => [
-        'url' => env('WALLET_SERVICE_URL', 'http://127.0.0.1:8004'),
+        'url' => env('WALLET_SERVICE_URL', 'http://127.0.0.1:8004'),  // prod: https://wallet.yourdomain.com
     ],
 
     'settlement_service' => [
-        'url' => env('SETTLEMENT_SERVICE_URL', 'http://127.0.0.1:8005'),
+        'url' => env('SETTLEMENT_SERVICE_URL', 'http://127.0.0.1:8005'),  // prod: https://settle.yourdomain.com
     ],
 
 ];
