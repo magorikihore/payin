@@ -1916,6 +1916,118 @@
                     </button>
                 </form>
             </div>
+
+            <!-- Email Templates -->
+            <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Email Templates</h3>
+                        <p class="text-sm text-gray-500">Customize the content of each notification email. Use <code class="bg-gray-100 px-1 rounded text-xs">{{name}}</code> for placeholders.</p>
+                    </div>
+                    <button @click="fetchEmailTemplates()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Refresh</button>
+                </div>
+
+                <div x-show="tplMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="tplMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="tplMsg"></div>
+
+                <div x-show="tplLoading" class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>
+
+                <!-- Template cards -->
+                <div x-show="!tplLoading" class="space-y-4">
+                    <template x-for="tpl in emailTemplates" :key="tpl.id">
+                        <div class="border rounded-lg overflow-hidden">
+                            <!-- Template header -->
+                            <button @click="tpl._open = !tpl._open" class="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition">
+                                <div class="flex items-center space-x-3">
+                                    <span class="w-2 h-2 rounded-full" :class="tpl.is_active ? 'bg-green-500' : 'bg-gray-400'"></span>
+                                    <span class="font-medium text-gray-800 text-sm" x-text="tpl.name"></span>
+                                    <span class="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded" x-text="tpl.key"></span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-xs text-gray-500" x-text="tpl.is_active ? 'Active' : 'Disabled'"></span>
+                                    <svg :class="tpl._open ? 'rotate-180' : ''" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </div>
+                            </button>
+
+                            <!-- Template editor (collapsible) -->
+                            <div x-show="tpl._open" x-cloak class="p-4 border-t space-y-4">
+                                <!-- Placeholders info -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
+                                    <strong>Available placeholders:</strong>
+                                    <span x-show="tpl.key === 'welcome'"><code>{{name}}</code></span>
+                                    <span x-show="tpl.key === 'password_reset'"><code>{{name}}</code>, <code>{{code}}</code></span>
+                                    <span x-show="tpl.key === 'kyc_approved'"><code>{{name}}</code></span>
+                                    <span x-show="tpl.key === 'kyc_rejected'"><code>{{name}}</code>, <code>{{reason}}</code></span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Subject</label>
+                                        <input type="text" x-model="tpl.subject" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Greeting</label>
+                                        <input type="text" x-model="tpl.greeting" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Body <span class="text-gray-400">(use blank lines for paragraphs, **bold** for emphasis)</span></label>
+                                    <textarea x-model="tpl.body" rows="6" class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Button Text <span class="text-gray-400">(optional)</span></label>
+                                        <input type="text" x-model="tpl.action_text" placeholder="e.g. Go to Dashboard" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Button URL <span class="text-gray-400">(optional)</span></label>
+                                        <input type="text" x-model="tpl.action_url" placeholder="https://login.payin.co.tz/dashboard" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Footer / Salutation</label>
+                                    <input type="text" x-model="tpl.footer" placeholder="— Payin Team" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+
+                                <div class="flex items-center space-x-4">
+                                    <label class="flex items-center space-x-2 text-sm">
+                                        <input type="checkbox" x-model="tpl.is_active" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                        <span>Active</span>
+                                    </label>
+                                </div>
+
+                                <!-- Preview -->
+                                <div class="border rounded-lg overflow-hidden">
+                                    <div class="bg-gray-100 px-4 py-2 text-xs font-medium text-gray-600 border-b">Preview</div>
+                                    <div class="p-4 bg-white text-sm space-y-2">
+                                        <div class="font-semibold text-gray-800" x-text="tpl.greeting.replace(/\{\{name\}\}/g, 'John Doe').replace(/\{\{code\}\}/g, '123456').replace(/\{\{reason\}\}/g, 'Document unclear')"></div>
+                                        <template x-for="line in tpl.body.replace(/\{\{name\}\}/g, 'John Doe').replace(/\{\{code\}\}/g, '123456').replace(/\{\{reason\}\}/g, '**Reason:** Document unclear').split('\n')" :key="Math.random()">
+                                            <p class="text-gray-600" x-show="line.trim()" x-html="line.trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')"></p>
+                                        </template>
+                                        <div x-show="tpl.action_text && tpl.action_url" class="pt-2">
+                                            <span class="inline-block bg-blue-600 text-white px-4 py-2 rounded text-xs font-medium" x-text="tpl.action_text"></span>
+                                        </div>
+                                        <div class="text-gray-500 text-xs pt-2" x-text="tpl.footer"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center space-x-3 pt-2">
+                                    <button @click="saveEmailTemplate(tpl)" :disabled="tplSaving" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
+                                        <span x-show="!tplSaving">Save Template</span>
+                                        <span x-show="tplSaving">Saving...</span>
+                                    </button>
+                                    <button @click="if(confirm('Reset this template to its default content?')) resetEmailTemplate(tpl)" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">
+                                        Reset to Default
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -2017,6 +2129,9 @@ function adminPanel() {
         mailForm: { MAIL_MAILER: 'smtp', MAIL_HOST: '', MAIL_PORT: '587', MAIL_USERNAME: '', MAIL_PASSWORD: '', MAIL_ENCRYPTION: 'tls', MAIL_FROM_ADDRESS: '', MAIL_FROM_NAME: 'Payin' },
         mailLoading: false, mailSaving: false, mailMsg: '', mailMsgType: 'success',
         testMailAddress: '', testMailSending: false, testMailMsg: '', testMailMsgType: 'success',
+
+        // Email Templates
+        emailTemplates: [], tplLoading: false, tplSaving: false, tplMsg: '', tplMsgType: 'success',
         logServiceUrls: {
             auth: '{{ config("services.auth_service.url") }}/api/admin/logs',
             payment: '/api/admin/logs',
@@ -2991,6 +3106,8 @@ function adminPanel() {
                 }
             } catch (e) { this.mailMsg = 'Failed to load mail config.'; this.mailMsgType = 'error'; }
             this.mailLoading = false;
+            // Also load templates
+            this.fetchEmailTemplates();
         },
 
         async saveMailConfig() {
@@ -3021,6 +3138,60 @@ function adminPanel() {
                 this.testMailMsgType = res.ok ? 'success' : 'error';
             } catch (e) { this.testMailMsg = 'Network error.'; this.testMailMsgType = 'error'; }
             this.testMailSending = false;
+        },
+
+        // ==================== EMAIL TEMPLATES ====================
+        async fetchEmailTemplates() {
+            this.tplLoading = true;
+            this.tplMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates', { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok && data.templates) {
+                    this.emailTemplates = data.templates.map(t => ({ ...t, _open: false }));
+                }
+            } catch (e) { this.tplMsg = 'Failed to load templates.'; this.tplMsgType = 'error'; }
+            this.tplLoading = false;
+        },
+
+        async saveEmailTemplate(tpl) {
+            this.tplSaving = true;
+            this.tplMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/' + tpl.id, {
+                    method: 'PUT', headers: this.getHeaders(),
+                    body: JSON.stringify({ subject: tpl.subject, greeting: tpl.greeting, body: tpl.body, action_text: tpl.action_text || null, action_url: tpl.action_url || null, footer: tpl.footer, is_active: tpl.is_active })
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.tplMsg = data.message || (res.ok ? 'Saved.' : 'Failed.');
+                this.tplMsgType = res.ok ? 'success' : 'error';
+                if (res.ok && data.template) {
+                    const idx = this.emailTemplates.findIndex(t => t.id === tpl.id);
+                    if (idx !== -1) this.emailTemplates[idx] = { ...data.template, _open: true };
+                }
+            } catch (e) { this.tplMsg = 'Network error.'; this.tplMsgType = 'error'; }
+            this.tplSaving = false;
+        },
+
+        async resetEmailTemplate(tpl) {
+            this.tplSaving = true;
+            this.tplMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/' + tpl.id + '/reset', {
+                    method: 'POST', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.tplMsg = data.message || (res.ok ? 'Reset.' : 'Failed.');
+                this.tplMsgType = res.ok ? 'success' : 'error';
+                if (res.ok && data.template) {
+                    const idx = this.emailTemplates.findIndex(t => t.id === tpl.id);
+                    if (idx !== -1) this.emailTemplates[idx] = { ...data.template, _open: true };
+                }
+            } catch (e) { this.tplMsg = 'Network error.'; this.tplMsgType = 'error'; }
+            this.tplSaving = false;
         },
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\EmailTemplate;
 use App\Models\User;
 use App\Notifications\KycApprovedNotification;
 use App\Notifications\KycRejectedNotification;
@@ -459,5 +460,80 @@ class AdminController extends Controller
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Failed to send test email: ' . $e->getMessage()], 422);
         }
+    }
+
+    // ==================== EMAIL TEMPLATES ====================
+
+    /**
+     * List all email templates (seed defaults if none exist).
+     */
+    public function emailTemplates(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        // Auto-seed defaults if table is empty
+        if (EmailTemplate::count() === 0) {
+            foreach (EmailTemplate::defaults() as $tpl) {
+                EmailTemplate::create($tpl);
+            }
+        }
+
+        return response()->json(['templates' => EmailTemplate::orderBy('id')->get()]);
+    }
+
+    /**
+     * Get a single email template.
+     */
+    public function emailTemplate(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $tpl = EmailTemplate::find($id);
+        if (!$tpl) return response()->json(['message' => 'Template not found.'], 404);
+
+        return response()->json(['template' => $tpl]);
+    }
+
+    /**
+     * Update an email template.
+     */
+    public function updateEmailTemplate(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $tpl = EmailTemplate::find($id);
+        if (!$tpl) return response()->json(['message' => 'Template not found.'], 404);
+
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'greeting' => 'required|string|max:500',
+            'body' => 'required|string|max:5000',
+            'action_text' => 'nullable|string|max:100',
+            'action_url' => 'nullable|string|max:500',
+            'footer' => 'nullable|string|max:500',
+            'is_active' => 'boolean',
+        ]);
+
+        $tpl->update($request->only(['subject', 'greeting', 'body', 'action_text', 'action_url', 'footer', 'is_active']));
+
+        return response()->json(['message' => 'Template updated.', 'template' => $tpl->fresh()]);
+    }
+
+    /**
+     * Reset a template to its default values.
+     */
+    public function resetEmailTemplate(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $tpl = EmailTemplate::find($id);
+        if (!$tpl) return response()->json(['message' => 'Template not found.'], 404);
+
+        $defaults = collect(EmailTemplate::defaults())->firstWhere('key', $tpl->key);
+        if ($defaults) {
+            $tpl->update($defaults);
+        }
+
+        return response()->json(['message' => 'Template reset to default.', 'template' => $tpl->fresh()]);
     }
 }
