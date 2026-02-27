@@ -1277,8 +1277,6 @@
             </div>
         </div>
 
-    </div>
-
     <!-- Change Password Modal -->
     <div x-show="showPasswordModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closePasswordModal()">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
@@ -1568,6 +1566,8 @@ console.log(data.request_ref);</pre>
                 <p class="text-gblue-600 text-sm">Contact us at <a href="mailto:support@payin.co.tz" class="underline font-medium">support@payin.co.tz</a> for integration support.</p>
             </div>
         </div>
+
+    </div>
 
 </div>
 
