@@ -133,9 +133,10 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Could not detect operator from phone number. Please check the number.'], 422);
         }
 
-        // Check wallet balance (has enough for disbursement + charges)
+        // Check wallet balance (has enough for disbursement + platform charge)
+        // Operator charge is our cost, deducted from platform profit — NOT charged to user
         $charges = $this->calculateCharges($accountId, $request->amount, $operator->code, 'disbursement');
-        $totalDebit = $request->amount + ($charges['platform_charge'] ?? 0) + ($charges['operator_charge'] ?? 0);
+        $totalDebit = $request->amount + ($charges['platform_charge'] ?? 0);
 
         $balanceCheck = $this->checkWalletBalance($accountId, $totalDebit, $request->bearerToken());
         if (!$balanceCheck['sufficient']) {
@@ -494,9 +495,9 @@ class PaymentController extends Controller
                 continue;
             }
 
-            // Check wallet balance
+            // Check wallet balance (user pays only platform charge, operator charge is our cost)
             $charges = $this->calculateCharges($accountId, $item['amount'], $operator->code, 'disbursement');
-            $totalDebit = $item['amount'] + ($charges['platform_charge'] ?? 0) + ($charges['operator_charge'] ?? 0);
+            $totalDebit = $item['amount'] + ($charges['platform_charge'] ?? 0);
 
             $balanceCheck = $this->checkWalletBalance($accountId, $totalDebit, $request->bearerToken());
             if (!$balanceCheck['sufficient']) {
@@ -889,7 +890,8 @@ class PaymentController extends Controller
                     ]);
             } elseif ($paymentRequest->type === 'disbursement') {
                 // Debit the disbursement wallet via internal API
-                $totalDebit = $paymentRequest->amount + $paymentRequest->platform_charge + $paymentRequest->operator_charge;
+                // User pays only platform charge; operator charge is our cost deducted from platform profit
+                $totalDebit = $paymentRequest->amount + $paymentRequest->platform_charge;
                 Http::withHeaders(['X-Service-Key' => $serviceKey])
                     ->post("{$walletServiceUrl}/api/internal/wallet/debit", [
                         'account_id'  => (string) $paymentRequest->account_id,
@@ -935,7 +937,7 @@ class PaymentController extends Controller
                 'platform_charge' => (float) $paymentRequest->platform_charge,
                 'operator_charge' => (float) $paymentRequest->operator_charge,
                 'net_amount'     => $paymentRequest->type === 'collection'
-                    ? (float) $paymentRequest->amount - (float) $paymentRequest->platform_charge - (float) $paymentRequest->operator_charge
+                    ? (float) $paymentRequest->amount - (float) $paymentRequest->platform_charge
                     : (float) $paymentRequest->amount,
                 'currency'       => $paymentRequest->currency,
                 'operator'       => $paymentRequest->operator_name,

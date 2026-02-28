@@ -114,10 +114,11 @@ class WalletController extends Controller
             // If charge service unavailable, proceed without charges
         }
 
-        $netAmount = $grossAmount - $totalCharge;
+        // User pays only platform charge; operator charge is our cost deducted from platform profit
+        $netAmount = $grossAmount - $platformCharge;
 
         if ($netAmount <= 0) {
-            return response()->json(['message' => 'Amount too small to cover charges. Charges: ' . number_format($totalCharge, 2) . ' ' . $currency], 422);
+            return response()->json(['message' => 'Amount too small to cover charges. Charges: ' . number_format($platformCharge, 2) . ' ' . $currency], 422);
         }
 
         $txnRef = 'TXN-' . strtoupper(Str::random(12));
@@ -142,7 +143,7 @@ class WalletController extends Controller
                 'type' => 'credit',
                 'amount' => $netAmount,
                 'reference' => $txnRef,
-                'description' => ($request->description ?? "Payin via {$operator}") . ($platformCharge > 0 ? " (Charge: " . number_format($platformCharge + ($operatorCharge ?? 0), 2) . " {$currency})" : ''),
+                'description' => ($request->description ?? "Payin via {$operator}") . ($platformCharge > 0 ? " (Service Fee: " . number_format($platformCharge, 2) . " {$currency})" : ''),
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'status' => 'completed',
@@ -202,7 +203,7 @@ class WalletController extends Controller
             'timestamp' => now()->toIso8601String(),
         ]);
 
-        $walletSummary = $this->walletSummary($user, "Collection wallet credited via {$operator}. Gross: " . number_format($grossAmount, 2) . " {$currency}, Charges: " . number_format($platformCharge + $operatorCharge, 2) . " {$currency}, Net: " . number_format($netAmount, 2) . " {$currency}");
+        $walletSummary = $this->walletSummary($user, "Collection wallet credited via {$operator}. Gross: " . number_format($grossAmount, 2) . " {$currency}, Service Fee: " . number_format($platformCharge, 2) . " {$currency}, Net: " . number_format($netAmount, 2) . " {$currency}");
 
         $data = $walletSummary->getData(true);
         $data['charges'] = [

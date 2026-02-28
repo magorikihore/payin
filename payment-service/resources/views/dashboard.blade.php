@@ -373,7 +373,7 @@
                                         <span class="text-sm font-medium text-gray-700 capitalize" x-text="bt.type"></span>
                                         <span class="text-xs text-gray-400 ml-1" x-text="'(' + bt.transaction_count + ' txns)'"></span>
                                     </div>
-                                    <span class="text-sm font-semibold text-gray-800" x-text="formatAmount(Number(bt.platform_charges) + Number(bt.operator_charges)) + ' ' + walletCurrency"></span>
+                                    <span class="text-sm font-semibold text-gray-800" x-text="formatAmount(Number(bt.platform_charges)) + ' ' + walletCurrency"></span>
                                 </div>
                             </template>
                         </div>
@@ -492,7 +492,7 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold" :class="txn.type==='collection' ? 'text-green-600' : 'text-gray-800'">
                                             <span x-text="(txn.type==='collection' ? '+' : '-') + ' ' + formatAmount(txn.amount) + ' ' + txn.currency"></span>
                                         </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600" x-text="(Number(txn.platform_charge || 0) + Number(txn.operator_charge || 0)) > 0 ? formatAmount(Number(txn.platform_charge || 0) + Number(txn.operator_charge || 0)) : '-'"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600" x-text="Number(txn.platform_charge || 0) > 0 ? formatAmount(Number(txn.platform_charge || 0)) : '-'"></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize" x-text="(txn.payment_method||'-').replace('_',' ')"></td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -1503,9 +1503,9 @@
                         </div>
 
                         <!-- Charge Summary Preview -->
-                        <div x-show="payoutCharges && payoutCharges.total_charge >= 0 && payoutForm.amount >= 100 && detectedOperator.code" x-cloak
+                        <div x-show="payoutCharges && payoutCharges.platform_charge >= 0 && payoutForm.amount >= 100 && detectedOperator.code" x-cloak
                             class="p-4 rounded-lg border"
-                            :class="payoutCharges.total_charge > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'">
+                            :class="payoutCharges.platform_charge > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'">
                             <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center">
                                 <svg class="w-4 h-4 mr-1.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                 Charges &amp; Fees Summary
@@ -1517,18 +1517,14 @@
                                     <span class="font-medium text-gray-800" x-text="formatAmount(payoutForm.amount) + ' ' + walletCurrency"></span>
                                 </div>
                                 <div class="flex justify-between" x-show="payoutCharges.platform_charge > 0">
-                                    <span class="text-gray-600">Platform Charge</span>
+                                    <span class="text-gray-600">Service Fee</span>
                                     <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.platform_charge) + ' ' + walletCurrency"></span>
-                                </div>
-                                <div class="flex justify-between" x-show="payoutCharges.operator_charge > 0">
-                                    <span class="text-gray-600">Operator Charge</span>
-                                    <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.operator_charge) + ' ' + walletCurrency"></span>
                                 </div>
                                 <div class="border-t border-gray-300 pt-1.5 flex justify-between font-semibold">
                                     <span class="text-gray-700">Total Debit</span>
-                                    <span class="text-gray-900" x-text="formatAmount(Number(payoutForm.amount) + (payoutCharges.total_charge || 0)) + ' ' + walletCurrency"></span>
+                                    <span class="text-gray-900" x-text="formatAmount(Number(payoutForm.amount) + (payoutCharges.platform_charge || 0)) + ' ' + walletCurrency"></span>
                                 </div>
-                                <div x-show="payoutCharges.total_charge === 0" class="text-xs text-green-600 mt-1">No charges apply to this transaction.</div>
+                                <div x-show="payoutCharges.platform_charge === 0" class="text-xs text-green-600 mt-1">No charges apply to this transaction.</div>
                             </div>
                         </div>
 
@@ -2954,10 +2950,10 @@ function dashboard() {
                 if (res.ok) {
                     this.payoutCharges = await res.json();
                 } else {
-                    this.payoutCharges = { platform_charge: 0, operator_charge: 0, total_charge: 0 };
+                    this.payoutCharges = { platform_charge: 0, total_charge: 0 };
                 }
             } catch (e) {
-                this.payoutCharges = { platform_charge: 0, operator_charge: 0, total_charge: 0 };
+                this.payoutCharges = { platform_charge: 0, total_charge: 0 };
             }
             this.payoutChargesLoading = false;
         },

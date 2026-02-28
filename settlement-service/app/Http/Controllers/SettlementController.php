@@ -88,8 +88,9 @@ class SettlementController extends Controller
             // Proceed without charges if service unavailable
         }
 
-        // Total to debit = settlement amount + charges
-        $totalDebit = $settlementAmount + $totalCharge;
+        // Total to debit = settlement amount + platform charge only
+        // Operator charge is our cost, deducted from platform profit
+        $totalDebit = $settlementAmount + $platformCharge;
 
         // Call wallet-service to debit the disbursement wallet
         $walletUrl = config('services.wallet_service.url') . '/api/wallet/debit-settlement';
