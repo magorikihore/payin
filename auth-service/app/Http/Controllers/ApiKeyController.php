@@ -144,17 +144,29 @@ class ApiKeyController extends Controller
         }
 
         // ── IP Whitelist Enforcement ──
-        // If the account has any approved IPs, only those IPs may call the API.
+        // If the account has ANY IP whitelist entries, enforcement is active.
+        // Only IPs with 'approved' status are allowed through.
         $clientIp = $request->input('client_ip');
-        $approvedIps = IpWhitelist::where('account_id', $key->account_id)
-            ->where('status', 'approved')
-            ->pluck('ip_address')
-            ->toArray();
+        $hasWhitelistEntries = IpWhitelist::where('account_id', $key->account_id)->exists();
 
-        if (!empty($approvedIps) && $clientIp) {
+        if ($hasWhitelistEntries && $clientIp) {
+            $approvedIps = IpWhitelist::where('account_id', $key->account_id)
+                ->where('status', 'approved')
+                ->pluck('ip_address')
+                ->toArray();
+
             if (!in_array($clientIp, $approvedIps)) {
+                // Check if this IP exists but is suspended/rejected
+                $entry = IpWhitelist::where('account_id', $key->account_id)
+                    ->where('ip_address', $clientIp)
+                    ->first();
+
+                $reason = $entry
+                    ? "IP address {$clientIp} is {$entry->status}."
+                    : "IP address {$clientIp} is not whitelisted for this account.";
+
                 return response()->json([
-                    'message' => "IP address {$clientIp} is not whitelisted for this account.",
+                    'message' => $reason,
                     'ip_blocked' => true,
                 ], 403);
             }
@@ -170,7 +182,7 @@ class ApiKeyController extends Controller
         return response()->json([
             'valid' => true,
             'account_id' => $key->account_id,
-            'ip_enforced' => !empty($approvedIps),
+            'ip_enforced' => $hasWhitelistEntries,
             'account' => $account ? [
                 'id' => $account->id,
                 'account_ref' => $account->account_ref,
