@@ -304,6 +304,11 @@
                         <option value="suspended">Suspended</option>
                         <option value="closed">Closed</option>
                     </select>
+                    <button @click="showAddBusinessModal = true; resetAddBusinessForm()"
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        Add Business
+                    </button>
                 </div>
             </div>
 
@@ -2415,6 +2420,225 @@
 
     </div>
 
+    <!-- ==================== ADD BUSINESS MODAL ==================== -->
+    <div x-show="showAddBusinessModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @keydown.escape.window="showAddBusinessModal = false">
+        <div class="flex items-start justify-center min-h-screen px-4 pt-8 pb-20">
+            <div class="fixed inset-0 bg-black/50" @click="showAddBusinessModal = false"></div>
+            <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl z-10">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b bg-green-600 rounded-t-xl">
+                    <h3 class="text-lg font-bold text-white">Add New Business</h3>
+                    <button @click="showAddBusinessModal = false" class="text-white/80 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <!-- Messages -->
+                <div x-show="addBizMsg" x-cloak class="px-6 pt-4">
+                    <div class="p-3 rounded-lg text-sm" :class="addBizMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="addBizMsg"></div>
+                </div>
+
+                <!-- Form -->
+                <div class="px-6 py-4 max-h-[70vh] overflow-y-auto space-y-5">
+                    <!-- Owner Info -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Account Owner</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">First Name <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="addBizForm.firstname" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Last Name <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="addBizForm.lastname" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="block text-xs text-gray-500 mb-1">Email <span class="text-red-500">*</span></label>
+                            <input type="email" x-model="addBizForm.email" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Owner email — login credentials will be sent here">
+                        </div>
+                    </div>
+
+                    <!-- Business Info -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Business Information</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Business Name <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="addBizForm.business_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Business Type</label>
+                                <select x-model="addBizForm.business_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                                    <option value="">Select type...</option>
+                                    <option value="sole_proprietorship">Sole Proprietorship</option>
+                                    <option value="partnership">Partnership</option>
+                                    <option value="limited_company">Limited Company</option>
+                                    <option value="corporation">Corporation</option>
+                                    <option value="ngo">NGO</option>
+                                    <option value="government">Government</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Registration Number</label>
+                                <input type="text" x-model="addBizForm.registration_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">TIN Number</label>
+                                <input type="text" x-model="addBizForm.tin_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Phone</label>
+                                <input type="text" x-model="addBizForm.phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="+255...">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Paybill</label>
+                                <input type="text" x-model="addBizForm.paybill" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="block text-xs text-gray-500 mb-1">Address</label>
+                            <input type="text" x-model="addBizForm.address" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none" placeholder="Street / P.O. Box">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">City</label>
+                                <input type="text" x-model="addBizForm.city" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Country</label>
+                                <select x-model="addBizForm.country" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                                    <option value="Tanzania">Tanzania</option>
+                                    <option value="Kenya">Kenya</option>
+                                    <option value="Uganda">Uganda</option>
+                                    <option value="Rwanda">Rwanda</option>
+                                    <option value="Burundi">Burundi</option>
+                                    <option value="DRC">DR Congo</option>
+                                    <option value="Mozambique">Mozambique</option>
+                                    <option value="Malawi">Malawi</option>
+                                    <option value="Zambia">Zambia</option>
+                                    <option value="South Africa">South Africa</option>
+                                    <option value="Nigeria">Nigeria</option>
+                                    <option value="Ghana">Ghana</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Identity -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Identity Verification</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">ID Type</label>
+                                <select x-model="addBizForm.id_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                                    <option value="">Select...</option>
+                                    <option value="national_id">National ID (NIDA)</option>
+                                    <option value="passport">Passport</option>
+                                    <option value="drivers_license">Driver's License</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">ID Number</label>
+                                <input type="text" x-model="addBizForm.id_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bank Details -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Settlement</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Bank Name</label>
+                                <input type="text" x-model="addBizForm.bank_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Account Name</label>
+                                <input type="text" x-model="addBizForm.bank_account_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 mt-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Account Number</label>
+                                <input type="text" x-model="addBizForm.bank_account_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">SWIFT Code</label>
+                                <input type="text" x-model="addBizForm.bank_swift" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Branch</label>
+                                <input type="text" x-model="addBizForm.bank_branch" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documents -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Documents (JPG, PNG, PDF — max 5MB each)</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">ID Document</label>
+                                <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizIdDocFile = $event.target.files[0]"
+                                    class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Certificate of Incorporation</label>
+                                <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizIncorpFile = $event.target.files[0]"
+                                    class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Business License</label>
+                                <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizLicFile = $event.target.files[0]"
+                                    class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Tax Clearance</label>
+                                <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizTaxFile = $event.target.files[0]"
+                                    class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Status -->
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Account Status</h4>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" x-model="addBizForm.status" value="pending" class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm text-gray-700">Pending (requires KYC review)</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" x-model="addBizForm.status" value="active" class="text-green-600 focus:ring-green-500">
+                                <span class="text-sm text-gray-700">Active (pre-approved)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 border-t bg-gray-50 rounded-b-xl flex items-center justify-between">
+                    <p class="text-xs text-gray-500">Login credentials will be emailed to the business owner.</p>
+                    <div class="flex items-center gap-3">
+                        <button @click="showAddBusinessModal = false" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100">Cancel</button>
+                        <button @click="submitAddBusiness()" :disabled="addBizSaving"
+                            class="px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                            <svg x-show="addBizSaving" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            <span x-text="addBizSaving ? 'Creating...' : 'Create Business'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -2458,6 +2682,18 @@ function adminPanel() {
 
         // Account name lookup
         accountMap: {},
+
+        // Add Business
+        showAddBusinessModal: false, addBizSaving: false, addBizMsg: '', addBizMsgType: 'success',
+        addBizIdDocFile: null, addBizIncorpFile: null, addBizLicFile: null, addBizTaxFile: null,
+        addBizForm: {
+            firstname: '', lastname: '', email: '', business_name: '', business_type: '',
+            registration_number: '', tin_number: '', phone: '', paybill: '',
+            address: '', city: '', country: 'Tanzania',
+            id_type: '', id_number: '',
+            bank_name: '', bank_account_name: '', bank_account_number: '', bank_swift: '', bank_branch: '',
+            status: 'active'
+        },
 
         // Charges
         charges: [], chargesLoading: false, chargeLoading: false, chargeMsg: '', chargeMsgType: 'success',
@@ -2777,6 +3013,66 @@ function adminPanel() {
             } catch (e) { this.stlMsg = 'Service unavailable.'; this.stlMsgType = 'error'; }
             this.stlActionLoading = false;
             setTimeout(() => { this.stlMsg = ''; }, 5000);
+        },
+
+        // ---- Add Business Functions ----
+        resetAddBusinessForm() {
+            this.addBizForm = {
+                firstname: '', lastname: '', email: '', business_name: '', business_type: '',
+                registration_number: '', tin_number: '', phone: '', paybill: '',
+                address: '', city: '', country: 'Tanzania',
+                id_type: '', id_number: '',
+                bank_name: '', bank_account_name: '', bank_account_number: '', bank_swift: '', bank_branch: '',
+                status: 'active'
+            };
+            this.addBizIdDocFile = null;
+            this.addBizIncorpFile = null;
+            this.addBizLicFile = null;
+            this.addBizTaxFile = null;
+            this.addBizMsg = '';
+            this.addBizSaving = false;
+        },
+
+        async submitAddBusiness() {
+            if (!this.addBizForm.firstname || !this.addBizForm.lastname || !this.addBizForm.email || !this.addBizForm.business_name) {
+                this.addBizMsg = 'First name, last name, email, and business name are required.';
+                this.addBizMsgType = 'error';
+                return;
+            }
+            this.addBizSaving = true;
+            this.addBizMsg = '';
+            try {
+                const fd = new FormData();
+                Object.entries(this.addBizForm).forEach(([k, v]) => { if (v) fd.append(k, v); });
+                if (this.addBizIdDocFile) fd.append('id_document', this.addBizIdDocFile);
+                if (this.addBizIncorpFile) fd.append('certificate_of_incorporation', this.addBizIncorpFile);
+                if (this.addBizLicFile) fd.append('business_license', this.addBizLicFile);
+                if (this.addBizTaxFile) fd.append('tax_clearance', this.addBizTaxFile);
+
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/create-business`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' },
+                    body: fd
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    this.addBizMsg = data.message || 'Business created successfully!';
+                    this.addBizMsgType = 'success';
+                    this.fetchAccounts();
+                    this.fetchStats();
+                    setTimeout(() => { this.showAddBusinessModal = false; this.addBizMsg = ''; }, 3000);
+                } else {
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+                    this.addBizMsg = errors || 'Failed to create business.';
+                    this.addBizMsgType = 'error';
+                }
+            } catch (e) {
+                console.error(e);
+                this.addBizMsg = 'Network error. Please try again.';
+                this.addBizMsgType = 'error';
+            }
+            this.addBizSaving = false;
         },
 
         // ---- KYC Functions ----

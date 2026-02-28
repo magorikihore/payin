@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\EmailTemplate;
 use App\Models\User;
+use App\Notifications\AccountOpeningNotification;
 use App\Notifications\KycApprovedNotification;
 use App\Notifications\KycRejectedNotification;
 use Illuminate\Http\JsonResponse;
@@ -261,6 +262,128 @@ class AdminController extends Controller
             'message' => 'KYC details updated successfully.',
             'account' => $account,
         ]);
+    }
+
+    /**
+     * Admin creates a new business account with full KYC and sends email to user.
+     */
+    public function createBusiness(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
+
+        $request->validate([
+            'firstname'            => 'required|string|max:191',
+            'lastname'             => 'required|string|max:191',
+            'email'                => 'required|email|max:191|unique:users,email',
+            'business_name'        => 'required|string|max:191',
+            'business_type'        => 'nullable|string|max:191',
+            'registration_number'  => 'nullable|string|max:191',
+            'tin_number'           => 'nullable|string|max:191',
+            'phone'                => 'nullable|string|max:20',
+            'address'              => 'nullable|string|max:500',
+            'city'                 => 'nullable|string|max:191',
+            'country'              => 'nullable|string|max:191',
+            'id_type'              => 'nullable|in:national_id,passport,drivers_license',
+            'id_number'            => 'nullable|string|max:191',
+            'bank_name'            => 'nullable|string|max:191',
+            'bank_account_name'    => 'nullable|string|max:191',
+            'bank_account_number'  => 'nullable|string|max:191',
+            'bank_swift'           => 'nullable|string|max:191',
+            'bank_branch'          => 'nullable|string|max:191',
+            'paybill'              => 'nullable|string|max:50',
+            'status'               => 'nullable|in:pending,active',
+            'id_document'                    => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'certificate_of_incorporation'   => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'business_license'               => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'tax_clearance'                  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        // Map country to currency
+        $currencyMap = [
+            'Tanzania' => 'TZS', 'Kenya' => 'KES', 'Uganda' => 'UGX', 'Rwanda' => 'RWF',
+            'Burundi' => 'BIF', 'DRC' => 'CDF', 'Mozambique' => 'MZN', 'Malawi' => 'MWK',
+            'Zambia' => 'ZMW', 'South Africa' => 'ZAR', 'Nigeria' => 'NGN', 'Ghana' => 'GHS',
+        ];
+        $country = $request->country ?? 'Tanzania';
+        $currency = $currencyMap[$country] ?? 'TZS';
+
+        // Create account
+        $accountData = [
+            'account_ref' => 'ACC-' . strtoupper(Str::random(8)),
+            'business_name' => $request->business_name,
+            'email' => $request->email,
+            'country' => $country,
+            'currency' => $currency,
+            'status' => $request->status ?? 'pending',
+            'business_type' => $request->business_type,
+            'registration_number' => $request->registration_number,
+            'tin_number' => $request->tin_number,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'city' => $request->city,
+            'id_type' => $request->id_type,
+            'id_number' => $request->id_number,
+            'bank_name' => $request->bank_name,
+            'bank_account_name' => $request->bank_account_name,
+            'bank_account_number' => $request->bank_account_number,
+            'bank_swift' => $request->bank_swift,
+            'bank_branch' => $request->bank_branch,
+            'paybill' => $request->paybill,
+            'kyc_submitted_at' => now(),
+        ];
+
+        // Handle document uploads
+        if ($request->hasFile('id_document')) {
+            $path = $request->file('id_document')->store('kyc/id-documents', 'public');
+            $accountData['id_document_url'] = '/storage/' . $path;
+        }
+        if ($request->hasFile('certificate_of_incorporation')) {
+            $path = $request->file('certificate_of_incorporation')->store('kyc/certificates', 'public');
+            $accountData['certificate_of_incorporation_url'] = '/storage/' . $path;
+        }
+        if ($request->hasFile('business_license')) {
+            $path = $request->file('business_license')->store('kyc/business-licenses', 'public');
+            $accountData['business_license_url'] = '/storage/' . $path;
+        }
+        if ($request->hasFile('tax_clearance')) {
+            $path = $request->file('tax_clearance')->store('kyc/tax-clearances', 'public');
+            $accountData['tax_clearance_url'] = '/storage/' . $path;
+        }
+
+        // If status is active, mark KYC as approved
+        if (($request->status ?? 'pending') === 'active') {
+            $accountData['kyc_approved_at'] = now();
+            $accountData['kyc_approved_by'] = $request->user()->id;
+        }
+
+        $account = Account::create($accountData);
+
+        // Generate random password
+        $password = Str::random(10);
+
+        // Create owner user
+        $user = User::create([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'name' => $request->firstname . ' ' . $request->lastname,
+            'email' => $request->email,
+            'password' => Hash::make($password),
+            'account_id' => $account->id,
+            'role' => 'owner',
+        ]);
+
+        // Send account opening email with credentials
+        try {
+            $user->load('account');
+            $user->notify(new AccountOpeningNotification($password));
+        } catch (\Throwable $e) {
+            \Log::warning('Account opening email failed: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'message' => 'Business account created successfully. Login credentials sent to ' . $request->email,
+            'account' => $account->fresh()->load('users:id,account_id,firstname,lastname,email,role'),
+        ], 201);
     }
 
     /**
