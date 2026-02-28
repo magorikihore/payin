@@ -117,6 +117,11 @@
                     placeholder="••••••••">
             </div>
 
+            <!-- Honeypot: hidden from humans, bots will fill this -->
+            <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+                <input type="text" x-model="website" tabindex="-1" autocomplete="off">
+            </div>
+
             <button type="submit" :disabled="loading"
                 class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 <span x-show="!loading">Create Account</span>
@@ -141,6 +146,8 @@ function loginForm() {
         business_name: '',
         country: 'Tanzania',
         password_confirmation: '',
+        website: '',
+        _form_loaded_at: Date.now(),
         error: '',
         success: '',
         loading: false,
@@ -189,6 +196,22 @@ function loginForm() {
         async register() {
             this.loading = true;
             this.error = '';
+
+            // Bot check: honeypot must be empty
+            if (this.website) {
+                this.error = 'Registration failed. Please try again.';
+                this.loading = false;
+                return;
+            }
+
+            // Bot check: form must be open for at least 3 seconds
+            const elapsed = (Date.now() - this._form_loaded_at) / 1000;
+            if (elapsed < 3) {
+                this.error = 'Please take your time filling out the form.';
+                this.loading = false;
+                return;
+            }
+
             try {
                 const res = await fetch('{{ config("services.auth_service.url") }}/api/register', {
                     method: 'POST',
@@ -200,7 +223,9 @@ function loginForm() {
                         country: this.country,
                         email: this.email,
                         password: this.password,
-                        password_confirmation: this.password_confirmation
+                        password_confirmation: this.password_confirmation,
+                        website: this.website,
+                        _form_loaded_at: this._form_loaded_at
                     })
                 });
                 const data = await res.json();
