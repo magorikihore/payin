@@ -2996,7 +2996,7 @@ function dashboard() {
                 this.transferAmounts[operator] = '';
                 this.transferAmountDisplays[operator] = '';
                 this.fetchMyTransfers();
-                this.fetchWallets();
+                this.fetchWallet();
                 setTimeout(() => { this.walletMsg[key] = ''; }, 5000);
             } catch (e) { this.walletMsg[key] = 'Service unavailable.'; this.walletMsgType[key] = 'error'; }
             finally { this.walletTransferLoading[operator] = false; }
@@ -3138,7 +3138,7 @@ function dashboard() {
                     this.fetchSettlements();
                     this.fetchMyCharges();
                     this.fetchTransactions();
-                    this.fetchWallets();
+                    this.fetchWallet();
                 }
             } catch (e) {
                 console.error('Settlement submit error:', e);
