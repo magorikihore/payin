@@ -1496,8 +1496,9 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (' + walletCurrency + ', min 100)'"></label>
-                            <input type="number" x-model="payoutForm.amount" min="100" required
-                                @input.debounce.500ms="calculatePayoutCharges()"
+                            <input type="text" inputmode="numeric" x-model="payoutAmountDisplay" required
+                                placeholder="0"
+                                @input="formatAmountInput($event, 'payout')"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                         </div>
 
@@ -2321,6 +2322,7 @@ function dashboard() {
         payoutOperators: [],
         detectedOperator: { name: '', code: '' }, detectingOp: false,
         payoutForm: { phone: '', amount: '', reference: '', description: '' },
+        payoutAmountDisplay: '',
         payoutLoading: false, payoutMsg: '', payoutMsgType: 'success',
         payoutCharges: null, payoutChargesLoading: false,
         lastPayoutResult: null,
@@ -2981,6 +2983,7 @@ function dashboard() {
                     this.payoutMsgType = 'success';
                     this.lastPayoutResult = data;
                     this.payoutForm = { phone: '', amount: '', reference: '', description: '' };
+                    this.payoutAmountDisplay = '';
                     this.detectedOperator = { name: '', code: '' };
                     this.payoutCharges = null;
                     this.fetchRecentDisbursements();
@@ -3112,6 +3115,16 @@ function dashboard() {
 
         // ---- Helpers ----
         formatAmount(a) { return Number(a).toLocaleString('en-US', { minimumFractionDigits: 2 }); },
+        formatAmountInput(event, target) {
+            let raw = event.target.value.replace(/[^0-9]/g, '');
+            let num = parseInt(raw, 10) || 0;
+            if (target === 'payout') {
+                this.payoutForm.amount = num > 0 ? num : '';
+                this.payoutAmountDisplay = num > 0 ? num.toLocaleString('en-US') : '';
+            }
+            event.target.value = num > 0 ? num.toLocaleString('en-US') : '';
+            this.calculatePayoutCharges();
+        },
         formatDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); },
 
         async logout() {
