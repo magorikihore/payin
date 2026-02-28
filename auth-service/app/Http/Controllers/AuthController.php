@@ -26,7 +26,7 @@ class AuthController extends Controller
             'Zambia' => 'ZMW', 'South Africa' => 'ZAR', 'Nigeria' => 'NGN', 'Ghana' => 'GHS',
         ];
         $country = $validated['country'] ?? 'Tanzania';
-        $currency = $validated['currency'] ?? ($currencyMap[$country] ?? 'USD');
+        $currency = $validated['currency'] ?? ($currencyMap[$country] ?? 'TZS');
 
         // Create account (KYC not yet submitted — user must complete after login)
         $account = Account::create([
