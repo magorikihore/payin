@@ -139,11 +139,7 @@ class ApiKeyController extends Controller
             return response()->json(['message' => 'API key expired or revoked.'], 401);
         }
 
-        if (!Hash::check($request->api_secret, $key->api_secret)) {
-            return response()->json(['message' => 'Invalid API secret.'], 401);
-        }
-
-        // ── IP Whitelist Enforcement ──
+        // ── IP Whitelist Enforcement (check BEFORE secret verification) ──
         // If the account has ANY IP whitelist entries, enforcement is active.
         // Only IPs with 'approved' status are allowed through.
         $clientIp = $request->input('client_ip');
@@ -156,7 +152,6 @@ class ApiKeyController extends Controller
                 ->toArray();
 
             if (!in_array($clientIp, $approvedIps)) {
-                // Check if this IP exists but is suspended/rejected
                 $entry = IpWhitelist::where('account_id', $key->account_id)
                     ->where('ip_address', $clientIp)
                     ->first();
@@ -170,6 +165,10 @@ class ApiKeyController extends Controller
                     'ip_blocked' => true,
                 ], 403);
             }
+        }
+
+        if (!Hash::check($request->api_secret, $key->api_secret)) {
+            return response()->json(['message' => 'Invalid API secret.'], 401);
         }
 
         // Update last used
