@@ -20,7 +20,7 @@
                 </svg>
             </div>
             <h2 class="text-2xl font-bold text-gray-800">Payin</h2>
-            <p class="text-gray-500 mt-1">Sign in to your account</p>
+            <p class="text-gray-500 mt-1">Login to your account</p>
         </div>
 
         <!-- Register Header -->
@@ -68,12 +68,12 @@
             </div>
             <button type="submit" :disabled="loading"
                 class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                <span x-show="!loading">Sign In</span>
-                <span x-show="loading">Signing in...</span>
+                <span x-show="!loading">Login</span>
+                <span x-show="loading">Logging in...</span>
             </button>
             <p class="text-center text-sm text-gray-500 mt-4">
                 Don't have an account?
-                <a href="#" @click.prevent="showRegister = true; error = ''" class="text-gblue-500 hover:underline">Register</a>
+                <a href="#" @click.prevent="showRegister = true; error = ''" class="text-gblue-500 hover:underline">Sign Up</a>
             </p>
         </form>
 
@@ -149,7 +149,7 @@
             </button>
             <p class="text-center text-sm text-gray-500 mt-4">
                 Already have an account?
-                <a href="#" @click.prevent="showRegister = false; error = ''" class="text-gblue-500 hover:underline">Sign In</a>
+                <a href="#" @click.prevent="showRegister = false; error = ''" class="text-gblue-500 hover:underline">Login</a>
             </p>
         </form>
 
