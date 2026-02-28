@@ -148,8 +148,8 @@
         <div x-show="activeTab === 'dashboard'">
             <!-- Welcome Header -->
             <div class="mb-6">
-                <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p class="text-sm text-gray-500 mt-1">Welcome back, <span x-text="user?.name || 'User'"></span>. Here's your business overview.</p>
+                <h1 class="text-2xl font-bold text-gray-900">Welcome back, <span x-text="user?.name || 'User'"></span></h1>
+                <p class="text-sm text-gray-500 mt-1">Here's your business overview.</p>
             </div>
 
             <!-- ===== TOP ROW: Balance Cards (left) + Recent Transactions (right) ===== -->
@@ -277,44 +277,44 @@
             </div>
 
             <!-- ===== TREASURY DETAIL: Balance per MNO ===== -->
-            <div class="bg-white rounded-xl shadow-md border overflow-hidden mb-6">
-                <div class="px-5 py-4 border-b">
-                    <h3 class="text-sm font-semibold text-gray-800">Treasury Detail</h3>
-                    <p class="text-xs text-gray-400">Balance breakdown by operator across Collection & Disbursement wallets</p>
+            <div class="bg-gray-900 rounded-xl shadow-lg overflow-hidden mb-6">
+                <div class="px-5 py-4 border-b border-gray-700">
+                    <h3 class="text-sm font-semibold text-white">Treasury Detail</h3>
+                    <p class="text-xs text-gray-400">Balance breakdown by operator</p>
                 </div>
                 <div x-show="collectionWallets.length === 0 && disbursementWallets.length === 0" class="p-6 text-center text-gray-400 text-sm">Loading wallet data...</div>
                 <div x-show="collectionWallets.length > 0 || disbursementWallets.length > 0" x-cloak>
                     <div class="overflow-x-auto">
                         <table class="w-full">
-                            <thead class="bg-gray-50">
+                            <thead class="bg-gray-800/50">
                                 <tr>
-                                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
-                                    <th class="px-5 py-3 text-right text-xs font-medium text-green-600 uppercase">Collection</th>
-                                    <th class="px-5 py-3 text-right text-xs font-medium text-blue-600 uppercase">Disbursement</th>
-                                    <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-400 uppercase">Operator</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Collection</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Disbursement</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-gray-400 uppercase">Total</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-gray-800">
                                 <template x-for="op in operators" :key="'treasury_'+op">
-                                    <tr class="hover:bg-gray-50 transition">
+                                    <tr class="hover:bg-gray-800/40 transition">
                                         <td class="px-5 py-3">
                                             <div class="flex items-center">
                                                 <div class="w-2.5 h-2.5 rounded-full mr-2" :class="operatorColor(op)"></div>
-                                                <span class="text-sm font-medium text-gray-700" x-text="op"></span>
+                                                <span class="text-sm font-medium text-white" x-text="op"></span>
                                             </div>
                                         </td>
-                                        <td class="px-5 py-3 text-right text-sm font-semibold text-green-600" x-text="formatAmount((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
-                                        <td class="px-5 py-3 text-right text-sm font-semibold text-blue-600" x-text="formatAmount((disbursementWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
-                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ((disbursementWallets.find(w => w.operator === op)?.balance) || 0)) + ' TZS'"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-white" x-text="formatAmount((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-white" x-text="formatAmount((disbursementWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-bold text-white" x-text="formatAmount(((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ((disbursementWallets.find(w => w.operator === op)?.balance) || 0)) + ' TZS'"></td>
                                     </tr>
                                 </template>
                             </tbody>
-                            <tfoot class="bg-gray-50 border-t">
+                            <tfoot class="bg-gray-800/50 border-t border-gray-700">
                                 <tr>
-                                    <td class="px-5 py-3 text-sm font-bold text-gray-700">Total</td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-green-600" x-text="formatAmount(collectionTotal) + ' TZS'"></td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-blue-600" x-text="formatAmount(disbursementTotal) + ' TZS'"></td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-900" x-text="formatAmount(overallBalance) + ' TZS'"></td>
+                                    <td class="px-5 py-3 text-sm font-bold text-gray-300">Total</td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-white" x-text="formatAmount(collectionTotal) + ' TZS'"></td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-white" x-text="formatAmount(disbursementTotal) + ' TZS'"></td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-white" x-text="formatAmount(overallBalance) + ' TZS'"></td>
                                 </tr>
                             </tfoot>
                         </table>
