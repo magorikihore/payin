@@ -194,8 +194,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'total_platform_charges' => round($totalPlatformCharges, 2),
-            'total_operator_charges' => round($totalOperatorCharges, 2),
-            'total_charges' => round($totalPlatformCharges + $totalOperatorCharges, 2),
+            'total_charges' => round($totalPlatformCharges, 2),
             'by_type' => $byType,
             'by_operator' => $byOperator,
         ]);

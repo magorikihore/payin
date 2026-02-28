@@ -358,12 +358,12 @@
                 <!-- Charges & Fees Summary -->
                 <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                     <div class="px-5 py-4 border-b">
-                        <h3 class="text-sm font-semibold text-gray-800">Charges & Fees</h3>
-                        <p class="text-xs text-gray-400">Deducted across completed transactions</p>
+                        <h3 class="text-sm font-semibold text-gray-800">Service Fees</h3>
+                        <p class="text-xs text-gray-400">Platform fees on completed transactions</p>
                     </div>
                     <div class="p-5">
                         <div class="flex items-center justify-between mb-4">
-                            <span class="text-sm text-gray-500">Total Charges</span>
+                            <span class="text-sm text-gray-500">Total Service Fees</span>
                             <span class="text-xl font-bold text-gray-800" x-text="formatAmount(myCharges.total_charges || 0) + ' ' + walletCurrency"></span>
                         </div>
                         <div x-show="myCharges.by_type && myCharges.by_type.length > 0" class="space-y-2">
