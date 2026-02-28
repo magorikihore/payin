@@ -783,7 +783,7 @@ class PaymentController extends Controller
             $response = Http::post("{$txnServiceUrl}/api/charges/calculate", [
                 'amount' => $amount,
                 'operator' => $operatorCode,
-                'type' => $type,
+                'transaction_type' => $type,
                 'account_id' => $accountId,
             ]);
 
@@ -809,18 +809,15 @@ class PaymentController extends Controller
         try {
             $walletServiceUrl = config('services.wallet_service.url');
             $response = Http::withToken($token)
-                ->get("{$walletServiceUrl}/api/wallets");
+                ->get("{$walletServiceUrl}/api/wallet");
 
             if ($response->successful()) {
                 $data = $response->json();
-                $wallet = $data['wallet'] ?? null;
-                if ($wallet) {
-                    $disbursementBalance = (float) ($wallet['disbursement_balance'] ?? 0);
-                    return [
-                        'sufficient' => $disbursementBalance >= $totalAmount,
-                        'balance' => $disbursementBalance,
-                    ];
-                }
+                $disbursementBalance = (float) ($data['disbursement_total'] ?? 0);
+                return [
+                    'sufficient' => $disbursementBalance >= $totalAmount,
+                    'balance' => $disbursementBalance,
+                ];
             }
         } catch (\Exception $e) {
             Log::warning("Wallet balance check failed: " . $e->getMessage());
@@ -870,23 +867,31 @@ class PaymentController extends Controller
     {
         try {
             $walletServiceUrl = config('services.wallet_service.url');
+            $serviceKey = config('services.internal_service_key');
 
             if ($paymentRequest->type === 'collection') {
-                // Credit the collection wallet
-                Http::post("{$walletServiceUrl}/api/wallets/credit", [
-                    'account_id' => (string) $paymentRequest->account_id,
-                    'amount'     => $paymentRequest->amount,
-                    'type'       => 'collection',
-                    'reference'  => $paymentRequest->request_ref,
-                ]);
+                // Credit the collection wallet via internal API
+                Http::withHeaders(['X-Service-Key' => $serviceKey])
+                    ->post("{$walletServiceUrl}/api/internal/wallet/credit", [
+                        'account_id'  => (string) $paymentRequest->account_id,
+                        'amount'      => $paymentRequest->amount,
+                        'operator'    => $paymentRequest->operator_name,
+                        'wallet_type' => 'collection',
+                        'reference'   => $paymentRequest->request_ref,
+                        'description' => 'Collection via ' . $paymentRequest->operator_name,
+                    ]);
             } elseif ($paymentRequest->type === 'disbursement') {
-                // Debit the disbursement wallet
-                Http::post("{$walletServiceUrl}/api/wallets/debit", [
-                    'account_id' => (string) $paymentRequest->account_id,
-                    'amount'     => $paymentRequest->amount + $paymentRequest->platform_charge + $paymentRequest->operator_charge,
-                    'type'       => 'disbursement',
-                    'reference'  => $paymentRequest->request_ref,
-                ]);
+                // Debit the disbursement wallet via internal API
+                $totalDebit = $paymentRequest->amount + $paymentRequest->platform_charge + $paymentRequest->operator_charge;
+                Http::withHeaders(['X-Service-Key' => $serviceKey])
+                    ->post("{$walletServiceUrl}/api/internal/wallet/debit", [
+                        'account_id'  => (string) $paymentRequest->account_id,
+                        'amount'      => $totalDebit,
+                        'operator'    => $paymentRequest->operator_name,
+                        'wallet_type' => 'disbursement',
+                        'reference'   => $paymentRequest->request_ref,
+                        'description' => 'Disbursement via ' . $paymentRequest->operator_name,
+                    ]);
             }
         } catch (\Exception $e) {
             Log::error("Wallet update failed for {$paymentRequest->request_ref}: " . $e->getMessage());

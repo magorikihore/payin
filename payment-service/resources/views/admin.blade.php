@@ -3249,7 +3249,14 @@ function adminPanel() {
             try {
                 const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/wallets', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
-                if (res.ok) this.walletData = await res.json();
+                if (res.ok) {
+                    this.walletData = await res.json();
+                    // Refresh modal data if modal is open
+                    if (this.showWalletModal && this.walletModalData) {
+                        const updated = (this.walletData.accounts || []).find(a => a.account_id == this.walletModalData.account_id);
+                        if (updated) this.walletModalData = updated;
+                    }
+                }
             } catch (e) { console.error(e); }
             this.wltLoading = false;
         },

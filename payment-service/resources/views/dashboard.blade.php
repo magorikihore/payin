@@ -1496,8 +1496,41 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (' + walletCurrency + ', min 100)'"></label>
-                            <input type="number" x-model="payoutForm.amount" min="100" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <input type="number" x-model="payoutForm.amount" min="100" required
+                                @input.debounce.500ms="calculatePayoutCharges()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                         </div>
+
+                        <!-- Charge Summary Preview -->
+                        <div x-show="payoutCharges && payoutCharges.total_charge >= 0 && payoutForm.amount >= 100 && detectedOperator.code" x-cloak
+                            class="p-4 rounded-lg border"
+                            :class="payoutCharges.total_charge > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                Charges &amp; Fees Summary
+                            </h4>
+                            <div x-show="payoutChargesLoading" class="text-xs text-gray-400">Calculating...</div>
+                            <div x-show="!payoutChargesLoading" class="space-y-1.5 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Send Amount</span>
+                                    <span class="font-medium text-gray-800" x-text="formatAmount(payoutForm.amount) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div class="flex justify-between" x-show="payoutCharges.platform_charge > 0">
+                                    <span class="text-gray-600">Platform Charge</span>
+                                    <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.platform_charge) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div class="flex justify-between" x-show="payoutCharges.operator_charge > 0">
+                                    <span class="text-gray-600">Operator Charge</span>
+                                    <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.operator_charge) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div class="border-t border-gray-300 pt-1.5 flex justify-between font-semibold">
+                                    <span class="text-gray-700">Total Debit</span>
+                                    <span class="text-gray-900" x-text="formatAmount(Number(payoutForm.amount) + (payoutCharges.total_charge || 0)) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div x-show="payoutCharges.total_charge === 0" class="text-xs text-green-600 mt-1">No charges apply to this transaction.</div>
+                            </div>
+                        </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Reference (optional)</label>
                             <input type="text" x-model="payoutForm.reference" placeholder="Your internal reference" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
@@ -2289,6 +2322,7 @@ function dashboard() {
         detectedOperator: { name: '', code: '' }, detectingOp: false,
         payoutForm: { phone: '', amount: '', reference: '', description: '' },
         payoutLoading: false, payoutMsg: '', payoutMsgType: 'success',
+        payoutCharges: null, payoutChargesLoading: false,
         lastPayoutResult: null,
         // Batch
         batchName: '', batchCsvText: '', batchItems: [], batchLoading: false,
@@ -2872,6 +2906,7 @@ function dashboard() {
                 for (const op of this.payoutOperators) {
                     if (op.prefixes && op.prefixes.includes(prefix)) {
                         this.detectedOperator = { name: op.name, code: op.code };
+                        this.calculatePayoutCharges();
                         return;
                     }
                 }
@@ -2886,11 +2921,39 @@ function dashboard() {
                 const data = await res.json();
                 if (data.detected) {
                     this.detectedOperator = { name: data.operator.name, code: data.operator.code };
+                    this.calculatePayoutCharges();
                 } else {
                     this.detectedOperator = { name: '', code: '' };
+                    this.payoutCharges = null;
                 }
-            } catch (e) { this.detectedOperator = { name: '', code: '' }; }
+            } catch (e) { this.detectedOperator = { name: '', code: '' }; this.payoutCharges = null; }
             this.detectingOp = false;
+        },
+
+        async calculatePayoutCharges() {
+            if (!this.detectedOperator.code || !this.payoutForm.amount || this.payoutForm.amount < 100) {
+                this.payoutCharges = null;
+                return;
+            }
+            this.payoutChargesLoading = true;
+            try {
+                const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges/calculate', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({
+                        amount: Number(this.payoutForm.amount),
+                        operator: this.detectedOperator.code,
+                        transaction_type: 'disbursement'
+                    })
+                });
+                if (res.ok) {
+                    this.payoutCharges = await res.json();
+                } else {
+                    this.payoutCharges = { platform_charge: 0, operator_charge: 0, total_charge: 0 };
+                }
+            } catch (e) {
+                this.payoutCharges = { platform_charge: 0, operator_charge: 0, total_charge: 0 };
+            }
+            this.payoutChargesLoading = false;
         },
 
         async sendSinglePayout() {
@@ -2919,6 +2982,7 @@ function dashboard() {
                     this.lastPayoutResult = data;
                     this.payoutForm = { phone: '', amount: '', reference: '', description: '' };
                     this.detectedOperator = { name: '', code: '' };
+                    this.payoutCharges = null;
                     this.fetchRecentDisbursements();
                 }
             } catch (e) { this.payoutMsg = 'Network error.'; this.payoutMsgType = 'error'; }

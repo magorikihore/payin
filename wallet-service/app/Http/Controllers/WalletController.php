@@ -881,4 +881,120 @@ class WalletController extends Controller
             // Webhook failed silently — transaction already processed
         }
     }
+
+    // ──────────────────────────────────────────────
+    // Internal service-to-service endpoints
+    // ──────────────────────────────────────────────
+
+    /**
+     * Internal: Credit a wallet (called from payment-service callbacks).
+     * Accepts account_id + operator directly, no user auth needed.
+     */
+    public function internalCredit(Request $request): JsonResponse
+    {
+        $request->validate([
+            'account_id' => 'required|string',
+            'amount'     => 'required|numeric|min:0.01',
+            'operator'   => 'required|string|in:' . implode(',', $this->operators),
+            'wallet_type'=> 'nullable|string|in:collection,disbursement',
+            'reference'  => 'required|string',
+            'description'=> 'nullable|string|max:255',
+        ]);
+
+        $accountId = $request->account_id;
+        $amount = (float) $request->amount;
+        $operator = $request->operator;
+        $walletType = $request->wallet_type ?? 'collection';
+
+        return DB::transaction(function () use ($accountId, $amount, $operator, $walletType, $request) {
+            $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => $walletType],
+                ['user_id' => 0, 'balance' => 0, 'currency' => 'TZS', 'status' => 'active']
+            );
+
+            $balanceBefore = $wallet->balance;
+            $balanceAfter = $balanceBefore + $amount;
+
+            $wallet->update(['balance' => $balanceAfter]);
+
+            WalletTransaction::create([
+                'wallet_id'      => $wallet->id,
+                'type'           => 'credit',
+                'amount'         => $amount,
+                'reference'      => $request->reference,
+                'description'    => $request->description ?? "Internal credit via {$operator}",
+                'balance_before' => $balanceBefore,
+                'balance_after'  => $balanceAfter,
+                'status'         => 'completed',
+                'metadata'       => json_encode(['internal' => true, 'operator' => $operator]),
+            ]);
+
+            return response()->json([
+                'message'        => 'Wallet credited.',
+                'balance_after'  => number_format($balanceAfter, 2, '.', ''),
+            ]);
+        });
+    }
+
+    /**
+     * Internal: Debit a wallet (called from payment-service callbacks).
+     * Accepts account_id + operator directly, no user auth needed.
+     */
+    public function internalDebit(Request $request): JsonResponse
+    {
+        $request->validate([
+            'account_id' => 'required|string',
+            'amount'     => 'required|numeric|min:0.01',
+            'operator'   => 'required|string|in:' . implode(',', $this->operators),
+            'wallet_type'=> 'nullable|string|in:collection,disbursement',
+            'reference'  => 'required|string',
+            'description'=> 'nullable|string|max:255',
+        ]);
+
+        $accountId = $request->account_id;
+        $amount = (float) $request->amount;
+        $operator = $request->operator;
+        $walletType = $request->wallet_type ?? 'disbursement';
+
+        return DB::transaction(function () use ($accountId, $amount, $operator, $walletType, $request) {
+            $wallet = Wallet::lockForUpdate()
+                ->where('account_id', $accountId)
+                ->where('operator', $operator)
+                ->where('wallet_type', $walletType)
+                ->first();
+
+            if (!$wallet) {
+                return response()->json(['message' => "{$walletType} wallet not found for {$operator}."], 404);
+            }
+
+            if ($wallet->balance < $amount) {
+                return response()->json([
+                    'message' => "Insufficient {$walletType} balance for {$operator}.",
+                    'available' => number_format($wallet->balance, 2, '.', ''),
+                ], 422);
+            }
+
+            $balanceBefore = $wallet->balance;
+            $balanceAfter = $balanceBefore - $amount;
+
+            $wallet->update(['balance' => $balanceAfter]);
+
+            WalletTransaction::create([
+                'wallet_id'      => $wallet->id,
+                'type'           => 'debit',
+                'amount'         => $amount,
+                'reference'      => $request->reference,
+                'description'    => $request->description ?? "Internal debit via {$operator}",
+                'balance_before' => $balanceBefore,
+                'balance_after'  => $balanceAfter,
+                'status'         => 'completed',
+                'metadata'       => json_encode(['internal' => true, 'operator' => $operator]),
+            ]);
+
+            return response()->json([
+                'message'        => 'Wallet debited.',
+                'balance_after'  => number_format($balanceAfter, 2, '.', ''),
+            ]);
+        });
+    }
 }

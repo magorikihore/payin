@@ -51,4 +51,6 @@ return [
         'url' => env('SETTLEMENT_SERVICE_URL', 'http://127.0.0.1:8005'),  // prod: https://settle.yourdomain.com
     ],
 
+    'internal_service_key' => env('INTERNAL_SERVICE_KEY', 'payin-internal-service-key-2025'),
+
 ];
