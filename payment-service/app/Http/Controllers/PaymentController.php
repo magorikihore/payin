@@ -780,7 +780,10 @@ class PaymentController extends Controller
     {
         try {
             $txnServiceUrl = config('services.transaction_service.url');
-            $response = Http::post("{$txnServiceUrl}/api/charges/calculate", [
+            $serviceKey = config('services.internal_service_key');
+            $response = Http::withHeaders([
+                'X-Service-Key' => $serviceKey,
+            ])->post("{$txnServiceUrl}/api/internal/charges/calculate", [
                 'amount' => $amount,
                 'operator' => $operatorCode,
                 'transaction_type' => $type,
@@ -793,6 +796,8 @@ class PaymentController extends Controller
                     'platform_charge' => $data['platform_charge'] ?? 0,
                     'operator_charge' => $data['operator_charge'] ?? 0,
                 ];
+            } else {
+                Log::warning('Charge calculation failed with status: ' . $response->status() . ' body: ' . $response->body());
             }
         } catch (\Exception $e) {
             Log::warning("Charge calculation failed: " . $e->getMessage());

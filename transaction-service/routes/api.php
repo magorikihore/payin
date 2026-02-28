@@ -44,4 +44,5 @@ Route::middleware('auth.service')->group(function () {
 // Internal service-to-service routes (protected by service key)
 Route::middleware('internal.service')->group(function () {
     Route::post('/internal/transactions', [TransactionController::class, 'internalStore']);
+    Route::post('/internal/charges/calculate', [ChargeConfigController::class, 'calculate']);
 });

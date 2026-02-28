@@ -95,9 +95,9 @@ class WalletController extends Controller
 
         try {
             $chargeRes = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
+                'X-Service-Key' => config('services.internal_service_key'),
                 'Accept' => 'application/json',
-            ])->post(config('services.transaction_service.url') . '/api/charges/calculate', [
+            ])->post(config('services.transaction_service.url') . '/api/internal/charges/calculate', [
                 'amount' => $grossAmount,
                 'operator' => $operator,
                 'transaction_type' => 'collection',
