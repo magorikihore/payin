@@ -121,8 +121,9 @@ class IpWhitelistController extends Controller
         $ips = $query->get();
 
         $pendingCount = IpWhitelist::where('status', 'pending')->count();
+        $suspendedCount = IpWhitelist::where('status', 'suspended')->count();
 
-        return response()->json(['ips' => $ips, 'pending_count' => $pendingCount]);
+        return response()->json(['ips' => $ips, 'pending_count' => $pendingCount, 'suspended_count' => $suspendedCount]);
     }
 
     /**
@@ -177,6 +178,62 @@ class IpWhitelistController extends Controller
 
         return response()->json([
             'message' => 'IP address rejected.',
+            'ip' => $ip->fresh()->load('account:id,business_name,account_ref,paybill'),
+        ]);
+    }
+
+    /**
+     * Admin: Suspend (deactivate) an approved IP.
+     */
+    public function suspend(Request $request, $id): JsonResponse
+    {
+        $user = $request->user();
+        if (!in_array($user->role ?? null, ['super_admin', 'admin_user'])) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $ip = IpWhitelist::find($id);
+        if (!$ip) {
+            return response()->json(['message' => 'IP whitelist entry not found.'], 404);
+        }
+
+        $ip->update([
+            'status' => 'suspended',
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+            'admin_notes' => $request->admin_notes ?? $ip->admin_notes,
+        ]);
+
+        return response()->json([
+            'message' => 'IP address suspended.',
+            'ip' => $ip->fresh()->load('account:id,business_name,account_ref,paybill'),
+        ]);
+    }
+
+    /**
+     * Admin: Reactivate a suspended or rejected IP.
+     */
+    public function reactivate(Request $request, $id): JsonResponse
+    {
+        $user = $request->user();
+        if (!in_array($user->role ?? null, ['super_admin', 'admin_user'])) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $ip = IpWhitelist::find($id);
+        if (!$ip) {
+            return response()->json(['message' => 'IP whitelist entry not found.'], 404);
+        }
+
+        $ip->update([
+            'status' => 'approved',
+            'approved_by' => $user->id,
+            'approved_at' => now(),
+            'admin_notes' => $request->admin_notes ?? $ip->admin_notes,
+        ]);
+
+        return response()->json([
+            'message' => 'IP address reactivated.',
             'ip' => $ip->fresh()->load('account:id,business_name,account_ref,paybill'),
         ]);
     }

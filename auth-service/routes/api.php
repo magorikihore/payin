@@ -74,6 +74,8 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/ip-whitelist', [IpWhitelistController::class, 'adminIndex']);
         Route::put('/ip-whitelist/{id}/approve', [IpWhitelistController::class, 'approve']);
         Route::put('/ip-whitelist/{id}/reject', [IpWhitelistController::class, 'reject']);
+        Route::put('/ip-whitelist/{id}/suspend', [IpWhitelistController::class, 'suspend']);
+        Route::put('/ip-whitelist/{id}/reactivate', [IpWhitelistController::class, 'reactivate']);
 
         // Logs (super_admin only)
         Route::get('/logs', [LogController::class, 'index']);

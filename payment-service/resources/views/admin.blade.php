@@ -1150,6 +1150,7 @@
                         <option value="">All Statuses</option>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
+                        <option value="suspended">Suspended</option>
                         <option value="rejected">Rejected</option>
                     </select>
                 </div>
@@ -1184,18 +1185,28 @@
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="ip.label || '—'"></td>
                                         <td class="px-6 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
-                                                :class="{'bg-orange-100 text-orange-800': ip.status==='pending', 'bg-green-100 text-green-800': ip.status==='approved', 'bg-red-100 text-red-800': ip.status==='rejected'}"
+                                                :class="{'bg-orange-100 text-orange-800': ip.status==='pending', 'bg-green-100 text-green-800': ip.status==='approved', 'bg-red-100 text-red-800': ip.status==='rejected', 'bg-yellow-100 text-yellow-800': ip.status==='suspended'}"
                                                 x-text="ip.status"></span>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500" x-text="formatDate(ip.created_at)"></td>
                                         <td class="px-6 py-4">
                                             <div class="flex space-x-2">
+                                                <!-- Pending: Approve / Reject -->
                                                 <button x-show="ip.status === 'pending'" @click="approveIp(ip.id)"
                                                     class="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 font-medium">Approve</button>
                                                 <button x-show="ip.status === 'pending'" @click="rejectIp(ip.id)"
                                                     class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 font-medium">Reject</button>
-                                                <span x-show="ip.status === 'approved'" class="text-xs text-green-600 font-medium">Active</span>
-                                                <span x-show="ip.status === 'rejected'" class="text-xs text-red-600 font-medium">Denied</span>
+                                                <!-- Approved: Suspend -->
+                                                <button x-show="ip.status === 'approved'" @click="suspendIp(ip.id)"
+                                                    class="text-xs bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 font-medium">Suspend</button>
+                                                <!-- Suspended: Reactivate -->
+                                                <button x-show="ip.status === 'suspended'" @click="reactivateIp(ip.id)"
+                                                    class="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 font-medium">Reactivate</button>
+                                                <button x-show="ip.status === 'suspended'" @click="rejectIp(ip.id)"
+                                                    class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 font-medium">Reject</button>
+                                                <!-- Rejected: Reactivate -->
+                                                <button x-show="ip.status === 'rejected'" @click="reactivateIp(ip.id)"
+                                                    class="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 font-medium">Reactivate</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -3836,6 +3847,34 @@ function adminPanel() {
                 const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist/${id}/reject`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ admin_notes: notes || '' })
+                });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    this.fetchAdminIps();
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        async suspendIp(id) {
+            if (!confirm('Suspend this IP? API requests from this IP will be blocked.')) return;
+            const notes = prompt('Suspension reason (optional):');
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist/${id}/suspend`, {
+                    method: 'PUT', headers: this.getHeaders(),
+                    body: JSON.stringify({ admin_notes: notes || '' })
+                });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    this.fetchAdminIps();
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        async reactivateIp(id) {
+            if (!confirm('Reactivate this IP? It will become active again.')) return;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist/${id}/reactivate`, {
+                    method: 'PUT', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) {
