@@ -270,6 +270,22 @@ class WalletController extends Controller
             'requested_by' => $user->id,
         ]);
 
+        // Notify admin users about new transfer request
+        try {
+            Http::post(config('services.auth_service.url') . '/api/internal/send-notification', [
+                'account_id' => $accountId,
+                'type' => 'transfer_requested',
+                'data' => [
+                    'reference' => $transferRef,
+                    'operator' => $operator,
+                    'amount' => $amount,
+                    'currency' => $user->account['currency'] ?? 'TZS',
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('Admin transfer notification failed: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Transfer request submitted. Pending admin approval.',
             'transfer' => $transfer,

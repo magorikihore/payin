@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\IpWhitelist;
+use App\Models\User;
 use App\Notifications\IpWhitelistApprovedNotification;
+use App\Notifications\AdminIpWhitelistRequestedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -55,6 +57,22 @@ class IpWhitelistController extends Controller
             'status' => 'pending',
             'requested_by' => $user->id,
         ]);
+
+        // Notify admin users about new IP whitelist request
+        try {
+            $account = $user->account;
+            $admins = User::whereIn('role', ['super_admin', 'admin_user'])->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminIpWhitelistRequestedNotification([
+                    'business_name' => $account->business_name ?? 'N/A',
+                    'ip_address' => $request->ip_address,
+                    'label' => $request->label ?? 'N/A',
+                    'requested_by' => $user->firstname . ' ' . $user->lastname,
+                ]));
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Admin IP whitelist notification failed: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'IP address added. Pending admin approval.',

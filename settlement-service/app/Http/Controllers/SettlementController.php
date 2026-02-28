@@ -193,12 +193,31 @@ class SettlementController extends Controller
             'total_debited' => $totalDebit,
             'currency' => $currency,
             'status' => 'pending',
-            'bank_name' => $request->bank_name,
-            'account_number' => $request->account_number,
-            'account_name' => $request->account_name,
+            'bank_name' => $bankName,
+            'account_number' => $accountNumber,
+            'account_name' => $accountName,
             'description' => $request->description ?? 'Settlement request',
             'timestamp' => now()->toIso8601String(),
         ]);
+
+        // Notify admin users about new settlement request
+        try {
+            Http::post(config('services.auth_service.url') . '/api/internal/send-notification', [
+                'account_id' => $user->account_id,
+                'type' => 'settlement_requested',
+                'data' => [
+                    'settlement_ref' => $settlementRef,
+                    'amount' => $settlementAmount,
+                    'currency' => $currency,
+                    'operator' => $operator,
+                    'bank_name' => $bankName,
+                    'account_number' => $accountNumber,
+                    'account_name' => $accountName,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('Admin settlement notification failed: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => "Settlement request created. " . number_format($totalDebit, 2) . " {$currency} debited from {$operator} disbursement wallet (Amount: " . number_format($settlementAmount, 2) . " {$currency}{$chargeMsg}).",

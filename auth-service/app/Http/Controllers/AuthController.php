@@ -7,6 +7,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Models\Account;
 use App\Models\User;
 use App\Notifications\WelcomeNotification;
+use App\Notifications\AdminKycSubmittedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -321,6 +322,20 @@ class AuthController extends Controller
 
         $account->update($data);
         $account->refresh();
+
+        // Notify admin users about new KYC submission
+        try {
+            $admins = User::whereIn('role', ['super_admin', 'admin_user'])->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminKycSubmittedNotification([
+                    'business_name' => $account->business_name ?? 'N/A',
+                    'account_ref' => $account->account_ref ?? 'N/A',
+                    'submitted_by' => $user->firstname . ' ' . $user->lastname,
+                ]));
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Admin KYC notification failed: ' . $e->getMessage());
+        }
 
         $message = $account->status === 'active'
             ? 'Business details updated successfully.'
