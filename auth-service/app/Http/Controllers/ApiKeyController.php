@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ApiKey;
+use App\Models\IpWhitelist;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -122,10 +123,9 @@ class ApiKeyController extends Controller
      */
     public function validate(Request $request): JsonResponse
     {
-        $request->validate([
-            'api_key' => 'required|string',
-            'api_secret' => 'required|string',
-        ]);
+        if (!$request->api_key || !$request->api_secret) {
+            return response()->json(['message' => 'api_key and api_secret are required.'], 422);
+        }
 
         $key = ApiKey::where('api_key', $request->api_key)
             ->where('status', 'active')
@@ -143,6 +143,23 @@ class ApiKeyController extends Controller
             return response()->json(['message' => 'Invalid API secret.'], 401);
         }
 
+        // ── IP Whitelist Enforcement ──
+        // If the account has any approved IPs, only those IPs may call the API.
+        $clientIp = $request->input('client_ip');
+        $approvedIps = IpWhitelist::where('account_id', $key->account_id)
+            ->where('status', 'approved')
+            ->pluck('ip_address')
+            ->toArray();
+
+        if (!empty($approvedIps) && $clientIp) {
+            if (!in_array($clientIp, $approvedIps)) {
+                return response()->json([
+                    'message' => "IP address {$clientIp} is not whitelisted for this account.",
+                    'ip_blocked' => true,
+                ], 403);
+            }
+        }
+
         // Update last used
         $key->update(['last_used_at' => now()]);
 
@@ -153,6 +170,7 @@ class ApiKeyController extends Controller
         return response()->json([
             'valid' => true,
             'account_id' => $key->account_id,
+            'ip_enforced' => !empty($approvedIps),
             'account' => $account ? [
                 'id' => $account->id,
                 'account_ref' => $account->account_ref,

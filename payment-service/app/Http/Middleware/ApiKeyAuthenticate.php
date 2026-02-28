@@ -27,16 +27,30 @@ class ApiKeyAuthenticate
 
         try {
             $authServiceUrl = config('services.auth_service.url');
-            $response = Http::timeout(10)->post("{$authServiceUrl}/api/internal/validate-api-key", [
-                'api_key' => $apiKey,
-                'api_secret' => $apiSecret,
-            ]);
+            $clientIp = $request->ip();
+
+            $response = Http::timeout(10)
+                ->acceptJson()
+                ->post("{$authServiceUrl}/api/internal/validate-api-key", [
+                    'api_key' => $apiKey,
+                    'api_secret' => $apiSecret,
+                    'client_ip' => $clientIp,
+                ]);
 
             if ($response->failed()) {
                 $data = $response->json();
+                $status = $response->status();
+
+                // IP blocked
+                if ($data['ip_blocked'] ?? false) {
+                    return response()->json([
+                        'message' => $data['message'] ?? 'IP address not whitelisted.',
+                    ], 403);
+                }
+
                 return response()->json([
                     'message' => $data['message'] ?? 'Invalid API credentials.',
-                ], 401);
+                ], $status >= 400 && $status < 600 ? $status : 401);
             }
 
             $data = $response->json();
