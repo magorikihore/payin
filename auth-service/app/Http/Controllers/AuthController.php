@@ -205,6 +205,7 @@ class AuthController extends Controller
                 'tin_certificate_url' => $account->tin_certificate_url,
                 'company_memorandum_url' => $account->company_memorandum_url,
                 'company_resolution_url' => $account->company_resolution_url,
+                'kyc_update_allowed' => (bool) $account->kyc_update_allowed,
                 'status' => $account->status,
                 'kyc_submitted_at' => $account->kyc_submitted_at,
                 'kyc_approved_at' => $account->kyc_approved_at,
@@ -313,11 +314,20 @@ class AuthController extends Controller
             $data['status'] = 'pending';
         }
 
+        // If account is active and admin granted update permission, revoke it after save
+        if ($account->status === 'active' && $account->kyc_update_allowed) {
+            $data['kyc_update_allowed'] = false;
+        }
+
         $account->update($data);
         $account->refresh();
 
+        $message = $account->status === 'active'
+            ? 'Business details updated successfully.'
+            : 'KYC details updated successfully. Your account is under review.';
+
         return response()->json([
-            'message' => 'KYC details updated successfully. Your account is under review.',
+            'message' => $message,
             'kyc' => [
                 'business_name' => $account->business_name,
                 'business_type' => $account->business_type,
@@ -343,6 +353,7 @@ class AuthController extends Controller
                 'tin_certificate_url' => $account->tin_certificate_url,
                 'company_memorandum_url' => $account->company_memorandum_url,
                 'company_resolution_url' => $account->company_resolution_url,
+                'kyc_update_allowed' => (bool) $account->kyc_update_allowed,
                 'status' => $account->status,
                 'kyc_submitted_at' => $account->kyc_submitted_at,
                 'kyc_approved_at' => $account->kyc_approved_at,

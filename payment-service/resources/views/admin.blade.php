@@ -1579,6 +1579,29 @@
                             <span x-show="kycNoteMsg" x-cloak class="text-sm text-green-600" x-text="kycNoteMsg"></span>
                         </div>
                     </div>
+
+                    <!-- KYC Update Permission -->
+                    <div class="px-6 py-4" x-show="kycAccount?.status === 'active'" x-cloak>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">KYC Update Permission</h4>
+                        <p class="text-xs text-gray-500 mb-3">Allow the business owner to edit their details (business info, bank, documents). Permission is automatically revoked after they save changes.</p>
+                        <div class="flex items-center gap-3">
+                            <button @click="toggleKycUpdatePermission()" :disabled="kycUpdatePermLoading"
+                                class="px-4 py-2 text-sm font-medium rounded-lg transition disabled:opacity-50"
+                                :class="kycAccount?.kyc_update_allowed ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-600 text-white hover:bg-green-700'">
+                                <span x-show="!kycUpdatePermLoading" x-text="kycAccount?.kyc_update_allowed ? 'Revoke Update Permission' : 'Allow Business to Update'"></span>
+                                <span x-show="kycUpdatePermLoading">Processing...</span>
+                            </button>
+                            <span x-show="kycAccount?.kyc_update_allowed" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                                Update Allowed
+                            </span>
+                            <span x-show="!kycAccount?.kyc_update_allowed" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-500 font-medium">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                                Locked
+                            </span>
+                            <span x-show="kycUpdatePermMsg" x-cloak class="text-sm text-green-600" x-text="kycUpdatePermMsg"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Modal Footer Actions -->
@@ -2751,6 +2774,7 @@ function adminPanel() {
         kycPaybill: '', kycPaybillSaving: false, kycPaybillMsg: '',
         kycRateLimit: 60, kycRateLimitSaving: false, kycRateLimitMsg: '', kycRateLimitMsgType: 'success',
         kycActionLoading: false,
+        kycUpdatePermLoading: false, kycUpdatePermMsg: '',
         // KYC Edit
         kycEditing: false, kycEditSaving: false, kycEditMsg: '', kycEditMsgType: 'success',
         kycIdDocFile: null, kycBizLicFile: null, kycIncorpFile: null, kycTaxFile: null,
@@ -3370,6 +3394,25 @@ function adminPanel() {
                 }
             } catch (e) { console.error(e); }
             this.kycActionLoading = false;
+        },
+
+        async toggleKycUpdatePermission() {
+            if (!this.kycAccount) return;
+            this.kycUpdatePermLoading = true;
+            this.kycUpdatePermMsg = '';
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc-update-permission`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.kycAccount.kyc_update_allowed = data.kyc_update_allowed;
+                    this.kycUpdatePermMsg = data.message;
+                    setTimeout(() => { this.kycUpdatePermMsg = ''; }, 5000);
+                }
+            } catch (e) { console.error(e); }
+            this.kycUpdatePermLoading = false;
         },
 
         // ---- Charges ----

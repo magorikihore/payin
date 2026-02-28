@@ -41,6 +41,7 @@ class Account extends Model
         'tin_certificate_url',
         'company_memorandum_url',
         'company_resolution_url',
+        'kyc_update_allowed',
         'kyc_notes',
         'kyc_submitted_at',
         'kyc_approved_at',
@@ -52,6 +53,7 @@ class Account extends Model
     protected $casts = [
         'kyc_submitted_at' => 'datetime',
         'kyc_approved_at' => 'datetime',
+        'kyc_update_allowed' => 'boolean',
     ];
 
     public function users(): HasMany

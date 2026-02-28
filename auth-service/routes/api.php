@@ -57,6 +57,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/accounts/{id}', [AdminController::class, 'accountDetail']);
         Route::put('/accounts/{id}/status', [AdminController::class, 'updateAccountStatus']);
         Route::put('/accounts/{id}/kyc-notes', [AdminController::class, 'updateKycNotes']);
+        Route::put('/accounts/{id}/kyc-update-permission', [AdminController::class, 'toggleKycUpdatePermission']);
         Route::post('/accounts/{id}/kyc', [AdminController::class, 'updateAccountKyc']);
         Route::post('/accounts/create-business', [AdminController::class, 'createBusiness']);
         Route::put('/accounts/{id}/rate-limit', [AdminController::class, 'updateRateLimit']);

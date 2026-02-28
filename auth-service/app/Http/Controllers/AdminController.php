@@ -190,6 +190,29 @@ class AdminController extends Controller
     }
 
     /**
+     * Toggle KYC update permission for a business account.
+     * When enabled, the business owner can edit their details even after KYC approval.
+     */
+    public function toggleKycUpdatePermission(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
+
+        $account = Account::find($id);
+        if (!$account) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        $allowed = !$account->kyc_update_allowed;
+        $account->update(['kyc_update_allowed' => $allowed]);
+
+        return response()->json([
+            'message' => $allowed ? 'Business can now update their KYC details.' : 'KYC update permission revoked.',
+            'kyc_update_allowed' => $allowed,
+            'account' => $account,
+        ]);
+    }
+
+    /**
      * Admin update KYC details for an account (edit fields + upload documents).
      */
     public function updateAccountKyc(Request $request, $id): JsonResponse

@@ -1010,7 +1010,7 @@
                     </div>
 
                     <!-- Stepper Progress -->
-                    <div x-show="kycData.status !== 'active'" class="flex items-center mb-8">
+                    <div x-show="kycData.status !== 'active' || kycData.kyc_update_allowed" class="flex items-center mb-8">
                         <template x-for="(step, idx) in [{n:1, label:'Business Info'}, {n:2, label:'ID Verification'}, {n:3, label:'Documents'}, {n:4, label:'Crypto Wallet'}]" :key="step.n">
                             <div class="flex items-center" :class="idx < 3 ? 'flex-1' : ''">
                                 <button type="button" @click="kycStep = step.n" class="flex items-center space-x-2 group">
@@ -1027,7 +1027,7 @@
                     </div>
 
                     <!-- ===== APPROVED: Read-only KYC Summary ===== -->
-                    <div x-show="kycData.status === 'active' && !kycFormLoading" x-cloak>
+                    <div x-show="kycData.status === 'active' && !kycData.kyc_update_allowed && !kycFormLoading" x-cloak>
                         <div class="mb-6 p-4 bg-ggreen-50 border border-ggreen-200 rounded-xl flex items-center">
                             <svg class="w-6 h-6 text-ggreen-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             <div>
@@ -1153,8 +1153,17 @@
                         </div>
                     </div>
 
-                    <!-- ===== NOT APPROVED: Show KYC Form ===== -->
-                    <div x-show="kycData.status !== 'active'">
+                    <!-- ===== NOT APPROVED OR UPDATE ALLOWED: Show KYC Form ===== -->
+                    <div x-show="kycData.status !== 'active' || kycData.kyc_update_allowed">
+
+                    <!-- Update Permission Banner -->
+                    <div x-show="kycData.status === 'active' && kycData.kyc_update_allowed" x-cloak class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start">
+                        <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <div>
+                            <p class="text-sm font-semibold text-blue-800">Update Permission Granted</p>
+                            <p class="text-xs text-blue-600">Admin has allowed you to update your business details. Make your changes and save. Permission will be revoked after saving.</p>
+                        </div>
+                    </div>
 
                     <!-- Alerts -->
                     <div x-show="kycData.kyc_notes && kycData.status !== 'active'" x-cloak class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
