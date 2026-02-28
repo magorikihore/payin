@@ -136,6 +136,10 @@ class TransactionController extends Controller
             ->whereDate('created_at', now()->toDateString())
             ->sum('platform_charge');
 
+        $todayOperator = Transaction::where('status', 'completed')
+            ->whereDate('created_at', now()->toDateString())
+            ->sum('operator_charge');
+
         // Per-account charges
         $byAccount = Transaction::where('status', 'completed')
             ->select('account_id',
@@ -151,6 +155,7 @@ class TransactionController extends Controller
             'total_operator_charges' => round($totalOperatorCharges, 2),
             'total_charges' => round($totalPlatformCharges + $totalOperatorCharges, 2),
             'today_platform_charges' => round($todayPlatform, 2),
+            'today_operator_charges' => round($todayOperator, 2),
             'by_operator' => $byOperator,
             'by_type' => $byType,
             'by_account' => $byAccount,

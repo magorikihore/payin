@@ -579,7 +579,7 @@
                                 <div x-show="walletMsg['trf_'+w.operator]" x-cloak class="mb-2 p-2 rounded text-xs"
                                     :class="walletMsgType['trf_'+w.operator] === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                                     x-text="walletMsg['trf_'+w.operator]"></div>
-                                <input type="number" x-model="transferAmounts[w.operator]" min="1" placeholder="Amount"
+                                <input type="text" inputmode="numeric" :value="transferAmountDisplays[w.operator] || ''" @input="formatAmountInput($event, 'transfer', w.operator)" placeholder="Amount"
                                     class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none mb-2">
                                 <button @click="transferToDisbursement(w.operator)" :disabled="walletTransferLoading[w.operator]"
                                     class="w-full py-1.5 bg-gblue-500 text-white rounded-lg text-xs font-medium hover:bg-gblue-600 transition disabled:opacity-50">
@@ -750,7 +750,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (min 1,000 ' + walletCurrency + ')'"></label>
-                        <input type="number" x-model="stlForm.amount" min="1000" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        <input type="text" inputmode="numeric" x-model="stlAmountDisplay" @input="formatAmountInput($event, 'settlement')" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
@@ -1703,7 +1703,7 @@
                         <h4 class="text-sm font-semibold text-gray-700 mb-3">Add Recipient Manually</h4>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <input type="text" x-model="manualRow.phone" placeholder="Phone (e.g. 0712345678)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                            <input type="number" x-model="manualRow.amount" placeholder="Amount" min="100" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <input type="text" inputmode="numeric" x-model="manualAmountDisplay" @input="formatAmountInput($event, 'manual')" placeholder="Amount" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <input type="text" x-model="manualRow.reference" placeholder="Reference (optional)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <button @click="addManualRow()" class="px-4 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium">+ Add</button>
                         </div>
@@ -2307,7 +2307,7 @@ function dashboard() {
         collectionWallets: [], disbursementWallets: [], operators: [],
         overallBalance: 0, collectionTotal: 0, disbursementTotal: 0,
         walletTransactions: [], walletTxnOperatorFilter: '', walletTxnTypeFilter: '',
-        creditAmounts: {}, creditDescs: {}, transferAmounts: {},
+        creditAmounts: {}, creditDescs: {}, transferAmounts: {}, transferAmountDisplays: {},
         walletCreditLoading: {}, walletTransferLoading: {},
         walletMsg: {}, walletMsgType: {},
         walletLoading: { txns: false },
@@ -2315,6 +2315,7 @@ function dashboard() {
         // Settlements
         settlements:[], stlFilterStatus: '', stlLoading: false, stlLoadingList: false,
         stlForm: { operator: '', amount: '', bank_name: '', account_number: '', account_name: '', description: '' },
+        stlAmountDisplay: '',
         settlementMsg: '', settlementMsgType: '',
 
         // Send Money (Payout)
@@ -2331,6 +2332,7 @@ function dashboard() {
         batchMsg: '', batchMsgType: 'success',
         batchResults: [], batchResultSummary: { sent: 0, failed: 0, total: 0 },
         manualRow: { phone: '', amount: '', reference: '', description: '' },
+        manualAmountDisplay: '',
         recentDisbursements: [], recentDisbLoading: false,
 
         // Password
@@ -2816,6 +2818,7 @@ function dashboard() {
                 if (!res.ok) { this.walletMsg[key] = data.message || 'Transfer failed.'; this.walletMsgType[key] = 'error'; return; }
                 this.walletMsg[key] = data.message; this.walletMsgType[key] = 'success';
                 this.transferAmounts[operator] = '';
+                this.transferAmountDisplays[operator] = '';
                 this.fetchMyTransfers();
                 setTimeout(() => { this.walletMsg[key] = ''; }, 5000);
             } catch (e) { this.walletMsg[key] = 'Service unavailable.'; this.walletMsgType[key] = 'error'; }
@@ -2871,6 +2874,7 @@ function dashboard() {
                 }
                 this.settlementMsg = data.message; this.settlementMsgType = 'success';
                 this.stlForm = { operator: '', amount: '', bank_name: '', account_number: '', account_name: '', description: '' };
+                this.stlAmountDisplay = '';
                 this.fetchSettlements();
                 this.fetchMyCharges();
                 this.fetchTransactions();
@@ -3061,6 +3065,7 @@ function dashboard() {
                 _status: 'ready'
             });
             this.manualRow = { phone: '', amount: '', reference: '', description: '' };
+            this.manualAmountDisplay = '';
             this.batchMsg = '';
         },
 
@@ -3115,15 +3120,25 @@ function dashboard() {
 
         // ---- Helpers ----
         formatAmount(a) { return Number(a).toLocaleString('en-US', { minimumFractionDigits: 2 }); },
-        formatAmountInput(event, target) {
+        formatAmountInput(event, target, key) {
             let raw = event.target.value.replace(/[^0-9]/g, '');
             let num = parseInt(raw, 10) || 0;
+            let formatted = num > 0 ? num.toLocaleString('en-US') : '';
             if (target === 'payout') {
                 this.payoutForm.amount = num > 0 ? num : '';
-                this.payoutAmountDisplay = num > 0 ? num.toLocaleString('en-US') : '';
+                this.payoutAmountDisplay = formatted;
+                this.calculatePayoutCharges();
+            } else if (target === 'transfer') {
+                this.transferAmounts[key] = num > 0 ? num : '';
+                this.transferAmountDisplays[key] = formatted;
+            } else if (target === 'settlement') {
+                this.stlForm.amount = num > 0 ? num : '';
+                this.stlAmountDisplay = formatted;
+            } else if (target === 'manual') {
+                this.manualRow.amount = num > 0 ? num : '';
+                this.manualAmountDisplay = formatted;
             }
-            event.target.value = num > 0 ? num.toLocaleString('en-US') : '';
-            this.calculatePayoutCharges();
+            event.target.value = formatted;
         },
         formatDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); },
 

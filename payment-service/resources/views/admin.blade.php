@@ -165,49 +165,77 @@
                 </div>
             </div>
 
+            <!-- Profit & Revenue Overview -->
+            <div class="mt-6 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold flex items-center">
+                        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        Our Profit & Revenue
+                    </h3>
+                    <span class="text-xs bg-white/20 px-3 py-1 rounded-full" x-text="'Margin: ' + ((chargeRevenue.total_charges > 0) ? Math.round(((chargeRevenue.total_platform_charges || 0) / chargeRevenue.total_charges) * 100) : 0) + '%'"></span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white/15 backdrop-blur rounded-xl p-4">
+                        <p class="text-green-100 text-xs font-medium uppercase tracking-wide">Our Profit (Platform)</p>
+                        <p class="text-3xl font-bold mt-1" x-text="formatAmount(chargeRevenue.total_platform_charges || 0) + ' TZS'"></p>
+                        <p class="text-xs text-green-200 mt-1">Revenue we keep from all charges</p>
+                    </div>
+                    <div class="bg-white/15 backdrop-blur rounded-xl p-4">
+                        <p class="text-green-100 text-xs font-medium uppercase tracking-wide">Today's Profit</p>
+                        <p class="text-3xl font-bold mt-1" x-text="formatAmount(chargeRevenue.today_platform_charges || 0) + ' TZS'"></p>
+                        <p class="text-xs text-green-200 mt-1">Platform earnings today</p>
+                    </div>
+                    <div class="bg-white/15 backdrop-blur rounded-xl p-4">
+                        <p class="text-green-100 text-xs font-medium uppercase tracking-wide">Today's Operator Cost</p>
+                        <p class="text-3xl font-bold mt-1" x-text="formatAmount(chargeRevenue.today_operator_charges || 0) + ' TZS'"></p>
+                        <p class="text-xs text-green-200 mt-1">Paid to operators today</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Charge Revenue Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-                <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl shadow-sm p-6 text-white">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-emerald-100 text-sm">Total Platform Charges</p>
-                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(chargeRevenue.total_platform_charges || 0) + ' TZS'"></p>
+                <div class="bg-white rounded-xl shadow-sm border p-5">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-emerald-100 rounded-lg">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
-                        <div class="p-3 bg-white/20 rounded-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium">Total Platform Charges</p>
+                            <p class="text-xl font-bold text-emerald-600" x-text="formatAmount(chargeRevenue.total_platform_charges || 0) + ' TZS'"></p>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-sm p-6 text-white">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-blue-100 text-sm">Total Operator Charges</p>
-                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(chargeRevenue.total_operator_charges || 0) + ' TZS'"></p>
+                <div class="bg-white rounded-xl shadow-sm border p-5">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-blue-100 rounded-lg">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         </div>
-                        <div class="p-3 bg-white/20 rounded-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium">Total Operator Charges</p>
+                            <p class="text-xl font-bold text-blue-600" x-text="formatAmount(chargeRevenue.total_operator_charges || 0) + ' TZS'"></p>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-r from-amber-500 to-amber-600 rounded-xl shadow-sm p-6 text-white">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-amber-100 text-sm">Today's Platform Revenue</p>
-                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(chargeRevenue.today_platform_charges || 0) + ' TZS'"></p>
+                <div class="bg-white rounded-xl shadow-sm border p-5">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-amber-100 rounded-lg">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                         </div>
-                        <div class="p-3 bg-white/20 rounded-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium">Today's Platform Revenue</p>
+                            <p class="text-xl font-bold text-amber-600" x-text="formatAmount(chargeRevenue.today_platform_charges || 0) + ' TZS'"></p>
                         </div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-purple-100 text-sm">Total Charges Collected</p>
-                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(chargeRevenue.total_charges || 0) + ' TZS'"></p>
+                <div class="bg-white rounded-xl shadow-sm border p-5">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-purple-100 rounded-lg">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
-                        <div class="p-3 bg-white/20 rounded-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium">Total Charges Collected</p>
+                            <p class="text-xl font-bold text-purple-600" x-text="formatAmount(chargeRevenue.total_charges || 0) + ' TZS'"></p>
                         </div>
                     </div>
                 </div>
@@ -215,37 +243,63 @@
 
             <!-- Charge Revenue Breakdown -->
             <div x-show="chargeRevenue.by_operator && chargeRevenue.by_operator.length > 0" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- By Operator -->
+                <!-- Profit by Operator -->
                 <div class="bg-white rounded-xl shadow-sm border p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Charges by Operator</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Profit by Operator</h3>
                     <div class="space-y-3">
                         <template x-for="op in (chargeRevenue.by_operator || [])" :key="op.operator">
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div>
-                                    <span class="font-medium text-gray-700" x-text="op.operator"></span>
-                                    <span class="text-xs text-gray-400 ml-2" x-text="op.transaction_count + ' txns'"></span>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <span class="font-medium text-gray-700" x-text="op.operator"></span>
+                                        <span class="text-xs text-gray-400 ml-2" x-text="op.transaction_count + ' txns'"></span>
+                                    </div>
+                                    <span class="text-sm font-bold text-emerald-600" x-text="formatAmount(Number(op.platform_charges) + Number(op.operator_charges)) + ' TZS'"></span>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-sm font-semibold text-emerald-600" x-text="formatAmount(Number(op.platform_charges) + Number(op.operator_charges)) + ' TZS'"></p>
-                                    <p class="text-xs text-gray-400" x-text="'Platform: ' + formatAmount(op.platform_charges) + ' | Operator: ' + formatAmount(op.operator_charges)"></p>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div class="bg-emerald-50 rounded px-2 py-1.5 text-center">
+                                        <p class="text-gray-500">Our Profit</p>
+                                        <p class="font-bold text-emerald-600" x-text="formatAmount(op.platform_charges) + ' TZS'"></p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded px-2 py-1.5 text-center">
+                                        <p class="text-gray-500">Operator Cost</p>
+                                        <p class="font-bold text-blue-600" x-text="formatAmount(op.operator_charges) + ' TZS'"></p>
+                                    </div>
+                                    <div class="bg-gray-100 rounded px-2 py-1.5 text-center">
+                                        <p class="text-gray-500">Margin</p>
+                                        <p class="font-bold text-gray-700" x-text="((Number(op.platform_charges) + Number(op.operator_charges)) > 0 ? Math.round(Number(op.platform_charges) / (Number(op.platform_charges) + Number(op.operator_charges)) * 100) : 0) + '%'"></p>
+                                    </div>
                                 </div>
                             </div>
                         </template>
                     </div>
                 </div>
-                <!-- By Type -->
+                <!-- Profit by Type -->
                 <div class="bg-white rounded-xl shadow-sm border p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Charges by Transaction Type</h3>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Profit by Transaction Type</h3>
                     <div class="space-y-3">
                         <template x-for="tp in (chargeRevenue.by_type || [])" :key="tp.type">
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                <div>
-                                    <span class="font-medium text-gray-700 capitalize" x-text="tp.type"></span>
-                                    <span class="text-xs text-gray-400 ml-2" x-text="tp.transaction_count + ' txns'"></span>
+                            <div class="p-3 bg-gray-50 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div>
+                                        <span class="font-medium text-gray-700 capitalize" x-text="tp.type"></span>
+                                        <span class="text-xs text-gray-400 ml-2" x-text="tp.transaction_count + ' txns'"></span>
+                                    </div>
+                                    <span class="text-sm font-bold text-emerald-600" x-text="formatAmount(Number(tp.platform_charges) + Number(tp.operator_charges)) + ' TZS'"></span>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-sm font-semibold text-emerald-600" x-text="formatAmount(Number(tp.platform_charges) + Number(tp.operator_charges)) + ' TZS'"></p>
-                                    <p class="text-xs text-gray-400" x-text="'Platform: ' + formatAmount(tp.platform_charges) + ' | Operator: ' + formatAmount(tp.operator_charges)"></p>
+                                <div class="grid grid-cols-3 gap-2 text-xs">
+                                    <div class="bg-emerald-50 rounded px-2 py-1.5 text-center">
+                                        <p class="text-gray-500">Our Profit</p>
+                                        <p class="font-bold text-emerald-600" x-text="formatAmount(tp.platform_charges) + ' TZS'"></p>
+                                    </div>
+                                    <div class="bg-blue-50 rounded px-2 py-1.5 text-center">
+                                        <p class="text-gray-500">Operator Cost</p>
+                                        <p class="font-bold text-blue-600" x-text="formatAmount(tp.operator_charges) + ' TZS'"></p>
+                                    </div>
+                                    <div class="bg-gray-100 rounded px-2 py-1.5 text-center">
+                                        <p class="text-gray-500">Margin</p>
+                                        <p class="font-bold text-gray-700" x-text="((Number(tp.platform_charges) + Number(tp.operator_charges)) > 0 ? Math.round(Number(tp.platform_charges) / (Number(tp.platform_charges) + Number(tp.operator_charges)) * 100) : 0) + '%'"></p>
+                                    </div>
                                 </div>
                             </div>
                         </template>
@@ -253,10 +307,10 @@
                 </div>
             </div>
 
-            <!-- Charges Per Account -->
+            <!-- Charges & Profit Per Account -->
             <div x-show="chargeRevenue.by_account && chargeRevenue.by_account.length > 0" class="mt-6">
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                    <div class="px-6 py-4 border-b"><h3 class="text-lg font-semibold text-gray-800">Charges Collected Per Account</h3></div>
+                    <div class="px-6 py-4 border-b"><h3 class="text-lg font-semibold text-gray-800">Charges & Profit Per Account</h3></div>
                     <div class="overflow-x-auto">
                         <table class="w-full">
                             <thead class="bg-gray-50">
@@ -264,9 +318,10 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transactions</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Volume</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Platform Charges</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator Charges</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Our Profit</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator Cost</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Charges</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Margin</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -275,9 +330,10 @@
                                         <td class="px-6 py-3 text-sm font-medium text-gray-700" x-text="accountName(ac.account_id)"></td>
                                         <td class="px-6 py-3 text-sm text-gray-600" x-text="ac.transaction_count"></td>
                                         <td class="px-6 py-3 text-sm text-gray-600" x-text="formatAmount(ac.total_volume) + ' TZS'"></td>
-                                        <td class="px-6 py-3 text-sm text-emerald-600 font-medium" x-text="formatAmount(ac.platform_charges) + ' TZS'"></td>
+                                        <td class="px-6 py-3 text-sm text-emerald-600 font-bold" x-text="formatAmount(ac.platform_charges) + ' TZS'"></td>
                                         <td class="px-6 py-3 text-sm text-blue-600 font-medium" x-text="formatAmount(ac.operator_charges) + ' TZS'"></td>
                                         <td class="px-6 py-3 text-sm text-purple-600 font-bold" x-text="formatAmount(Number(ac.platform_charges) + Number(ac.operator_charges)) + ' TZS'"></td>
+                                        <td class="px-6 py-3 text-sm font-bold" :class="((Number(ac.platform_charges) + Number(ac.operator_charges)) > 0 ? Math.round(Number(ac.platform_charges) / (Number(ac.platform_charges) + Number(ac.operator_charges)) * 100) : 0) >= 50 ? 'text-emerald-600' : 'text-amber-600'" x-text="((Number(ac.platform_charges) + Number(ac.operator_charges)) > 0 ? Math.round(Number(ac.platform_charges) / (Number(ac.platform_charges) + Number(ac.operator_charges)) * 100) : 0) + '%'"></td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -598,7 +654,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Amount (TZS)</label>
-                            <input type="number" step="0.01" x-model="fundForm.amount" placeholder="0.00"
+                            <input type="text" inputmode="numeric" x-model="fundAmountDisplay" @input="formatAmountInput($event, 'fund')" placeholder="0"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
                         <div>
@@ -2960,6 +3016,7 @@ function adminPanel() {
         walletData: {}, wltLoading: false, wltSearch: '',
         showWalletModal: false, walletModalData: null,
         fundForm: { account_id: '', operator: 'M-Pesa', amount: '', description: '' },
+        fundAmountDisplay: '',
         fundLoading: false, fundMsg: '', fundMsgType: 'success',
 
         // Settlements (admin)
@@ -3291,6 +3348,7 @@ function adminPanel() {
                 if (res.ok) {
                     this.fundMsg = data.message + ' Balance: ' + this.formatAmount(data.balance_after) + ' TZS'; this.fundMsgType = 'success';
                     this.fundForm = { account_id: '', operator: 'M-Pesa', amount: '', description: '' };
+                    this.fundAmountDisplay = '';
                     this.fetchAdminWallets();
                 } else {
                     const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
@@ -3850,6 +3908,16 @@ function adminPanel() {
         },
 
         formatAmount(a) { return Number(a).toLocaleString('en-US', { minimumFractionDigits: 2 }); },
+        formatAmountInput(event, target) {
+            let raw = event.target.value.replace(/[^0-9]/g, '');
+            let num = parseInt(raw, 10) || 0;
+            let formatted = num > 0 ? num.toLocaleString('en-US') : '';
+            if (target === 'fund') {
+                this.fundForm.amount = num > 0 ? num : '';
+                this.fundAmountDisplay = formatted;
+            }
+            event.target.value = formatted;
+        },
 
         // ---- Reversals ----
         async fetchAdminReversals() {
