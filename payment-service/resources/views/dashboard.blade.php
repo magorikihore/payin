@@ -1684,7 +1684,7 @@
                         </div>
 
                         <div class="flex justify-end mt-3">
-                            <button @click="sendBatchPayout()" :disabled="batchLoading" class="px-6 py-2.5 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
+                            <button @click="sendBatchPayout()" :disabled="batchLoading || batchResults.length > 0" class="px-6 py-2.5 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
                                 <span x-show="!batchLoading">Send Batch</span>
                                 <span x-show="batchLoading">Sending...</span>
                             </button>
@@ -3263,7 +3263,11 @@ function dashboard() {
                 }
                 this.batchMsg = data.message || (res.ok ? 'Batch sent.' : 'Batch failed.');
                 this.batchMsgType = data.failed === 0 ? 'success' : 'error';
-                if (data.failed === 0) { this.batchName = ''; }
+                // Clear form to prevent duplicate sends
+                this.batchItems = [];
+                this.batchName = '';
+                this.batchCsvText = '';
+                this.batchCharges = null;
                 this.fetchRecentDisbursements();
             } catch (e) { this.batchMsg = 'Network error.'; this.batchMsgType = 'error'; }
             this.batchLoading = false;
