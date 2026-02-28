@@ -4,83 +4,139 @@
 
 @section('content')
 <div x-data="dashboard()" x-init="init()" x-cloak>
-    <!-- Google-style color strip -->
-    <div class="flex h-1">
-        <div class="flex-1 bg-gblue-500"></div>
-        <div class="flex-1 bg-gred-500"></div>
-        <div class="flex-1 bg-gyellow-500"></div>
-        <div class="flex-1 bg-ggreen-500"></div>
-    </div>
-
-    <!-- Navigation -->
-    <nav class="bg-white shadow border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+    <!-- Top Navbar -->
+    <nav class="bg-gray-900 shadow-lg border-b border-gray-800 fixed top-0 left-0 right-0 z-30">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-14">
                 <div class="flex items-center">
-                    <svg class="w-8 h-8 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden mr-3 text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                     </svg>
-                    <span class="ml-2 text-xl font-bold text-gray-800">Payin</span>
+                    <span class="ml-2 text-lg font-bold text-white">Payin</span>
+                    <span x-show="user?.account" class="ml-3 text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-full font-medium hidden sm:inline" x-text="user?.account?.business_name"></span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Welcome, <span class="font-medium" x-text="user?.name || 'User'"></span></span>
-                    <span x-show="user?.account" class="text-xs bg-gblue-50 text-gblue-700 px-2 py-1 rounded-full" x-text="user?.account?.business_name"></span>
-                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full capitalize" x-text="user?.role || ''"></span>
-                    <button @click="showPasswordModal = true" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">Change Password</button>
-                    <button x-show="hasPerm('view_settings')" @click="activeTab = 'settings'; fetchCallback()" :class="activeTab === 'settings' ? 'text-gblue-600' : 'text-gray-500 hover:text-gray-700'" class="flex items-center text-sm font-medium transition" title="Settings">
-                        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.11 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Settings
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="user?.name || 'User'"></span></span>
+                    <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role || ''"></span>
+                    <button @click="showPasswordModal = true" class="text-xs text-gray-400 hover:text-white transition" title="Change Password">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                     </button>
-                    <button @click="logout()" class="text-sm text-gred-500 hover:text-gred-700 font-medium">Logout</button>
+                    <button @click="logout()" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Pending KYC Banner -->
-    <div x-show="accountPending" x-cloak class="bg-gyellow-50 border-b border-gyellow-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <svg class="w-10 h-10 text-gyellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-4">
-                    <h3 class="text-lg font-semibold text-gyellow-800">Account Pending KYC Approval</h3>
-                    <p class="text-sm text-gyellow-700 mt-1">Your account is currently under review. Our admin team will verify your business details and approve your account shortly. You will be able to access all features once approved.</p>
+    <!-- Mobile sidebar overlay -->
+    <div x-show="sidebarOpen" x-cloak @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 z-30 lg:hidden"></div>
+
+    <!-- Left Sidebar -->
+    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+           class="fixed top-14 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-40 lg:z-10 transform transition-transform duration-200 overflow-y-auto">
+        <div class="py-5 flex flex-col h-full">
+
+            <!-- Business Section -->
+            <div class="px-4 mb-2">
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Business</h3>
+            </div>
+            <nav class="flex-1 px-2 space-y-0.5">
+                <button x-show="hasPerm('view_transactions')" @click="activeTab = 'transactions'; sidebarOpen = false"
+                    :class="activeTab === 'transactions' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'transactions' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    Transactions
+                </button>
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'wallet'; fetchWallet(); sidebarOpen = false"
+                    :class="activeTab === 'wallet' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'wallet' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    Wallet
+                </button>
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'send-money'; fetchPayoutOperators(); sidebarOpen = false"
+                    :class="activeTab === 'send-money' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'send-money' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                    Send Money
+                </button>
+                <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="activeTab = 'settlements'; fetchSettlements(); sidebarOpen = false"
+                    :class="activeTab === 'settlements' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'settlements' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Settlements
+                </button>
+                <button x-show="hasPerm('view_account_info')" @click="activeTab = 'account'; fetchKyc(); sidebarOpen = false"
+                    :class="activeTab === 'account' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'account' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    Account Info
+                </button>
+                <button x-show="hasPerm('view_users') || hasPerm('add_user')" @click="activeTab = 'users'; fetchAccountUsers(); sidebarOpen = false"
+                    :class="activeTab === 'users' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'users' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Users
+                </button>
+            </nav>
+
+            <!-- Divider -->
+            <div class="px-4 my-3"><div class="border-t border-gray-200"></div></div>
+
+            <!-- Developer Tools Section -->
+            <div class="px-4 mb-2">
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Developer Tools</h3>
+            </div>
+            <nav class="px-2 space-y-0.5">
+                <button @click="activeTab = 'api-docs'; sidebarOpen = false"
+                    :class="activeTab === 'api-docs' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'api-docs' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    API Documentation
+                </button>
+                <button x-show="hasPerm('view_settings')" @click="activeTab = 'settings'; fetchCallback(); sidebarOpen = false"
+                    :class="activeTab === 'settings' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'settings' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.11 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Webhook & API Keys
+                </button>
+            </nav>
+
+            <!-- Bottom account info -->
+            <div class="mt-auto px-4 pt-4 pb-3 border-t border-gray-200">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-bold" x-text="(user?.name || 'U')[0].toUpperCase()"></div>
+                    <div class="ml-3 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate" x-text="user?.name || 'User'"></p>
+                        <p class="text-xs text-gray-500 truncate" x-text="user?.email || ''"></p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </aside>
 
-    <!-- Tab Navigation -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div class="border-b border-gray-200">
-            <nav class="flex space-x-8 overflow-x-auto">
-                <button x-show="hasPerm('view_transactions')" @click="activeTab = 'transactions'" :class="activeTab === 'transactions' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Transactions</button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'wallet'; fetchWallet()" :class="activeTab === 'wallet' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Wallet</button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'send-money'; fetchPayoutOperators()" :class="activeTab === 'send-money' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
-                    <span class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>Send Money</span>
-                </button>
-                <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="activeTab = 'settlements'; fetchSettlements()" :class="activeTab === 'settlements' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Settlements</button>
-                <button x-show="hasPerm('view_account_info')" @click="activeTab = 'account'; fetchKyc()" :class="activeTab === 'account' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Account Info</button>
+    <!-- Main Content Area -->
+    <div class="lg:ml-64 pt-14 min-h-screen bg-gray-50">
 
-                <button x-show="hasPerm('view_users') || hasPerm('add_user')" @click="activeTab = 'users'; fetchAccountUsers()" :class="activeTab === 'users' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Users</button>
-                <button @click="activeTab = 'api-docs'" :class="activeTab === 'api-docs' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                    class="py-3 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
-                    <span class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>API Docs</span>
-                </button>
-            </nav>
+        <!-- Pending KYC Banner -->
+        <div x-show="accountPending" x-cloak class="bg-yellow-50 border-b border-yellow-200">
+            <div class="px-6 py-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-base font-semibold text-yellow-800">Account Pending KYC Approval</h3>
+                        <p class="text-sm text-yellow-700 mt-0.5">Your account is under review. You'll be able to access all features once approved.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pb-12">
+        <div class="px-6 lg:px-8 py-6 pb-12">
 
         <!-- ==================== TRANSACTIONS TAB ==================== -->
         <div x-show="activeTab === 'transactions'">
@@ -1986,7 +2042,8 @@ console.log(data.request_ref);</pre>
             </div>
         </div>
 
-    </div>
+        </div><!-- /px-6 py-6 -->
+    </div><!-- /lg:ml-64 main content -->
 
 </div>
 
@@ -1995,6 +2052,7 @@ function dashboard() {
     return {
         user: null,
         activeTab: 'transactions',
+        sidebarOpen: false,
 
         // Transactions
         transactions: [], loadingTxns: true, txnError: '',
