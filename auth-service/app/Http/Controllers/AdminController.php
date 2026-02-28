@@ -219,6 +219,8 @@ class AdminController extends Controller
             'bank_branch'          => 'nullable|string|max:191',
             'id_document'          => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'business_license'     => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'certificate_of_incorporation' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'tax_clearance'        => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $data = $request->only([
@@ -238,6 +240,18 @@ class AdminController extends Controller
         if ($request->hasFile('business_license')) {
             $path = $request->file('business_license')->store('kyc/business-licenses', 'public');
             $data['business_license_url'] = '/storage/' . $path;
+        }
+
+        // Handle certificate of incorporation upload
+        if ($request->hasFile('certificate_of_incorporation')) {
+            $path = $request->file('certificate_of_incorporation')->store('kyc/certificates', 'public');
+            $data['certificate_of_incorporation_url'] = '/storage/' . $path;
+        }
+
+        // Handle tax clearance upload
+        if ($request->hasFile('tax_clearance')) {
+            $path = $request->file('tax_clearance')->store('kyc/tax-clearances', 'public');
+            $data['tax_clearance_url'] = '/storage/' . $path;
         }
 
         $account->update($data);

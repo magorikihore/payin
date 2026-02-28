@@ -1159,7 +1159,7 @@
                         <!-- Documents -->
                         <div class="px-6 py-4 bg-gray-50">
                             <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Documents</h4>
-                            <div class="flex flex-wrap gap-3">
+                            <div class="grid grid-cols-2 gap-3">
                                 <div class="flex items-center space-x-2">
                                     <template x-if="kycAccount?.id_document_url">
                                         <div class="flex items-center space-x-2">
@@ -1172,6 +1172,17 @@
                                     </template>
                                 </div>
                                 <div class="flex items-center space-x-2">
+                                    <template x-if="kycAccount?.certificate_of_incorporation_url">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.certificate_of_incorporation_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Certificate of Incorporation &rarr;</a>
+                                        </div>
+                                    </template>
+                                    <template x-if="!kycAccount?.certificate_of_incorporation_url">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">Certificate of Incorporation — Not uploaded</span>
+                                    </template>
+                                </div>
+                                <div class="flex items-center space-x-2">
                                     <template x-if="kycAccount?.business_license_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
@@ -1180,6 +1191,17 @@
                                     </template>
                                     <template x-if="!kycAccount?.business_license_url">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">Business License — Not uploaded</span>
+                                    </template>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <template x-if="kycAccount?.tax_clearance_url">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tax_clearance_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Tax Clearance &rarr;</a>
+                                        </div>
+                                    </template>
+                                    <template x-if="!kycAccount?.tax_clearance_url">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">Tax Clearance — Not uploaded</span>
                                     </template>
                                 </div>
                             </div>
@@ -1345,6 +1367,17 @@
                                     </template>
                                 </div>
                                 <div>
+                                    <label class="block text-xs text-gray-500 uppercase mb-2">Certificate of Incorporation (JPG, PNG, PDF — max 5MB)</label>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycIncorpFile = $event.target.files[0]"
+                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <template x-if="kycAccount?.certificate_of_incorporation_url">
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs text-green-600">Current:</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.certificate_of_incorporation_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div>
                                     <label class="block text-xs text-gray-500 uppercase mb-2">Business License (JPG, PNG, PDF — max 5MB)</label>
                                     <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycBizLicFile = $event.target.files[0]"
                                         class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
@@ -1352,6 +1385,17 @@
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
                                             <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.business_license_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 uppercase mb-2">Tax Clearance (JPG, PNG, PDF — max 5MB)</label>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycTaxFile = $event.target.files[0]"
+                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <template x-if="kycAccount?.tax_clearance_url">
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs text-green-600">Current:</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tax_clearance_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2404,7 +2448,7 @@ function adminPanel() {
         kycActionLoading: false,
         // KYC Edit
         kycEditing: false, kycEditSaving: false, kycEditMsg: '', kycEditMsgType: 'success',
-        kycIdDocFile: null, kycBizLicFile: null,
+        kycIdDocFile: null, kycBizLicFile: null, kycIncorpFile: null, kycTaxFile: null,
         kycEditForm: {
             business_name: '', business_type: '', registration_number: '', tin_number: '',
             email: '', phone: '', address: '', city: '', country: '',
@@ -2765,6 +2809,8 @@ function adminPanel() {
                 this.kycEditMsg = '';
                 this.kycIdDocFile = null;
                 this.kycBizLicFile = null;
+                this.kycIncorpFile = null;
+                this.kycTaxFile = null;
                 return;
             }
             if (!this.kycAccount) return;
@@ -2780,6 +2826,8 @@ function adminPanel() {
             };
             this.kycIdDocFile = null;
             this.kycBizLicFile = null;
+            this.kycIncorpFile = null;
+            this.kycTaxFile = null;
             this.kycEditMsg = '';
             this.kycEditing = true;
         },
@@ -2792,7 +2840,9 @@ function adminPanel() {
                 const fd = new FormData();
                 Object.entries(this.kycEditForm).forEach(([k, v]) => { if (v) fd.append(k, v); });
                 if (this.kycIdDocFile) fd.append('id_document', this.kycIdDocFile);
+                if (this.kycIncorpFile) fd.append('certificate_of_incorporation', this.kycIncorpFile);
                 if (this.kycBizLicFile) fd.append('business_license', this.kycBizLicFile);
+                if (this.kycTaxFile) fd.append('tax_clearance', this.kycTaxFile);
                 const token = document.cookie.split('; ').find(c => c.startsWith('admin_token='))?.split('=')[1];
                 const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc`, {
                     method: 'POST',
@@ -2808,6 +2858,8 @@ function adminPanel() {
                     this.kycEditing = false;
                     this.kycIdDocFile = null;
                     this.kycBizLicFile = null;
+                    this.kycIncorpFile = null;
+                    this.kycTaxFile = null;
                     setTimeout(() => { this.kycEditMsg = ''; }, 5000);
                 } else {
                     const err = await res.json();

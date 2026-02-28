@@ -36,6 +36,8 @@ class Account extends Model
         'id_number',
         'id_document_url',
         'business_license_url',
+        'certificate_of_incorporation_url',
+        'tax_clearance_url',
         'kyc_notes',
         'kyc_submitted_at',
         'kyc_approved_at',

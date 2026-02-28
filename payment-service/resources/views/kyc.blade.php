@@ -247,20 +247,32 @@
                 <!-- ===== STEP 3: Documents ===== -->
                 <div x-show="kycStep === 3">
                     <h4 class="text-md font-semibold text-gray-800 mb-1">Upload Documents</h4>
-                    <p class="text-sm text-gray-500 mb-5">Upload your ID document and business license for verification.</p>
+                    <p class="text-sm text-gray-500 mb-5">Upload the required documents for verification.</p>
 
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">ID Document (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">ID Document — Passport, Driving License or NIDA (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
                             <input type="file" @change="idFile = $event.target.files[0]; delete errors.id_document" accept=".jpg,.jpeg,.png,.pdf"
                                 class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
                             <p x-show="errors.id_document" x-text="errors.id_document" class="text-xs text-red-500 mt-1"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Certificate of Incorporation (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <input type="file" @change="incorporationFile = $event.target.files[0]; delete errors.certificate_of_incorporation" accept=".jpg,.jpeg,.png,.pdf"
+                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
+                            <p x-show="errors.certificate_of_incorporation" x-text="errors.certificate_of_incorporation" class="text-xs text-red-500 mt-1"></p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Business License (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
                             <input type="file" @change="licenseFile = $event.target.files[0]; delete errors.business_license" accept=".jpg,.jpeg,.png,.pdf"
                                 class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
                             <p x-show="errors.business_license" x-text="errors.business_license" class="text-xs text-red-500 mt-1"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Tax Clearance Certificate (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <input type="file" @change="taxClearanceFile = $event.target.files[0]; delete errors.tax_clearance" accept=".jpg,.jpeg,.png,.pdf"
+                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
+                            <p x-show="errors.tax_clearance" x-text="errors.tax_clearance" class="text-xs text-red-500 mt-1"></p>
                         </div>
                     </div>
 
@@ -343,7 +355,7 @@ function kycPage() {
         kycStep: 1,
         saving: false,
         msg: '', msgType: '',
-        idFile: null, licenseFile: null,
+        idFile: null, licenseFile: null, incorporationFile: null, taxClearanceFile: null,
         form: {
             business_name: '', business_type: '', registration_number: '', tin_number: '',
             phone: '', address: '', city: '', country: 'Tanzania',
@@ -411,9 +423,13 @@ function kycPage() {
         validateStep3() {
             this.errors = {};
             if (!this.idFile) this.errors.id_document = 'Please upload your ID document.';
+            if (!this.incorporationFile) this.errors.certificate_of_incorporation = 'Please upload your Certificate of Incorporation.';
             if (!this.licenseFile) this.errors.business_license = 'Please upload your business license.';
+            if (!this.taxClearanceFile) this.errors.tax_clearance = 'Please upload your Tax Clearance certificate.';
             if (this.idFile && this.idFile.size > 5 * 1024 * 1024) this.errors.id_document = 'ID document must be under 5MB.';
+            if (this.incorporationFile && this.incorporationFile.size > 5 * 1024 * 1024) this.errors.certificate_of_incorporation = 'Certificate must be under 5MB.';
             if (this.licenseFile && this.licenseFile.size > 5 * 1024 * 1024) this.errors.business_license = 'Business license must be under 5MB.';
+            if (this.taxClearanceFile && this.taxClearanceFile.size > 5 * 1024 * 1024) this.errors.tax_clearance = 'Tax clearance must be under 5MB.';
             if (Object.keys(this.errors).length) { this.msg = 'Please fix the errors below before continuing.'; this.msgType = 'error'; return false; }
             this.msg = ''; return true;
         },
@@ -435,7 +451,9 @@ function kycPage() {
                     if (this.form[k] !== null && this.form[k] !== '') formData.append(k, this.form[k]);
                 });
                 if (this.idFile) formData.append('id_document', this.idFile);
+                if (this.incorporationFile) formData.append('certificate_of_incorporation', this.incorporationFile);
                 if (this.licenseFile) formData.append('business_license', this.licenseFile);
+                if (this.taxClearanceFile) formData.append('tax_clearance', this.taxClearanceFile);
 
                 const res = await fetch('{{ config("services.auth_service.url") }}/api/account/kyc', {
                     method: 'POST',
