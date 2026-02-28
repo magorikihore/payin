@@ -54,7 +54,8 @@ class ChargeConfig extends Model
                 }
             })
             ->where(function ($q) use ($operator) {
-                $q->where('operator', $operator)->orWhere('operator', 'all');
+                $q->whereRaw('LOWER(operator) = ?', [strtolower($operator)])
+                  ->orWhere('operator', 'all');
             })
             ->where(function ($q) use ($transactionType) {
                 $q->where('transaction_type', $transactionType)->orWhere('transaction_type', 'all');

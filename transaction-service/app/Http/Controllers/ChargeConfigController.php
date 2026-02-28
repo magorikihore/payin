@@ -179,14 +179,38 @@ class ChargeConfigController extends Controller
             'account_id' => 'nullable|integer',
         ]);
 
+        // Normalize operator code to display name (mpesa -> M-Pesa, etc.)
+        $operator = $this->normalizeOperator($request->operator);
+
         $charges = ChargeConfig::calculateCharges(
             (float) $request->amount,
-            $request->operator,
+            $operator,
             $request->transaction_type,
             $request->account_id
         );
 
         return response()->json($charges);
+    }
+
+    /**
+     * Map operator codes (mpesa, tigopesa, etc.) to display names (M-Pesa, Tigo Pesa, etc.)
+     */
+    private function normalizeOperator(string $operator): string
+    {
+        $codeToName = [
+            'mpesa'       => 'M-Pesa',
+            'm-pesa'      => 'M-Pesa',
+            'tigopesa'    => 'Tigo Pesa',
+            'tigo pesa'   => 'Tigo Pesa',
+            'airtelmoney' => 'Airtel Money',
+            'airtel'      => 'Airtel Money',
+            'airtel money'=> 'Airtel Money',
+            'halopesa'    => 'Halopesa',
+            'halotel'     => 'Halopesa',
+            'all'         => 'all',
+        ];
+
+        return $codeToName[strtolower($operator)] ?? $operator;
     }
 
     private function isSuperAdmin(Request $request): bool
