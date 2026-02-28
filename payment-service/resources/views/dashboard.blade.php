@@ -152,118 +152,265 @@
                 <p class="text-sm text-gray-500 mt-1">Welcome back, <span x-text="user?.name || 'User'"></span>. Here's your business overview.</p>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-xl shadow-md p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-gblue-50 rounded-lg">
-                            <svg class="w-6 h-6 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            <!-- ===== TOP ROW: Balance Cards (left) + Recent Transactions (right) ===== -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+                <!-- LEFT COLUMN: Balances -->
+                <div class="lg:col-span-1 space-y-4">
+                    <!-- Collection Balance -->
+                    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-5 text-white">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-white/20 rounded-lg mr-3">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Collection Balance</p>
+                                    <p class="text-xs opacity-60">Money received (Payin)</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm text-gray-500">Total</p>
-                            <p class="text-2xl font-bold text-gray-800" x-text="stats.total"></p>
+                        <p class="text-3xl font-bold" x-text="formatAmount(collectionTotal) + ' TZS'"></p>
+                        <div class="mt-3 pt-3 border-t border-white/20">
+                            <button @click="activeTab = 'wallet'; fetchWallet()" class="inline-flex items-center px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                Top Up
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Disbursement Balance -->
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-5 text-white">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center">
+                                <div class="p-2 bg-white/20 rounded-lg mr-3">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Disbursement Balance</p>
+                                    <p class="text-xs opacity-60">Available for payouts</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold" x-text="formatAmount(disbursementTotal) + ' TZS'"></p>
+                        <div class="mt-3 pt-3 border-t border-white/20">
+                            <button @click="activeTab = 'send-money'; fetchPayoutOperators()" class="inline-flex items-center px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-medium transition">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                                Send Money
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Stats Mini -->
+                    <div class="bg-white rounded-xl shadow-md border p-4">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Transaction Summary</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="text-center p-2 bg-gray-50 rounded-lg">
+                                <p class="text-lg font-bold text-gray-800" x-text="stats.total"></p>
+                                <p class="text-[10px] text-gray-500 uppercase">Total</p>
+                            </div>
+                            <div class="text-center p-2 bg-green-50 rounded-lg">
+                                <p class="text-lg font-bold text-green-600" x-text="stats.completed"></p>
+                                <p class="text-[10px] text-gray-500 uppercase">Completed</p>
+                            </div>
+                            <div class="text-center p-2 bg-yellow-50 rounded-lg">
+                                <p class="text-lg font-bold text-yellow-600" x-text="stats.pending"></p>
+                                <p class="text-[10px] text-gray-500 uppercase">Pending</p>
+                            </div>
+                            <div class="text-center p-2 bg-red-50 rounded-lg">
+                                <p class="text-lg font-bold text-red-600" x-text="stats.failed"></p>
+                                <p class="text-[10px] text-gray-500 uppercase">Failed</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-md p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-ggreen-50 rounded-lg">
-                            <svg class="w-6 h-6 text-ggreen-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+
+                <!-- RIGHT COLUMN: Recent Transactions -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-md border overflow-hidden h-full flex flex-col">
+                        <div class="px-5 py-4 border-b flex items-center justify-between">
+                            <h3 class="text-sm font-semibold text-gray-800">Recent Transactions</h3>
+                            <button @click="activeTab = 'transactions'" class="text-xs text-blue-600 hover:text-blue-800 font-medium">View All &rarr;</button>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm text-gray-500">Completed</p>
-                            <p class="text-2xl font-bold text-ggreen-500" x-text="stats.completed"></p>
+                        <div x-show="loadingTxns" class="p-8 text-center text-gray-500 flex-1 flex items-center justify-center">
+                            <div>
+                                <svg class="animate-spin h-7 w-7 mx-auto text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <p class="mt-2 text-sm">Loading...</p>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-md p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-gyellow-50 rounded-lg">
-                            <svg class="w-6 h-6 text-gyellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div x-show="!loadingTxns && transactions.length === 0" x-cloak class="p-8 text-center text-gray-400 flex-1 flex items-center justify-center">
+                            <div>
+                                <svg class="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                                <p class="text-sm">No transactions yet</p>
+                            </div>
                         </div>
-                        <div class="ml-4">
-                            <p class="text-sm text-gray-500">Pending</p>
-                            <p class="text-2xl font-bold text-gyellow-600" x-text="stats.pending"></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-md p-6 border">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-gred-50 rounded-lg">
-                            <svg class="w-6 h-6 text-gred-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-sm text-gray-500">Failed</p>
-                            <p class="text-2xl font-bold text-gred-500" x-text="stats.failed"></p>
+                        <div x-show="!loadingTxns && transactions.length > 0" x-cloak class="flex-1 overflow-y-auto">
+                            <div class="divide-y divide-gray-100">
+                                <template x-for="txn in transactions.slice(0, 10)" :key="txn.id">
+                                    <div class="px-5 py-3 hover:bg-gray-50 transition flex items-center justify-between">
+                                        <div class="flex items-center min-w-0">
+                                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                                                :class="txn.type === 'collection' ? 'bg-green-100' : txn.type === 'disbursement' ? 'bg-red-100' : txn.type === 'topup' ? 'bg-blue-100' : 'bg-purple-100'">
+                                                <svg x-show="txn.type === 'collection'" class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                                                <svg x-show="txn.type === 'disbursement'" class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                                                <svg x-show="txn.type === 'topup'" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                                                <svg x-show="txn.type === 'settlement'" class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                            </div>
+                                            <div class="ml-3 min-w-0">
+                                                <p class="text-sm font-medium text-gray-800 truncate" x-text="txn.transaction_ref"></p>
+                                                <p class="text-xs text-gray-400" x-text="formatDate(txn.created_at)"></p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right flex-shrink-0 ml-3">
+                                            <p class="text-sm font-semibold" :class="txn.type === 'collection' ? 'text-green-600' : 'text-gray-800'"
+                                                x-text="(txn.type === 'collection' ? '+' : '-') + ' ' + formatAmount(txn.amount) + ' TZS'"></p>
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium capitalize"
+                                                :class="{'bg-green-50 text-green-700': txn.status==='completed','bg-yellow-50 text-yellow-700': txn.status==='pending','bg-red-50 text-red-700': txn.status==='failed','bg-gray-100 text-gray-600': txn.status==='cancelled'}"
+                                                x-text="txn.status"></span>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Charges Summary -->
-            <div x-show="myCharges.total_charges > 0" x-cloak class="mb-6 bg-gradient-to-r from-gblue-50 to-ggreen-50 rounded-xl border border-gblue-200 p-5">
-                <div class="flex items-center justify-between flex-wrap gap-4">
-                    <div class="flex items-center">
-                        <div class="p-2 bg-gblue-100 rounded-lg mr-3">
-                            <svg class="w-5 h-5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-semibold text-gray-700">Total Charges Deducted</p>
-                            <p class="text-xs text-gray-500">Across all your completed transactions</p>
-                        </div>
-                    </div>
-                    <div class="flex space-x-6 text-center">
-                        <div>
-                            <p class="text-xs text-gray-500">Charges</p>
-                            <p class="text-lg font-bold text-gblue-500" x-text="formatAmount(myCharges.total_charges || 0) + ' TZS'"></p>
-                        </div>
-                    </div>
+            <!-- ===== TREASURY DETAIL: Balance per MNO ===== -->
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden mb-6">
+                <div class="px-5 py-4 border-b">
+                    <h3 class="text-sm font-semibold text-gray-800">Treasury Detail</h3>
+                    <p class="text-xs text-gray-400">Balance breakdown by operator across Collection & Disbursement wallets</p>
                 </div>
-                <div x-show="myCharges.by_type && myCharges.by_type.length > 0" class="mt-3 pt-3 border-t border-gblue-200 flex flex-wrap gap-4">
-                    <template x-for="bt in (myCharges.by_type || [])" :key="bt.type">
-                        <div class="bg-white rounded-lg px-3 py-2 text-xs border">
-                            <span class="font-medium text-gray-700 capitalize" x-text="bt.type"></span>:
-                            <span class="text-gblue-500 font-semibold" x-text="formatAmount(Number(bt.platform_charges) + Number(bt.operator_charges)) + ' TZS'"></span>
-                            <span class="text-gray-400" x-text="'(' + bt.transaction_count + ' txns)'"></span>
-                        </div>
-                    </template>
+                <div x-show="collectionWallets.length === 0 && disbursementWallets.length === 0" class="p-6 text-center text-gray-400 text-sm">Loading wallet data...</div>
+                <div x-show="collectionWallets.length > 0 || disbursementWallets.length > 0" x-cloak>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-green-600 uppercase">Collection</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-blue-600 uppercase">Disbursement</th>
+                                    <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <template x-for="op in operators" :key="'treasury_'+op">
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-5 py-3">
+                                            <div class="flex items-center">
+                                                <div class="w-2.5 h-2.5 rounded-full mr-2" :class="operatorColor(op)"></div>
+                                                <span class="text-sm font-medium text-gray-700" x-text="op"></span>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-green-600" x-text="formatAmount((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-blue-600" x-text="formatAmount((disbursementWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ((disbursementWallets.find(w => w.operator === op)?.balance) || 0)) + ' TZS'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tfoot class="bg-gray-50 border-t">
+                                <tr>
+                                    <td class="px-5 py-3 text-sm font-bold text-gray-700">Total</td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-green-600" x-text="formatAmount(collectionTotal) + ' TZS'"></td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-blue-600" x-text="formatAmount(disbursementTotal) + ' TZS'"></td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-900" x-text="formatAmount(overallBalance) + ' TZS'"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <button x-show="hasPerm('view_transactions')" @click="activeTab = 'transactions'" class="bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition text-left group">
-                    <div class="flex items-center">
-                        <div class="p-2.5 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-semibold text-gray-800">View Transactions</p>
-                            <p class="text-xs text-gray-500">Search & filter history</p>
+            <!-- ===== BOTTOM ROW: Settlement Overview + Charges ===== -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+                <!-- Settlement Overview -->
+                <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                    <div class="px-5 py-4 border-b flex items-center justify-between">
+                        <h3 class="text-sm font-semibold text-gray-800">Settlement Overview</h3>
+                        <button @click="activeTab = 'settlements'; fetchSettlements()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">View All &rarr;</button>
+                    </div>
+                    <div x-show="stlLoadingList" class="p-6 text-center text-gray-400">
+                        <svg class="animate-spin h-6 w-6 mx-auto text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </div>
+                    <div x-show="!stlLoadingList && settlements.length === 0" x-cloak class="p-6 text-center text-gray-400 text-sm">No settlements found.</div>
+                    <div x-show="!stlLoadingList && settlements.length > 0" x-cloak>
+                        <div class="divide-y divide-gray-100">
+                            <template x-for="stl in settlements.slice(0, 5)" :key="'dash_stl_'+stl.id">
+                                <div class="px-5 py-3 hover:bg-gray-50 transition flex items-center justify-between">
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-mono text-gray-700 truncate" x-text="stl.settlement_ref"></p>
+                                        <div class="flex items-center space-x-2 mt-0.5">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
+                                                :class="operatorBadgeColor(stl.operator)" x-text="stl.operator"></span>
+                                            <span class="text-xs text-gray-400" x-text="formatDate(stl.created_at)"></span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0 ml-3">
+                                        <p class="text-sm font-semibold text-gray-800" x-text="formatAmount(stl.amount) + ' TZS'"></p>
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium capitalize"
+                                            :class="{'bg-yellow-50 text-yellow-700': stl.status==='pending','bg-blue-50 text-blue-700': stl.status==='processing','bg-green-50 text-green-700': stl.status==='completed','bg-red-50 text-red-700': stl.status==='failed'}"
+                                            x-text="stl.status"></span>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
+                </div>
+
+                <!-- Charges & Fees Summary -->
+                <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                    <div class="px-5 py-4 border-b">
+                        <h3 class="text-sm font-semibold text-gray-800">Charges & Fees</h3>
+                        <p class="text-xs text-gray-400">Deducted across completed transactions</p>
+                    </div>
+                    <div class="p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-sm text-gray-500">Total Charges</span>
+                            <span class="text-xl font-bold text-blue-600" x-text="formatAmount(myCharges.total_charges || 0) + ' TZS'"></span>
+                        </div>
+                        <div x-show="myCharges.by_type && myCharges.by_type.length > 0" class="space-y-2">
+                            <template x-for="bt in (myCharges.by_type || [])" :key="'dash_charge_'+bt.type">
+                                <div class="flex items-center justify-between p-2.5 bg-gray-50 rounded-lg">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-700 capitalize" x-text="bt.type"></span>
+                                        <span class="text-xs text-gray-400 ml-1" x-text="'(' + bt.transaction_count + ' txns)'"></span>
+                                    </div>
+                                    <span class="text-sm font-semibold text-blue-600" x-text="formatAmount(Number(bt.platform_charges) + Number(bt.operator_charges)) + ' TZS'"></span>
+                                </div>
+                            </template>
+                        </div>
+                        <div x-show="!myCharges.by_type || myCharges.by_type.length === 0" class="text-center text-gray-400 text-sm py-4">No charges recorded yet.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Quick Actions Row ===== -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button x-show="hasPerm('view_transactions')" @click="activeTab = 'transactions'" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                    <div class="p-2 bg-blue-50 rounded-lg inline-flex group-hover:bg-blue-100 transition mb-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    <p class="text-xs font-semibold text-gray-700">Transactions</p>
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'send-money'; fetchPayoutOperators()" class="bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition text-left group">
-                    <div class="flex items-center">
-                        <div class="p-2.5 bg-green-50 rounded-lg group-hover:bg-green-100 transition">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-semibold text-gray-800">Send Money</p>
-                            <p class="text-xs text-gray-500">Disburse to mobile wallets</p>
-                        </div>
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'send-money'; fetchPayoutOperators()" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                    <div class="p-2 bg-green-50 rounded-lg inline-flex group-hover:bg-green-100 transition mb-2">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     </div>
+                    <p class="text-xs font-semibold text-gray-700">Send Money</p>
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'wallet'; fetchWallet()" class="bg-white rounded-xl border shadow-sm p-5 hover:shadow-md transition text-left group">
-                    <div class="flex items-center">
-                        <div class="p-2.5 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                        </div>
-                        <div class="ml-3">
-                            <p class="text-sm font-semibold text-gray-800">Wallet Balances</p>
-                            <p class="text-xs text-gray-500">View & manage wallets</p>
-                        </div>
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'wallet'; fetchWallet()" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                    <div class="p-2 bg-purple-50 rounded-lg inline-flex group-hover:bg-purple-100 transition mb-2">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     </div>
+                    <p class="text-xs font-semibold text-gray-700">Wallets</p>
+                </button>
+                <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="activeTab = 'settlements'; fetchSettlements()" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                    <div class="p-2 bg-orange-50 rounded-lg inline-flex group-hover:bg-orange-100 transition mb-2">
+                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    </div>
+                    <p class="text-xs font-semibold text-gray-700">Settlements</p>
                 </button>
             </div>
         </div>
@@ -2202,6 +2349,8 @@ function dashboard() {
             this.fetchTransactions();
             this.fetchMyCharges();
             this.fetchStats();
+            this.fetchWallet();
+            this.fetchSettlements();
             this.appReady = true;
             this.$nextTick(() => document.dispatchEvent(new Event('alpine:initialized')));
         },
