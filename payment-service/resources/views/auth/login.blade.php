@@ -59,6 +59,20 @@
 
         <!-- Register Form -->
         <form x-show="showRegister" @submit.prevent="register" x-cloak>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <input type="text" x-model="firstname" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                        placeholder="John">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <input type="text" x-model="lastname" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                        placeholder="Doe">
+                </div>
+            </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
                 <input type="text" x-model="business_name" required
@@ -122,6 +136,8 @@ function loginForm() {
     return {
         email: '',
         password: '',
+        firstname: '',
+        lastname: '',
         business_name: '',
         country: 'Tanzania',
         password_confirmation: '',
@@ -178,6 +194,8 @@ function loginForm() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({
+                        firstname: this.firstname,
+                        lastname: this.lastname,
                         business_name: this.business_name,
                         country: this.country,
                         email: this.email,

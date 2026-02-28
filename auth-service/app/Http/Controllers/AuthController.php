@@ -29,9 +29,11 @@ class AuthController extends Controller
             'status' => 'pending',
         ]);
 
-        // Create owner user (use business name as user name)
+        // Create owner user
         $user = User::create([
-            'name' => $validated['business_name'],
+            'firstname' => $validated['firstname'],
+            'lastname' => $validated['lastname'],
+            'name' => $validated['firstname'] . ' ' . $validated['lastname'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'account_id' => $account->id,

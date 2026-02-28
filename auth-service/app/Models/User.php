@@ -52,6 +52,8 @@ class User extends Authenticatable
     ];
 
     protected $fillable = [
+        'firstname',
+        'lastname',
         'name',
         'email',
         'password',
@@ -59,6 +61,13 @@ class User extends Authenticatable
         'role',
         'permissions',
     ];
+
+    protected $appends = ['full_name'];
+
+    public function getFullNameAttribute(): string
+    {
+        return trim(($this->firstname ?? '') . ' ' . ($this->lastname ?? ''));
+    }
 
     /**
      * The attributes that should be hidden for serialization.

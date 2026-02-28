@@ -18,7 +18,7 @@
                     <span class="ml-2 text-lg font-bold text-white">Payin</span>
                 </div>
                 <div class="flex items-center space-x-3">
-                    <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="user?.name || 'User'"></span></span>
+                    <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="(user?.firstname || user?.name || 'User')"></span></span>
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role || ''"></span>
                     <button @click="showPasswordModal = true" class="text-xs text-gray-400 hover:text-white transition" title="Change Password">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
@@ -111,9 +111,9 @@
             <!-- Bottom account info -->
             <div class="mt-auto px-4 pt-4 pb-3 border-t border-gray-200">
                 <div class="flex items-center">
-                    <div class="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-bold" x-text="(user?.name || 'U')[0].toUpperCase()"></div>
+                    <div class="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-bold" x-text="(user?.firstname || user?.name || 'U')[0].toUpperCase()"></div>
                     <div class="ml-3 min-w-0">
-                        <p class="text-sm font-medium text-gray-900 truncate" x-text="user?.name || 'User'"></p>
+                        <p class="text-sm font-medium text-gray-900 truncate" x-text="(user?.firstname && user?.lastname) ? (user.firstname + ' ' + user.lastname) : (user?.name || 'User')"></p>
                         <p class="text-xs text-gray-500 truncate" x-text="user?.email || ''"></p>
                     </div>
                 </div>
@@ -147,7 +147,7 @@
         <div x-show="activeTab === 'dashboard'">
             <!-- Welcome Header -->
             <div class="mb-6">
-                <h1 class="text-2xl font-bold text-gray-900">Welcome back, <span x-text="user?.name || 'User'"></span></h1>
+                <h1 class="text-2xl font-bold text-gray-900">Welcome back, <span x-text="user?.firstname || user?.name || 'User'"></span></h1>
                 <p class="text-sm text-gray-500 mt-1">Here's your business overview.</p>
             </div>
 
@@ -846,8 +846,12 @@
                 <form @submit.prevent="addUser()">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                            <input type="text" x-model="newUserForm.name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                            <input type="text" x-model="newUserForm.firstname" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                            <input type="text" x-model="newUserForm.lastname" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -915,7 +919,7 @@
                             <tbody class="divide-y divide-gray-200">
                                 <template x-for="u in accountUsers" :key="u.id">
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="u.name"></td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="(u.firstname && u.lastname) ? (u.firstname + ' ' + u.lastname) : u.name"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="u.email"></td>
                                         <td class="px-6 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -945,7 +949,7 @@
                                                             <option value="admin" x-show="u.role !== 'admin'">Admin</option>
                                                             <option value="viewer" x-show="u.role !== 'viewer'">Viewer</option>
                                                         </select>
-                                                        <button @click="removeUser(u.id, u.name)" class="text-xs bg-gred-50 text-gred-700 px-2 py-1 rounded hover:bg-gred-100">Remove</button>
+                                                        <button @click="removeUser(u.id, (u.firstname && u.lastname) ? (u.firstname + ' ' + u.lastname) : u.name)" class="text-xs bg-gred-50 text-gred-700 px-2 py-1 rounded hover:bg-gred-100">Remove</button>
                                                     </div>
                                                     <button @click="editingPermUserId = u.id; editingPerms = [...(u.permissions || [])]"
                                                         class="text-xs bg-gblue-50 text-gblue-700 px-2 py-1 rounded hover:bg-gblue-100 text-left">
@@ -959,7 +963,7 @@
                                     <tr x-show="editingPermUserId === u.id" x-cloak class="bg-gblue-50">
                                         <td colspan="6" class="px-6 py-4">
                                             <div class="flex items-center justify-between mb-3">
-                                                <span class="text-sm font-semibold text-gray-700">Edit Permissions for <span x-text="u.name"></span></span>
+                                                <span class="text-sm font-semibold text-gray-700">Edit Permissions for <span x-text="(u.firstname && u.lastname) ? (u.firstname + ' ' + u.lastname) : u.name"></span></span>
                                                 <div class="flex space-x-2">
                                                     <button type="button" @click="editingPerms = [...allPermissions]" class="text-xs text-gblue-500 hover:text-gblue-700">Select All</button>
                                                     <button type="button" @click="editingPerms = []" class="text-xs text-gray-500 hover:text-gray-700">Clear</button>
@@ -2289,7 +2293,7 @@ function dashboard() {
 
         // Account Users
         accountUsers: [], accUsersLoading: false, addUserLoading: false,
-        newUserForm: { name: '', email: '', password: '', role: 'viewer', permissions: [] },
+        newUserForm: { firstname: '', lastname: '', email: '', password: '', role: 'viewer', permissions: [] },
         addUserMsg: '', addUserMsgType: '',
         allPermissions: ['view_transactions', 'create_settlement', 'view_settlements', 'wallet_transfer', 'add_user', 'view_users', 'view_account_info', 'view_settings'],
         editingPermUserId: null, editingPerms: [],
@@ -3077,7 +3081,7 @@ function dashboard() {
                     this.addUserMsg = errors || 'Failed.'; this.addUserMsgType = 'error'; return;
                 }
                 this.addUserMsg = data.message; this.addUserMsgType = 'success';
-                this.newUserForm = { name: '', email: '', password: '', role: 'viewer', permissions: [] };
+                this.newUserForm = { firstname: '', lastname: '', email: '', password: '', role: 'viewer', permissions: [] };
                 this.fetchAccountUsers();
             } catch (e) { this.addUserMsg = 'Service unavailable.'; this.addUserMsgType = 'error'; }
             finally { this.addUserLoading = false; }

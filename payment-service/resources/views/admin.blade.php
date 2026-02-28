@@ -16,7 +16,7 @@
                     <span class="ml-2 text-xl font-bold text-white">Payin Admin</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-300">Super Admin: <span class="font-medium text-white" x-text="user?.name || 'Admin'"></span></span>
+                    <span class="text-sm text-gray-300">Super Admin: <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
                     <button @click="logout()" class="text-sm text-red-400 hover:text-red-300 font-medium">Logout</button>
                 </div>
             </div>
@@ -415,7 +415,7 @@
                             <tbody class="divide-y divide-gray-200">
                                 <template x-for="usr in adminUsers" :key="usr.id">
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="usr.name"></td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="(usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="usr.email"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600">
                                             <span x-text="usr.account?.business_name || '-'"></span>
@@ -428,7 +428,7 @@
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500" x-text="formatDate(usr.created_at)"></td>
                                         <td class="px-6 py-4">
-                                            <button @click="adminResetPassword(usr.id, usr.name)" class="text-xs bg-yellow-500 text-white px-3 py-1.5 rounded hover:bg-yellow-600 font-medium">Reset Password</button>
+                                            <button @click="adminResetPassword(usr.id, (usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name)" class="text-xs bg-yellow-500 text-white px-3 py-1.5 rounded hover:bg-yellow-600 font-medium">Reset Password</button>
                                         </td>
                                     </tr>
                                 </template>
@@ -1375,7 +1375,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="text-xs text-gray-500 uppercase">Owner Name</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.owner?.name || '—'"></p>
+                                <p class="text-sm font-medium text-gray-800" x-text="(kycAccount?.owner?.firstname && kycAccount?.owner?.lastname) ? (kycAccount.owner.firstname + ' ' + kycAccount.owner.lastname) : (kycAccount?.owner?.name || '—')"></p>
                             </div>
                             <div>
                                 <label class="text-xs text-gray-500 uppercase">Owner Email</label>
@@ -1755,7 +1755,7 @@
                             <tbody class="divide-y divide-gray-200">
                                 <template x-for="au in adminUsersList" :key="au.id">
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="au.name"></td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="(au.firstname && au.lastname) ? (au.firstname + ' ' + au.lastname) : au.name"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="au.email"></td>
                                         <td class="px-6 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -1804,9 +1804,15 @@
                     <h3 class="text-lg font-bold text-gray-800 mb-4" x-text="editingAdminUser ? 'Edit Admin User' : 'Create Admin User'"></h3>
 
                     <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                            <input type="text" x-model="adminUserForm.name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Full name">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                <input type="text" x-model="adminUserForm.firstname" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="First name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                <input type="text" x-model="adminUserForm.lastname" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Last name">
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
@@ -2446,7 +2452,7 @@ function adminPanel() {
         // Admin Users management (super_admin only)
         adminUsersList: [], adminUsersLoading: false,
         showAdminUserModal: false, editingAdminUser: null,
-        adminUserForm: { name: '', email: '', password: '', permissions: [] },
+        adminUserForm: { firstname: '', lastname: '', email: '', password: '', permissions: [] },
         adminUserSaving: false, adminUserError: '', adminUserSuccess: '',
         adminPermLabels: {
             admin_overview: 'Overview & Stats',
@@ -3370,9 +3376,9 @@ function adminPanel() {
             this.adminUserError = '';
             this.adminUserSuccess = '';
             if (au) {
-                this.adminUserForm = { name: au.name, email: au.email, password: '', permissions: [...(au.permissions || [])] };
+                this.adminUserForm = { firstname: au.firstname || '', lastname: au.lastname || '', email: au.email, password: '', permissions: [...(au.permissions || [])] };
             } else {
-                this.adminUserForm = { name: '', email: '', password: '', permissions: [] };
+                this.adminUserForm = { firstname: '', lastname: '', email: '', password: '', permissions: [] };
             }
             this.showAdminUserModal = true;
         },
@@ -3398,7 +3404,8 @@ function adminPanel() {
                 const method = isEdit ? 'PUT' : 'POST';
 
                 const body = {
-                    name: this.adminUserForm.name,
+                    firstname: this.adminUserForm.firstname,
+                    lastname: this.adminUserForm.lastname,
                     email: this.adminUserForm.email,
                     permissions: this.adminUserForm.permissions,
                 };
@@ -3435,7 +3442,7 @@ function adminPanel() {
         },
 
         async deleteAdminUser(au) {
-            if (!confirm(`Delete admin user "${au.name}"? This cannot be undone.`)) return;
+            if (!confirm(`Delete admin user "${(au.firstname && au.lastname) ? (au.firstname + ' ' + au.lastname) : au.name}"? This cannot be undone.`)) return;
             try {
                 const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/admin-users/${au.id}`, {
                     method: 'DELETE', headers: this.getHeaders(),

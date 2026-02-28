@@ -22,7 +22,7 @@ class AccountUserController extends Controller
         }
 
         $users = User::where('account_id', $user->account_id)
-            ->select('id', 'name', 'email', 'role', 'permissions', 'created_at')
+            ->select('id', 'firstname', 'lastname', 'name', 'email', 'role', 'permissions', 'created_at')
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -44,7 +44,8 @@ class AccountUserController extends Controller
         }
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'role' => 'required|in:admin,viewer',
             'password' => 'required|string|min:8',
@@ -53,7 +54,9 @@ class AccountUserController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'name' => $request->firstname . ' ' . $request->lastname,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'account_id' => $authUser->account_id,
@@ -63,7 +66,7 @@ class AccountUserController extends Controller
 
         return response()->json([
             'message' => 'User added successfully.',
-            'user' => $user->only('id', 'name', 'email', 'role', 'permissions', 'created_at'),
+            'user' => $user->only('id', 'firstname', 'lastname', 'name', 'email', 'role', 'permissions', 'created_at'),
         ], 201);
     }
 

@@ -91,7 +91,7 @@ class AdminController extends Controller
     {
         if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
 
-        $account = Account::with(['users:id,account_id,name,email,role,created_at', 'owner:id,account_id,name,email'])->find($id);
+        $account = Account::with(['users:id,account_id,firstname,lastname,name,email,role,created_at', 'owner:id,account_id,firstname,lastname,name,email'])->find($id);
 
         if (!$account) {
             return response()->json(['message' => 'Account not found.'], 404);
@@ -261,7 +261,9 @@ class AdminController extends Controller
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
-                $q->where('name', 'like', "%{$s}%")
+                $q->where('firstname', 'like', "%{$s}%")
+                  ->orWhere('lastname', 'like', "%{$s}%")
+                  ->orWhere('name', 'like', "%{$s}%")
                   ->orWhere('email', 'like', "%{$s}%");
             });
         }
@@ -270,7 +272,7 @@ class AdminController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->select('id', 'account_id', 'name', 'email', 'role', 'created_at')
+        $users = $query->select('id', 'account_id', 'firstname', 'lastname', 'name', 'email', 'role', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -334,7 +336,7 @@ class AdminController extends Controller
         if ($denied = $this->checkSuperAdmin($request)) return $denied;
 
         $users = User::whereIn('role', ['super_admin', 'admin_user'])
-            ->select('id', 'name', 'email', 'role', 'permissions', 'created_at')
+            ->select('id', 'firstname', 'lastname', 'name', 'email', 'role', 'permissions', 'created_at')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -353,7 +355,8 @@ class AdminController extends Controller
         if ($denied = $this->checkSuperAdmin($request)) return $denied;
 
         $request->validate([
-            'name' => 'required|string|max:191',
+            'firstname' => 'required|string|max:191',
+            'lastname' => 'required|string|max:191',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
             'permissions' => 'required|array|min:1',
@@ -361,7 +364,9 @@ class AdminController extends Controller
         ]);
 
         $user = User::create([
-            'name' => $request->name,
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'name' => $request->firstname . ' ' . $request->lastname,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'admin_user',
@@ -371,7 +376,7 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => "Admin user {$user->name} created successfully.",
-            'user' => $user->only('id', 'name', 'email', 'role', 'permissions', 'created_at'),
+            'user' => $user->only('id', 'firstname', 'lastname', 'name', 'email', 'role', 'permissions', 'created_at'),
         ], 201);
     }
 
@@ -389,7 +394,8 @@ class AdminController extends Controller
         }
 
         $request->validate([
-            'name' => 'sometimes|string|max:191',
+            'firstname' => 'sometimes|string|max:191',
+            'lastname' => 'sometimes|string|max:191',
             'email' => 'sometimes|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:8',
             'permissions' => 'sometimes|array|min:1',
@@ -397,7 +403,11 @@ class AdminController extends Controller
         ]);
 
         $data = [];
-        if ($request->has('name')) $data['name'] = $request->name;
+        if ($request->has('firstname')) $data['firstname'] = $request->firstname;
+        if ($request->has('lastname')) $data['lastname'] = $request->lastname;
+        if ($request->has('firstname') || $request->has('lastname')) {
+            $data['name'] = ($request->firstname ?? $user->firstname) . ' ' . ($request->lastname ?? $user->lastname);
+        }
         if ($request->has('email')) $data['email'] = $request->email;
         if ($request->filled('password')) $data['password'] = Hash::make($request->password);
         if ($request->has('permissions')) $data['permissions'] = $request->permissions;
@@ -406,7 +416,7 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => "Admin user {$user->name} updated successfully.",
-            'user' => $user->fresh()->only('id', 'name', 'email', 'role', 'permissions', 'created_at'),
+            'user' => $user->fresh()->only('id', 'firstname', 'lastname', 'name', 'email', 'role', 'permissions', 'created_at'),
         ]);
     }
 
