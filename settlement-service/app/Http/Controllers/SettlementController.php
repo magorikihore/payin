@@ -49,14 +49,36 @@ class SettlementController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:1000',
             'operator' => 'required|string|in:' . implode(',', $this->operators),
-            'bank_name' => 'required|string|max:100',
-            'account_number' => 'required|string|max:50',
-            'account_name' => 'required|string|max:100',
+            'bank_account_id' => 'required|integer',
             'description' => 'nullable|string|max:255',
         ]);
 
         $user = $request->user();
         $token = $request->bearerToken();
+
+        // Fetch bank account details from auth-service
+        $bankName = '';
+        $accountNumber = '';
+        $accountName = '';
+
+        try {
+            $bankRes = Http::get(config('services.auth_service.url') . '/api/internal/bank-accounts/' . $user->account_id);
+            if ($bankRes->ok()) {
+                $bankAccounts = $bankRes->json('bank_accounts') ?? [];
+                $selected = collect($bankAccounts)->firstWhere('id', $request->bank_account_id);
+                if (!$selected) {
+                    return response()->json(['message' => 'Selected bank account not found.'], 422);
+                }
+                $bankName = $selected['bank_name'];
+                $accountNumber = $selected['account_number'];
+                $accountName = $selected['account_name'];
+            } else {
+                return response()->json(['message' => 'Unable to verify bank account.'], 503);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Auth service unavailable. Cannot verify bank account.'], 503);
+        }
+
         $operator = $request->operator;
         $settlementRef = 'STL-' . strtoupper(Str::random(12));
         $settlementAmount = (float) $request->amount;
@@ -129,7 +151,7 @@ class SettlementController extends Controller
                 'platform_charge' => $platformCharge,
                 'operator_charge' => $operatorCharge,
                 'currency' => $currency,
-                'description' => 'Settlement to ' . $request->bank_name . ' - ' . $request->account_name,
+                'description' => 'Settlement to ' . $bankName . ' - ' . $accountName,
                 'payment_method' => 'bank_transfer',
             ]);
         } catch (\Exception $e) {
@@ -145,9 +167,9 @@ class SettlementController extends Controller
             'currency' => $currency,
             'operator' => $operator,
             'status' => 'pending',
-            'bank_name' => $request->bank_name,
-            'account_number' => $request->account_number,
-            'account_name' => $request->account_name,
+            'bank_name' => $bankName,
+            'account_number' => $accountNumber,
+            'account_name' => $accountName,
             'description' => $request->description ?? 'Settlement request',
             'metadata' => json_encode([
                 'platform_charge' => $platformCharge,

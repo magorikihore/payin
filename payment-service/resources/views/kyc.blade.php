@@ -162,35 +162,59 @@
 
                         <!-- Bank Settlement Details -->
                         <div class="border-t border-gray-200 pt-4 mt-4">
-                            <h5 class="text-sm font-semibold text-gray-700 mb-3">Bank Settlement Details</h5>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Bank Name</label>
-                                    <input type="text" x-model="form.bank_name" placeholder="e.g. CRDB Bank"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Account Name</label>
-                                    <input type="text" x-model="form.bank_account_name" placeholder="Account holder name"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                </div>
+                            <h5 class="text-sm font-semibold text-gray-700 mb-3">Bank Settlement Accounts</h5>
+                            <p class="text-sm text-gray-500 mb-3">Add at least one bank account for settlements. You can add more later from your dashboard.</p>
+
+                            <!-- Added bank accounts list -->
+                            <div x-show="bankAccounts.length > 0" class="space-y-2 mb-3">
+                                <template x-for="(ba, idx) in bankAccounts" :key="idx">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-800" x-text="ba.bank_name + ' — ' + ba.account_number"></p>
+                                            <p class="text-xs text-gray-500" x-text="ba.account_name"></p>
+                                        </div>
+                                        <button type="button" @click="bankAccounts.splice(idx, 1)" class="text-xs text-red-500 hover:text-red-700 px-2 py-1">✕</button>
+                                    </div>
+                                </template>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Account Number</label>
-                                    <input type="text" x-model="form.bank_account_number" placeholder="Bank account number"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+
+                            <!-- Add bank account inline form -->
+                            <div class="border border-dashed border-gray-300 rounded-lg p-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Bank Name *</label>
+                                        <input type="text" x-model="bankForm.bank_name" placeholder="e.g. CRDB Bank"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Account Name *</label>
+                                        <input type="text" x-model="bankForm.account_name" placeholder="Account holder name"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">SWIFT Code</label>
-                                    <input type="text" x-model="form.bank_swift" placeholder="e.g. COLOTZTZ"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Account Number *</label>
+                                        <input type="text" x-model="bankForm.account_number" placeholder="Bank account number"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">SWIFT Code</label>
+                                        <input type="text" x-model="bankForm.swift_code" placeholder="e.g. COLOTZTZ"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Branch</label>
+                                        <input type="text" x-model="bankForm.branch" placeholder="Branch name"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-600 mb-1">Bank Branch</label>
-                                    <input type="text" x-model="form.bank_branch" placeholder="Branch name"
-                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                </div>
+                                <button type="button" @click="addBankToList()"
+                                    :disabled="!bankForm.bank_name || !bankForm.account_name || !bankForm.account_number"
+                                    class="mt-3 text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-40 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    Add Account
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -378,10 +402,11 @@ function kycPage() {
         form: {
             business_name: '', business_type: '', registration_number: '', tin_number: '',
             phone: '', address: '', city: '', country: 'Tanzania',
-            bank_name: '', bank_account_name: '', bank_account_number: '', bank_swift: '', bank_branch: '',
             id_type: '', id_number: '',
             crypto_wallet_address: '', crypto_network: '', crypto_currency: ''
         },
+        bankAccounts: [],
+        bankForm: { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '' },
         errors: {},
 
         appReady: false,
@@ -466,6 +491,12 @@ function kycPage() {
             return true;
         },
 
+        addBankToList() {
+            if (!this.bankForm.bank_name || !this.bankForm.account_name || !this.bankForm.account_number) return;
+            this.bankAccounts.push({ ...this.bankForm });
+            this.bankForm = { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '' };
+        },
+
         async saveKyc() {
             if (!this.validateAll()) return;
             this.saving = true;
@@ -483,9 +514,11 @@ function kycPage() {
                 if (this.memorandumFile) formData.append('company_memorandum', this.memorandumFile);
                 if (this.resolutionFile) formData.append('company_resolution', this.resolutionFile);
 
+                const authHeaders = { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' };
+
                 const res = await fetch('{{ config("services.auth_service.url") }}/api/account/kyc', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' },
+                    headers: authHeaders,
                     body: formData
                 });
                 const data = await res.json();
@@ -495,6 +528,18 @@ function kycPage() {
                     this.msgType = 'error';
                     return;
                 }
+
+                // Save bank accounts
+                for (let i = 0; i < this.bankAccounts.length; i++) {
+                    try {
+                        await fetch('{{ config("services.auth_service.url") }}/api/account/bank-accounts', {
+                            method: 'POST',
+                            headers: { ...authHeaders, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ...this.bankAccounts[i], is_default: i === 0 })
+                        });
+                    } catch (e) { console.error('Failed to save bank account', e); }
+                }
+
                 // KYC submitted successfully — redirect to dashboard
                 localStorage.removeItem('kyc_required');
                 localStorage.setItem('account_pending', 'true');

@@ -1507,27 +1507,25 @@
                             </div>
                         </div>
 
-                        <!-- Bank Details -->
-                        <div class="px-6 py-4" x-show="kycAccount?.bank_name || kycAccount?.bank_account_number">
-                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Settlement</h4>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Bank</label>
-                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.bank_name || '—'"></p>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Account Name</label>
-                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.bank_account_name || '—'"></p>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">Account Number</label>
-                                    <p class="text-sm font-medium text-gray-800 font-mono" x-text="kycAccount?.bank_account_number || '—'"></p>
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase">SWIFT / Branch</label>
-                                    <p class="text-sm font-medium text-gray-800" x-text="[kycAccount?.bank_swift, kycAccount?.bank_branch].filter(Boolean).join(' / ') || '—'"></p>
-                                </div>
+                        <!-- Bank Accounts -->
+                        <div class="px-6 py-4">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Accounts</h4>
+                            <div x-show="kycBankAccounts.length > 0" class="space-y-2">
+                                <template x-for="ba in kycBankAccounts" :key="ba.id">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <p class="text-sm font-semibold text-gray-800" x-text="ba.bank_name"></p>
+                                                <span x-show="ba.is_default" class="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Default</span>
+                                                <span x-show="ba.label" class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded" x-text="ba.label"></span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-0.5"><span class="font-mono" x-text="ba.account_number"></span> — <span x-text="ba.account_name"></span></p>
+                                            <p x-show="ba.swift_code || ba.branch" class="text-xs text-gray-400" x-text="[ba.swift_code, ba.branch].filter(Boolean).join(' / ')"></p>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
+                            <p x-show="kycBankAccounts.length === 0" class="text-sm text-gray-400">No bank accounts added.</p>
                         </div>
                     </div>
 
@@ -1624,31 +1622,21 @@
                             </div>
                         </div>
 
-                        <!-- Bank Edit -->
+                        <!-- Bank Accounts (read-only in edit mode — managed by business user) -->
                         <div class="px-6 py-4 bg-gray-50">
-                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Settlement</h4>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Bank Name</label>
-                                    <input type="text" x-model="kycEditForm.bank_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Account Name</label>
-                                    <input type="text" x-model="kycEditForm.bank_account_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Account Number</label>
-                                    <input type="text" x-model="kycEditForm.bank_account_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase mb-1 block">SWIFT Code</label>
-                                    <input type="text" x-model="kycEditForm.bank_swift" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                </div>
-                                <div>
-                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Branch</label>
-                                    <input type="text" x-model="kycEditForm.bank_branch" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                </div>
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Accounts</h4>
+                            <div x-show="kycBankAccounts.length > 0" class="space-y-2">
+                                <template x-for="ba in kycBankAccounts" :key="ba.id">
+                                    <div class="bg-white rounded-lg px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-medium text-gray-800" x-text="ba.bank_name"></p>
+                                            <span x-show="ba.is_default" class="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">Default</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500" x-text="ba.account_number + ' — ' + ba.account_name"></p>
+                                    </div>
+                                </template>
                             </div>
+                            <p x-show="kycBankAccounts.length === 0" class="text-sm text-gray-400">No bank accounts — managed by business user.</p>
                         </div>
 
                         <!-- Document Upload -->
@@ -2904,7 +2892,7 @@
 
                     <!-- Bank Details -->
                     <div>
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Settlement</h4>
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Account</h4>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs text-gray-500 mb-1">Bank Name</label>
@@ -2929,6 +2917,7 @@
                                 <input type="text" x-model="addBizForm.bank_branch" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none">
                             </div>
                         </div>
+                        <p class="text-xs text-gray-400 mt-2">This bank account will be added when the business is created. More accounts can be added by the business owner later.</p>
                     </div>
 
                     <!-- Documents -->
@@ -3045,11 +3034,11 @@ function adminPanel() {
         kycEditing: false, kycEditSaving: false, kycEditMsg: '', kycEditMsgType: 'success',
         kycIdDocFile: null, kycBizLicFile: null, kycIncorpFile: null, kycTaxFile: null,
         kycTinCertFile: null, kycMemoFile: null, kycResolutionFile: null,
+        kycBankAccounts: [],
         kycEditForm: {
             business_name: '', business_type: '', registration_number: '', tin_number: '',
             email: '', phone: '', address: '', city: '', country: '',
-            id_type: '', id_number: '',
-            bank_name: '', bank_account_name: '', bank_account_number: '', bank_swift: '', bank_branch: ''
+            id_type: '', id_number: ''
         },
 
         // Account name lookup
@@ -3486,6 +3475,24 @@ function adminPanel() {
                 if (res.ok) {
                     this.addBizMsg = data.message || 'Business created successfully!';
                     this.addBizMsgType = 'success';
+                    // Save bank account if provided
+                    if (data.account?.id && this.addBizForm.bank_name && this.addBizForm.bank_account_number) {
+                        try {
+                            await fetch(`{{ config("services.auth_service.url") }}/api/internal/bank-accounts/create`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                                body: JSON.stringify({
+                                    account_id: data.account.id,
+                                    bank_name: this.addBizForm.bank_name,
+                                    account_name: this.addBizForm.bank_account_name,
+                                    account_number: this.addBizForm.bank_account_number,
+                                    swift_code: this.addBizForm.bank_swift,
+                                    branch: this.addBizForm.bank_branch,
+                                    is_default: true
+                                })
+                            });
+                        } catch (e) { console.error('Failed to save bank account', e); }
+                    }
                     this.fetchAccounts();
                     this.fetchStats();
                     setTimeout(() => { this.showAddBusinessModal = false; this.addBizMsg = ''; }, 3000);
@@ -3507,6 +3514,7 @@ function adminPanel() {
             this.showKycModal = true;
             this.kycLoading = true;
             this.kycAccount = null;
+            this.kycBankAccounts = [];
             this.kycNoteMsg = '';
             this.kycPaybillMsg = '';
             this.kycRateLimitMsg = '';
@@ -3521,9 +3529,23 @@ function adminPanel() {
                     this.kycNotesText = this.kycAccount.kyc_notes || '';
                     this.kycPaybill = this.kycAccount.paybill || '';
                     this.kycRateLimit = this.kycAccount.rate_limit ?? 60;
+                    // Fetch bank accounts for this account
+                    this.fetchKycBankAccounts(accountId);
                 }
             } catch (e) { console.error(e); }
             this.kycLoading = false;
+        },
+
+        async fetchKycBankAccounts(accountId) {
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/internal/bank-accounts/${accountId}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.kycBankAccounts = data.bank_accounts || [];
+                }
+            } catch (e) { console.error('Failed to fetch bank accounts', e); }
         },
 
         toggleKycEdit() {
@@ -3546,9 +3568,7 @@ function adminPanel() {
                 registration_number: a.registration_number || '', tin_number: a.tin_number || '',
                 email: a.email || '', phone: a.phone || '',
                 address: a.address || '', city: a.city || '', country: a.country || '',
-                id_type: a.id_type || '', id_number: a.id_number || '',
-                bank_name: a.bank_name || '', bank_account_name: a.bank_account_name || '',
-                bank_account_number: a.bank_account_number || '', bank_swift: a.bank_swift || '', bank_branch: a.bank_branch || ''
+                id_type: a.id_type || '', id_number: a.id_number || ''
             };
             this.kycIdDocFile = null;
             this.kycBizLicFile = null;

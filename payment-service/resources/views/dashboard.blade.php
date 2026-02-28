@@ -753,16 +753,14 @@
                         <input type="text" inputmode="numeric" x-model="stlAmountDisplay" @input="formatAmountInput($event, 'settlement')" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
-                        <input type="text" x-model="stlForm.bank_name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="e.g. CRDB, NMB">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
-                        <input type="text" x-model="stlForm.account_number" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
-                        <input type="text" x-model="stlForm.account_name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bank Account</label>
+                        <select x-model="stlForm.bank_account_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <option value="">Select Bank Account</option>
+                            <template x-for="ba in bankAccounts" :key="ba.id">
+                                <option :value="ba.id" x-text="ba.bank_name + ' — ' + ba.account_number + ' (' + ba.account_name + ')' + (ba.is_default ? ' ★' : '')"></option>
+                            </template>
+                        </select>
+                        <p x-show="bankAccounts.length === 0 && !bankAccountsLoading" class="text-xs text-red-500 mt-1">No bank accounts saved. <a href="#" @click.prevent="activeTab = 'account'; fetchKyc();" class="underline text-gblue-500">Add one in Account tab</a>.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
@@ -1085,28 +1083,75 @@
                                 </div>
                             </div>
 
-                            <!-- Bank Settlement -->
+                            <!-- Bank Accounts -->
                             <div>
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                    Bank Settlement
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center justify-between">
+                                    <span class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                        Bank Accounts
+                                    </span>
+                                    <span class="text-xs text-gray-400" x-text="bankAccounts.length + ' account(s)'"></span>
                                 </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Bank Name</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.bank_name || '—'"></p>
+
+                                <!-- Existing bank accounts list -->
+                                <div x-show="bankAccounts.length > 0" class="space-y-2 mb-3">
+                                    <template x-for="ba in bankAccounts" :key="ba.id">
+                                        <div class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-2">
+                                                    <p class="text-sm font-medium text-gray-800" x-text="ba.bank_name"></p>
+                                                    <span x-show="ba.is_default" class="text-xs bg-gblue-100 text-gblue-700 px-1.5 py-0.5 rounded">Default</span>
+                                                    <span x-show="ba.label" class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded" x-text="ba.label"></span>
+                                                </div>
+                                                <p class="text-xs text-gray-500 mt-0.5" x-text="ba.account_number + ' — ' + ba.account_name"></p>
+                                            </div>
+                                            <div class="flex items-center gap-1 ml-3">
+                                                <button x-show="!ba.is_default" @click="setDefaultBank(ba.id)" class="text-xs text-gblue-500 hover:text-gblue-700 px-2 py-1" title="Set as default">★</button>
+                                                <button @click="deleteBankAccount(ba.id)" class="text-xs text-red-500 hover:text-red-700 px-2 py-1" title="Remove">✕</button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                                <p x-show="bankAccounts.length === 0 && !bankAccountsLoading" class="text-sm text-gray-400 mb-3">No bank accounts added yet.</p>
+
+                                <!-- Add bank account form -->
+                                <button x-show="!showBankForm" @click="showBankForm = true" class="text-sm text-gblue-500 hover:text-gblue-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                    Add Bank Account
+                                </button>
+                                <div x-show="showBankForm" x-cloak class="border border-gray-200 rounded-lg p-4 mt-2">
+                                    <div x-show="bankMsg" class="mb-3 p-2 rounded text-sm" :class="bankMsgType==='success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="bankMsg"></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">Bank Name *</label>
+                                            <input type="text" x-model="bankForm.bank_name" required placeholder="e.g. CRDB Bank" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">Account Name *</label>
+                                            <input type="text" x-model="bankForm.account_name" required placeholder="Account holder name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">Account Number *</label>
+                                            <input type="text" x-model="bankForm.account_number" required placeholder="Bank account number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                                            <input type="text" x-model="bankForm.label" placeholder="e.g. Main, Payroll" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">SWIFT Code</label>
+                                            <input type="text" x-model="bankForm.swift_code" placeholder="e.g. COLOTZTZ" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">Branch</label>
+                                            <input type="text" x-model="bankForm.branch" placeholder="Branch name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        </div>
                                     </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Account Name</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.bank_account_name || '—'"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Account Number</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.bank_account_number || '—'"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">SWIFT / Branch</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="[kycData.bank_swift, kycData.bank_branch].filter(Boolean).join(' / ') || '—'"></p>
+                                    <div class="flex gap-2 mt-3">
+                                        <button @click="addBankAccount()" :disabled="bankFormLoading || !bankForm.bank_name || !bankForm.account_name || !bankForm.account_number" class="bg-gblue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gblue-600 disabled:opacity-50">
+                                            <span x-show="!bankFormLoading">Save</span><span x-show="bankFormLoading">Saving...</span>
+                                        </button>
+                                        <button @click="showBankForm = false; bankMsg = ''" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300">Cancel</button>
                                     </div>
                                 </div>
                             </div>
@@ -1259,36 +1304,8 @@
 
                                 <!-- Bank Settlement Details -->
                                 <div class="border-t border-gray-200 pt-4 mt-4">
-                                    <h5 class="text-sm font-semibold text-gray-700 mb-3">Bank Settlement Details</h5>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-600 mb-1">Bank Name</label>
-                                            <input type="text" x-model="kycForm.bank_name" placeholder="e.g. CRDB Bank"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-600 mb-1">Account Name</label>
-                                            <input type="text" x-model="kycForm.bank_account_name" placeholder="Account holder name"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-600 mb-1">Account Number</label>
-                                            <input type="text" x-model="kycForm.bank_account_number" placeholder="Bank account number"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-600 mb-1">SWIFT Code</label>
-                                            <input type="text" x-model="kycForm.bank_swift" placeholder="e.g. COLOTZTZ"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-600 mb-1">Bank Branch</label>
-                                            <input type="text" x-model="kycForm.bank_branch" placeholder="Branch name"
-                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                    </div>
+                                    <h5 class="text-sm font-semibold text-gray-700 mb-2">Bank Settlement Details</h5>
+                                    <p class="text-sm text-gray-500">Bank accounts are managed separately. You can add and manage bank accounts from the Account Info view above.</p>
                                 </div>
                             </div>
 
@@ -2356,9 +2373,12 @@ function dashboard() {
 
         // Settlements
         settlements:[], stlFilterStatus: '', stlLoading: false, stlLoadingList: false,
-        stlForm: { operator: '', amount: '', bank_name: '', account_number: '', account_name: '', description: '' },
+        stlForm: { operator: '', amount: '', bank_account_id: '', description: '' },
         stlAmountDisplay: '',
         settlementMsg: '', settlementMsgType: '',
+        bankAccounts: [], bankAccountsLoading: false,
+        bankForm: { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '', label: '' },
+        bankFormLoading: false, bankMsg: '', bankMsgType: '', showBankForm: false,
 
         // Send Money (Payout)
         sendMoneySubTab: 'single',
@@ -2442,6 +2462,7 @@ function dashboard() {
             this.fetchStats();
             this.fetchWallet();
             this.fetchSettlements();
+            this.fetchBankAccounts();
             this.appReady = true;
             this.$nextTick(() => document.dispatchEvent(new Event('alpine:initialized')));
         },
@@ -2905,6 +2926,9 @@ function dashboard() {
         },
         async createSettlement() {
             this.stlLoading = true; this.settlementMsg = '';
+            if (!this.stlForm.bank_account_id) {
+                this.settlementMsg = 'Please select a bank account.'; this.settlementMsgType = 'error'; this.stlLoading = false; return;
+            }
             try {
                 const res = await fetch('{{ config("services.settlement_service.url") }}/api/settlements', {
                     method: 'POST', headers: this.getHeaders(),
@@ -2916,13 +2940,67 @@ function dashboard() {
                     this.settlementMsg = errors || 'Failed.'; this.settlementMsgType = 'error'; return;
                 }
                 this.settlementMsg = data.message; this.settlementMsgType = 'success';
-                this.stlForm = { operator: '', amount: '', bank_name: '', account_number: '', account_name: '', description: '' };
+                this.stlForm = { operator: '', amount: '', bank_account_id: '', description: '' };
                 this.stlAmountDisplay = '';
                 this.fetchSettlements();
                 this.fetchMyCharges();
                 this.fetchTransactions();
             } catch (e) { this.settlementMsg = 'Service unavailable.'; this.settlementMsgType = 'error'; }
             finally { this.stlLoading = false; }
+        },
+
+        // ---- Bank Accounts ----
+        async fetchBankAccounts() {
+            this.bankAccountsLoading = true;
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/bank-accounts', { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.bankAccounts = data.bank_accounts || [];
+                    // Auto-select default bank account for settlement form
+                    if (this.bankAccounts.length && !this.stlForm.bank_account_id) {
+                        const def = this.bankAccounts.find(b => b.is_default);
+                        if (def) this.stlForm.bank_account_id = def.id;
+                    }
+                }
+            } catch (e) { console.error('Failed to fetch bank accounts', e); }
+            finally { this.bankAccountsLoading = false; }
+        },
+        async addBankAccount() {
+            this.bankFormLoading = true; this.bankMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/bank-accounts', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(this.bankForm)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+                    this.bankMsg = errors || 'Failed.'; this.bankMsgType = 'error'; return;
+                }
+                this.bankMsg = data.message; this.bankMsgType = 'success';
+                this.bankForm = { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '', label: '' };
+                this.showBankForm = false;
+                this.fetchBankAccounts();
+            } catch (e) { this.bankMsg = 'Service unavailable.'; this.bankMsgType = 'error'; }
+            finally { this.bankFormLoading = false; }
+        },
+        async deleteBankAccount(id) {
+            if (!confirm('Remove this bank account?')) return;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/bank-accounts/${id}`, {
+                    method: 'DELETE', headers: this.getHeaders()
+                });
+                if (res.ok) this.fetchBankAccounts();
+            } catch (e) { console.error(e); }
+        },
+        async setDefaultBank(id) {
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/bank-accounts/${id}/default`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                if (res.ok) this.fetchBankAccounts();
+            } catch (e) { console.error(e); }
         },
 
         // ---- Send Money (Payout) ----

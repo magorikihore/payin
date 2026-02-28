@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApiKeyController;
+use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\InternalNotificationController;
 use App\Http\Controllers\IpWhitelistController;
 use App\Http\Controllers\LogController;
@@ -28,6 +29,12 @@ Route::post('/internal/validate-api-key', [ApiKeyController::class, 'validate'])
 // Internal: Send notification email (called by other services)
 Route::post('/internal/send-notification', [InternalNotificationController::class, 'send']);
 
+// Internal: Get bank accounts for an account (called by settlement-service)
+Route::get('/internal/bank-accounts/{accountId}', [BankAccountController::class, 'internalIndex']);
+
+// Internal: Create bank account for an account (called by admin create-business)
+Route::post('/internal/bank-accounts/create', [BankAccountController::class, 'internalStore']);
+
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -41,6 +48,12 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/account/api-keys', [ApiKeyController::class, 'index']);
     Route::post('/account/api-keys', [ApiKeyController::class, 'store']);
     Route::delete('/account/api-keys/{id}', [ApiKeyController::class, 'destroy']);
+
+    // Bank Accounts (owner/admin)
+    Route::get('/account/bank-accounts', [BankAccountController::class, 'index']);
+    Route::post('/account/bank-accounts', [BankAccountController::class, 'store']);
+    Route::put('/account/bank-accounts/{id}/default', [BankAccountController::class, 'setDefault']);
+    Route::delete('/account/bank-accounts/{id}', [BankAccountController::class, 'destroy']);
 
     // IP Whitelist (user)
     Route::get('/account/ips', [IpWhitelistController::class, 'index']);

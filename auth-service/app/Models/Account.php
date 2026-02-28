@@ -65,4 +65,9 @@ class Account extends Model
     {
         return $this->hasOne(User::class)->where('role', 'owner');
     }
+
+    public function bankAccounts()
+    {
+        return $this->hasMany(BankAccount::class);
+    }
 }
