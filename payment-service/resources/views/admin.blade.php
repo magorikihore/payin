@@ -1209,6 +1209,39 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">Tax Clearance — Not uploaded</span>
                                     </template>
                                 </div>
+                                <div class="flex items-center space-x-2">
+                                    <template x-if="kycAccount?.tin_certificate_url">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tin_certificate_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View TIN Certificate &rarr;</a>
+                                        </div>
+                                    </template>
+                                    <template x-if="!kycAccount?.tin_certificate_url">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">TIN Certificate — Not uploaded</span>
+                                    </template>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <template x-if="kycAccount?.company_memorandum_url">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_memorandum_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Company Memorandum &rarr;</a>
+                                        </div>
+                                    </template>
+                                    <template x-if="!kycAccount?.company_memorandum_url">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">Company Memorandum — Not uploaded</span>
+                                    </template>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <template x-if="kycAccount?.company_resolution_url">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_resolution_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Company Resolution &rarr;</a>
+                                        </div>
+                                    </template>
+                                    <template x-if="!kycAccount?.company_resolution_url">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">Company Resolution — Not uploaded</span>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
@@ -1401,6 +1434,39 @@
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
                                             <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tax_clearance_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 uppercase mb-2">TIN Certificate (JPG, PNG, PDF — max 5MB)</label>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycTinCertFile = $event.target.files[0]"
+                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <template x-if="kycAccount?.tin_certificate_url">
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs text-green-600">Current:</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tin_certificate_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 uppercase mb-2">Company Memorandum (JPG, PNG, PDF — max 5MB)</label>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycMemoFile = $event.target.files[0]"
+                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <template x-if="kycAccount?.company_memorandum_url">
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs text-green-600">Current:</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_memorandum_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 uppercase mb-2">Company Resolution (JPG, PNG, PDF — max 5MB)</label>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycResolutionFile = $event.target.files[0]"
+                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <template x-if="kycAccount?.company_resolution_url">
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs text-green-600">Current:</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_resolution_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2604,6 +2670,21 @@
                                 <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizTaxFile = $event.target.files[0]"
                                     class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
                             </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">TIN Certificate</label>
+                                <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizTinCertFile = $event.target.files[0]"
+                                    class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Company Memorandum</label>
+                                <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizMemoFile = $event.target.files[0]"
+                                    class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Company Resolution</label>
+                                <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="addBizResolutionFile = $event.target.files[0]"
+                                    class="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                            </div>
                         </div>
                     </div>
 
@@ -2673,6 +2754,7 @@ function adminPanel() {
         // KYC Edit
         kycEditing: false, kycEditSaving: false, kycEditMsg: '', kycEditMsgType: 'success',
         kycIdDocFile: null, kycBizLicFile: null, kycIncorpFile: null, kycTaxFile: null,
+        kycTinCertFile: null, kycMemoFile: null, kycResolutionFile: null,
         kycEditForm: {
             business_name: '', business_type: '', registration_number: '', tin_number: '',
             email: '', phone: '', address: '', city: '', country: '',
@@ -2686,6 +2768,7 @@ function adminPanel() {
         // Add Business
         showAddBusinessModal: false, addBizSaving: false, addBizMsg: '', addBizMsgType: 'success',
         addBizIdDocFile: null, addBizIncorpFile: null, addBizLicFile: null, addBizTaxFile: null,
+        addBizTinCertFile: null, addBizMemoFile: null, addBizResolutionFile: null,
         addBizForm: {
             firstname: '', lastname: '', email: '', business_name: '', business_type: '',
             registration_number: '', tin_number: '', phone: '', paybill: '',
@@ -3029,6 +3112,9 @@ function adminPanel() {
             this.addBizIncorpFile = null;
             this.addBizLicFile = null;
             this.addBizTaxFile = null;
+            this.addBizTinCertFile = null;
+            this.addBizMemoFile = null;
+            this.addBizResolutionFile = null;
             this.addBizMsg = '';
             this.addBizSaving = false;
         },
@@ -3048,6 +3134,9 @@ function adminPanel() {
                 if (this.addBizIncorpFile) fd.append('certificate_of_incorporation', this.addBizIncorpFile);
                 if (this.addBizLicFile) fd.append('business_license', this.addBizLicFile);
                 if (this.addBizTaxFile) fd.append('tax_clearance', this.addBizTaxFile);
+                if (this.addBizTinCertFile) fd.append('tin_certificate', this.addBizTinCertFile);
+                if (this.addBizMemoFile) fd.append('company_memorandum', this.addBizMemoFile);
+                if (this.addBizResolutionFile) fd.append('company_resolution', this.addBizResolutionFile);
 
                 const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/create-business`, {
                     method: 'POST',
@@ -3107,6 +3196,9 @@ function adminPanel() {
                 this.kycBizLicFile = null;
                 this.kycIncorpFile = null;
                 this.kycTaxFile = null;
+                this.kycTinCertFile = null;
+                this.kycMemoFile = null;
+                this.kycResolutionFile = null;
                 return;
             }
             if (!this.kycAccount) return;
@@ -3124,6 +3216,9 @@ function adminPanel() {
             this.kycBizLicFile = null;
             this.kycIncorpFile = null;
             this.kycTaxFile = null;
+            this.kycTinCertFile = null;
+            this.kycMemoFile = null;
+            this.kycResolutionFile = null;
             this.kycEditMsg = '';
             this.kycEditing = true;
         },
@@ -3139,6 +3234,9 @@ function adminPanel() {
                 if (this.kycIncorpFile) fd.append('certificate_of_incorporation', this.kycIncorpFile);
                 if (this.kycBizLicFile) fd.append('business_license', this.kycBizLicFile);
                 if (this.kycTaxFile) fd.append('tax_clearance', this.kycTaxFile);
+                if (this.kycTinCertFile) fd.append('tin_certificate', this.kycTinCertFile);
+                if (this.kycMemoFile) fd.append('company_memorandum', this.kycMemoFile);
+                if (this.kycResolutionFile) fd.append('company_resolution', this.kycResolutionFile);
                 const token = document.cookie.split('; ').find(c => c.startsWith('admin_token='))?.split('=')[1];
                 const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc`, {
                     method: 'POST',
@@ -3156,6 +3254,9 @@ function adminPanel() {
                     this.kycBizLicFile = null;
                     this.kycIncorpFile = null;
                     this.kycTaxFile = null;
+                    this.kycTinCertFile = null;
+                    this.kycMemoFile = null;
+                    this.kycResolutionFile = null;
                     setTimeout(() => { this.kycEditMsg = ''; }, 5000);
                 } else {
                     const err = await res.json();

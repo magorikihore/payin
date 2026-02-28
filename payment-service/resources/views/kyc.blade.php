@@ -274,6 +274,24 @@
                                 class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
                             <p x-show="errors.tax_clearance" x-text="errors.tax_clearance" class="text-xs text-red-500 mt-1"></p>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">TIN Number Certificate (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <input type="file" @change="tinCertificateFile = $event.target.files[0]; delete errors.tin_certificate" accept=".jpg,.jpeg,.png,.pdf"
+                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
+                            <p x-show="errors.tin_certificate" x-text="errors.tin_certificate" class="text-xs text-red-500 mt-1"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Company Memorandum (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <input type="file" @change="memorandumFile = $event.target.files[0]; delete errors.company_memorandum" accept=".jpg,.jpeg,.png,.pdf"
+                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
+                            <p x-show="errors.company_memorandum" x-text="errors.company_memorandum" class="text-xs text-red-500 mt-1"></p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Company Resolution (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
+                            <input type="file" @change="resolutionFile = $event.target.files[0]; delete errors.company_resolution" accept=".jpg,.jpeg,.png,.pdf"
+                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
+                            <p x-show="errors.company_resolution" x-text="errors.company_resolution" class="text-xs text-red-500 mt-1"></p>
+                        </div>
                     </div>
 
                     <div class="flex justify-between mt-6">
@@ -356,6 +374,7 @@ function kycPage() {
         saving: false,
         msg: '', msgType: '',
         idFile: null, licenseFile: null, incorporationFile: null, taxClearanceFile: null,
+        tinCertificateFile: null, memorandumFile: null, resolutionFile: null,
         form: {
             business_name: '', business_type: '', registration_number: '', tin_number: '',
             phone: '', address: '', city: '', country: 'Tanzania',
@@ -426,10 +445,16 @@ function kycPage() {
             if (!this.incorporationFile) this.errors.certificate_of_incorporation = 'Please upload your Certificate of Incorporation.';
             if (!this.licenseFile) this.errors.business_license = 'Please upload your business license.';
             if (!this.taxClearanceFile) this.errors.tax_clearance = 'Please upload your Tax Clearance certificate.';
+            if (!this.tinCertificateFile) this.errors.tin_certificate = 'Please upload your TIN Number Certificate.';
+            if (!this.memorandumFile) this.errors.company_memorandum = 'Please upload your Company Memorandum.';
+            if (!this.resolutionFile) this.errors.company_resolution = 'Please upload your Company Resolution.';
             if (this.idFile && this.idFile.size > 5 * 1024 * 1024) this.errors.id_document = 'ID document must be under 5MB.';
             if (this.incorporationFile && this.incorporationFile.size > 5 * 1024 * 1024) this.errors.certificate_of_incorporation = 'Certificate must be under 5MB.';
             if (this.licenseFile && this.licenseFile.size > 5 * 1024 * 1024) this.errors.business_license = 'Business license must be under 5MB.';
             if (this.taxClearanceFile && this.taxClearanceFile.size > 5 * 1024 * 1024) this.errors.tax_clearance = 'Tax clearance must be under 5MB.';
+            if (this.tinCertificateFile && this.tinCertificateFile.size > 5 * 1024 * 1024) this.errors.tin_certificate = 'TIN certificate must be under 5MB.';
+            if (this.memorandumFile && this.memorandumFile.size > 5 * 1024 * 1024) this.errors.company_memorandum = 'Company memorandum must be under 5MB.';
+            if (this.resolutionFile && this.resolutionFile.size > 5 * 1024 * 1024) this.errors.company_resolution = 'Company resolution must be under 5MB.';
             if (Object.keys(this.errors).length) { this.msg = 'Please fix the errors below before continuing.'; this.msgType = 'error'; return false; }
             this.msg = ''; return true;
         },
@@ -454,6 +479,9 @@ function kycPage() {
                 if (this.incorporationFile) formData.append('certificate_of_incorporation', this.incorporationFile);
                 if (this.licenseFile) formData.append('business_license', this.licenseFile);
                 if (this.taxClearanceFile) formData.append('tax_clearance', this.taxClearanceFile);
+                if (this.tinCertificateFile) formData.append('tin_certificate', this.tinCertificateFile);
+                if (this.memorandumFile) formData.append('company_memorandum', this.memorandumFile);
+                if (this.resolutionFile) formData.append('company_resolution', this.resolutionFile);
 
                 const res = await fetch('{{ config("services.auth_service.url") }}/api/account/kyc', {
                     method: 'POST',

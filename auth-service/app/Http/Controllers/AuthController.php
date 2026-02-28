@@ -202,6 +202,9 @@ class AuthController extends Controller
                 'business_license_url' => $account->business_license_url,
                 'certificate_of_incorporation_url' => $account->certificate_of_incorporation_url,
                 'tax_clearance_url' => $account->tax_clearance_url,
+                'tin_certificate_url' => $account->tin_certificate_url,
+                'company_memorandum_url' => $account->company_memorandum_url,
+                'company_resolution_url' => $account->company_resolution_url,
                 'status' => $account->status,
                 'kyc_submitted_at' => $account->kyc_submitted_at,
                 'kyc_approved_at' => $account->kyc_approved_at,
@@ -249,6 +252,9 @@ class AuthController extends Controller
             'business_license' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'certificate_of_incorporation' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'tax_clearance' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'tin_certificate' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'company_memorandum' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'company_resolution' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         $data = $request->only([
@@ -281,6 +287,24 @@ class AuthController extends Controller
         if ($request->hasFile('tax_clearance')) {
             $path = $request->file('tax_clearance')->store('kyc/tax-clearances', 'public');
             $data['tax_clearance_url'] = '/storage/' . $path;
+        }
+
+        // Handle TIN certificate upload
+        if ($request->hasFile('tin_certificate')) {
+            $path = $request->file('tin_certificate')->store('kyc/tin-certificates', 'public');
+            $data['tin_certificate_url'] = '/storage/' . $path;
+        }
+
+        // Handle company memorandum upload
+        if ($request->hasFile('company_memorandum')) {
+            $path = $request->file('company_memorandum')->store('kyc/memorandums', 'public');
+            $data['company_memorandum_url'] = '/storage/' . $path;
+        }
+
+        // Handle company resolution upload
+        if ($request->hasFile('company_resolution')) {
+            $path = $request->file('company_resolution')->store('kyc/resolutions', 'public');
+            $data['company_resolution_url'] = '/storage/' . $path;
         }
 
         // Mark as pending review when KYC is submitted/updated
@@ -316,6 +340,9 @@ class AuthController extends Controller
                 'business_license_url' => $account->business_license_url,
                 'certificate_of_incorporation_url' => $account->certificate_of_incorporation_url,
                 'tax_clearance_url' => $account->tax_clearance_url,
+                'tin_certificate_url' => $account->tin_certificate_url,
+                'company_memorandum_url' => $account->company_memorandum_url,
+                'company_resolution_url' => $account->company_resolution_url,
                 'status' => $account->status,
                 'kyc_submitted_at' => $account->kyc_submitted_at,
                 'kyc_approved_at' => $account->kyc_approved_at,
