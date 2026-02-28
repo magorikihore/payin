@@ -616,41 +616,46 @@
                     </div>
                 </div>
 
-                <!-- Per-account wallets -->
-                <template x-for="acctWallet in (walletData.accounts || [])" :key="acctWallet.account_id">
-                    <div class="bg-white rounded-xl shadow-sm border mb-4">
-                        <div class="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
-                            <div>
-                                <span class="font-semibold text-gray-800" x-text="accountName(acctWallet.account_id)"></span>
-                                <span class="ml-4 text-sm text-gray-500">Collection: <span class="font-medium text-green-600" x-text="formatAmount(acctWallet.collection_total) + ' ' + (acctWallet.wallets?.[0]?.currency || 'TZS')"></span></span>
-                                <span class="ml-3 text-sm text-gray-500">Disbursement: <span class="font-medium text-blue-600" x-text="formatAmount(acctWallet.disbursement_total) + ' ' + (acctWallet.wallets?.[0]?.currency || 'TZS')"></span></span>
-                                <span class="ml-3 text-sm text-gray-500">Total: <span class="font-bold text-gray-800" x-text="formatAmount(acctWallet.overall_balance) + ' ' + (acctWallet.wallets?.[0]?.currency || 'TZS')"></span></span>
-                            </div>
+                <!-- Search Bar -->
+                <div class="bg-white rounded-xl shadow-sm p-4 border mb-6">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex-1 min-w-[250px]">
+                            <input type="text" x-model="wltSearch" @input.debounce.400ms="" placeholder="Search business by name..."
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
+                        <p class="text-sm text-gray-500"><span class="font-medium" x-text="filteredWalletAccounts().length"></span> business(es)</p>
+                    </div>
+                </div>
+
+                <!-- Business List -->
+                <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                    <div x-show="filteredWalletAccounts().length === 0" class="p-8 text-center text-gray-500">No businesses found.</div>
+                    <div x-show="filteredWalletAccounts().length > 0" x-cloak>
                         <div class="overflow-x-auto">
                             <table class="w-full">
                                 <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Business</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Collection Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Disbursement Total</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Overall Balance</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200">
-                                    <template x-for="w in acctWallet.wallets" :key="w.operator + w.wallet_type">
-                                        <tr class="hover:bg-gray-50">
-                                            <td class="px-4 py-2 text-sm" x-text="w.operator"></td>
-                                            <td class="px-4 py-2">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
-                                                    :class="w.wallet_type === 'collection' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'"
-                                                    x-text="w.wallet_type"></span>
+                                    <template x-for="acctWallet in filteredWalletAccounts()" :key="acctWallet.account_id">
+                                        <tr class="hover:bg-gray-50 cursor-pointer" @click="openWalletModal(acctWallet)">
+                                            <td class="px-6 py-4">
+                                                <span class="text-sm font-semibold text-gray-800" x-text="accountName(acctWallet.account_id)"></span>
+                                                <span class="ml-2 text-xs text-gray-400" x-text="'#' + acctWallet.account_id"></span>
                                             </td>
-                                            <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(w.balance) + ' ' + (w.currency || 'TZS')"></td>
-                                            <td class="px-4 py-2">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
-                                                    :class="w.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
-                                                    x-text="w.status"></span>
+                                            <td class="px-6 py-4 text-sm font-medium text-green-600" x-text="formatAmount(acctWallet.collection_total) + ' TZS'"></td>
+                                            <td class="px-6 py-4 text-sm font-medium text-blue-600" x-text="formatAmount(acctWallet.disbursement_total) + ' TZS'"></td>
+                                            <td class="px-6 py-4 text-sm font-bold text-gray-800" x-text="formatAmount(acctWallet.overall_balance) + ' TZS'"></td>
+                                            <td class="px-6 py-4">
+                                                <button class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-200 font-medium">
+                                                    View Wallets
+                                                </button>
                                             </td>
                                         </tr>
                                     </template>
@@ -658,8 +663,79 @@
                             </table>
                         </div>
                     </div>
-                </template>
-                <div x-show="!walletData.accounts || walletData.accounts.length === 0" class="bg-white rounded-xl shadow-sm border p-8 text-center text-gray-500">No wallet data found.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Detail Modal -->
+        <div x-show="showWalletModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="showWalletModal = false">
+            <div class="fixed inset-0 bg-black/50" @click="showWalletModal = false"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto" @click.stop>
+                <div class="px-6 py-4 border-b bg-gray-50 rounded-t-2xl flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800" x-text="accountName(walletModalData?.account_id) + ' — Wallets'"></h3>
+                        <p class="text-xs text-gray-500 mt-0.5" x-text="'Account #' + (walletModalData?.account_id || '')"></p>
+                    </div>
+                    <button @click="showWalletModal = false" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+                </div>
+                <div class="p-6">
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-green-50 rounded-xl p-4 border border-green-200">
+                            <p class="text-xs text-green-700 font-medium">Collection</p>
+                            <p class="text-xl font-bold text-green-700 mt-1" x-text="formatAmount(walletModalData?.collection_total || 0) + ' TZS'"></p>
+                        </div>
+                        <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                            <p class="text-xs text-blue-700 font-medium">Disbursement</p>
+                            <p class="text-xl font-bold text-blue-700 mt-1" x-text="formatAmount(walletModalData?.disbursement_total || 0) + ' TZS'"></p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                            <p class="text-xs text-gray-600 font-medium">Overall</p>
+                            <p class="text-xl font-bold text-gray-800 mt-1" x-text="formatAmount(walletModalData?.overall_balance || 0) + ' TZS'"></p>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Details Table -->
+                    <div class="overflow-x-auto border rounded-xl">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Currency</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <template x-for="w in (walletModalData?.wallets || [])" :key="w.operator + w.wallet_type">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                :class="{'bg-green-100 text-green-800': w.operator==='M-Pesa','bg-blue-100 text-blue-800': w.operator==='Tigo Pesa','bg-red-100 text-red-800': w.operator==='Airtel Money','bg-orange-100 text-orange-800': w.operator==='Halopesa'}"
+                                                x-text="w.operator"></span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                :class="w.wallet_type === 'collection' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'"
+                                                x-text="w.wallet_type"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-bold" :class="parseFloat(w.balance) > 0 ? 'text-gray-800' : 'text-gray-400'" x-text="formatAmount(w.balance)"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-500" x-text="w.currency || 'TZS'"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                :class="w.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                                                x-text="w.status"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-end">
+                    <button @click="showWalletModal = false" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">Close</button>
+                </div>
             </div>
         </div>
 
@@ -2881,7 +2957,8 @@ function adminPanel() {
         adminTransactions: [], txnLoading: false, txnSearch: '', txnStatusFilter: '', txnTypeFilter: '', txnOperatorFilter: '', txnPage: 1, txnPagination: {},
 
         // Wallets (admin)
-        walletData: {}, wltLoading: false,
+        walletData: {}, wltLoading: false, wltSearch: '',
+        showWalletModal: false, walletModalData: null,
         fundForm: { account_id: '', operator: 'M-Pesa', amount: '', description: '' },
         fundLoading: false, fundMsg: '', fundMsgType: 'success',
 
@@ -3175,6 +3252,22 @@ function adminPanel() {
                 if (res.ok) this.walletData = await res.json();
             } catch (e) { console.error(e); }
             this.wltLoading = false;
+        },
+
+        filteredWalletAccounts() {
+            const accounts = this.walletData.accounts || [];
+            if (!this.wltSearch) return accounts;
+            const q = this.wltSearch.toLowerCase();
+            return accounts.filter(a => {
+                const name = (this.accountName(a.account_id) || '').toLowerCase();
+                const id = String(a.account_id);
+                return name.includes(q) || id.includes(q);
+            });
+        },
+
+        openWalletModal(acctWallet) {
+            this.walletModalData = acctWallet;
+            this.showWalletModal = true;
         },
 
         async fundDisbursementWallet() {
