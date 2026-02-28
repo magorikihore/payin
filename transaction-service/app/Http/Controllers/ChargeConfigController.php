@@ -182,11 +182,22 @@ class ChargeConfigController extends Controller
         // Normalize operator code to display name (mpesa -> M-Pesa, etc.)
         $operator = $this->normalizeOperator($request->operator);
 
+        // Use explicit account_id if provided, otherwise extract from authenticated user
+        $accountId = $request->account_id;
+        if (!$accountId) {
+            $authUser = $request->auth_user ?? $request->user();
+            if (is_array($authUser)) {
+                $accountId = $authUser['account_id'] ?? null;
+            } elseif (is_object($authUser)) {
+                $accountId = $authUser->account_id ?? null;
+            }
+        }
+
         $charges = ChargeConfig::calculateCharges(
             (float) $request->amount,
             $operator,
             $request->transaction_type,
-            $request->account_id
+            $accountId
         );
 
         return response()->json($charges);
