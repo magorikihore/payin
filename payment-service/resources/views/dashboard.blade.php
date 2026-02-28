@@ -147,7 +147,7 @@
         <div x-show="activeTab === 'dashboard'">
             <!-- Welcome Header -->
             <div class="mb-6">
-                <h1 class="text-2xl font-bold text-gray-900">Welcome back, <span x-text="user?.firstname || user?.name || 'User'"></span></h1>
+                <h1 class="text-2xl font-bold text-gray-900">Welcome back, <span x-text="user?.account?.business_name || user?.name || 'User'"></span></h1>
                 <p class="text-sm text-gray-500 mt-1">Here's your business overview.</p>
             </div>
 
