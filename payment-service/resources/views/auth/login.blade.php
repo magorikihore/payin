@@ -147,7 +147,13 @@
                 <span x-show="!loading">Get Started</span>
                 <span x-show="loading">Creating...</span>
             </button>
-            <p class="text-center text-sm text-gray-500 mt-4">
+            <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
+                By clicking "Get Started" I agree to HoneyCoin's
+                <a href="#" class="text-gblue-500 hover:underline">Terms of Use</a> and
+                <a href="#" class="text-gblue-500 hover:underline">Privacy Policy</a>
+                and to receive electronic communication about your accounts and services.
+            </p>
+            <p class="text-center text-sm text-gray-500 mt-3">
                 Already have an account?
                 <a href="#" @click.prevent="showRegister = false; error = ''" class="text-gblue-500 hover:underline">Login</a>
             </p>
