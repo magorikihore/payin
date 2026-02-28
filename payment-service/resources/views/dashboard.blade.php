@@ -16,7 +16,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                     </svg>
                     <span class="ml-2 text-lg font-bold text-white">Payin</span>
-                    <span x-show="user?.name" class="ml-3 text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-full font-medium hidden sm:inline" x-text="(user?.name || '').split(' ')[0]"></span>
                 </div>
                 <div class="flex items-center space-x-3">
                     <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="user?.name || 'User'"></span></span>
