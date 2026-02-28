@@ -25,6 +25,7 @@ class PaymentRequest extends Model
         'operator_name',
         'status',
         'description',
+        'batch_name',
         'operator_request',
         'operator_response',
         'callback_data',

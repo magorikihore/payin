@@ -449,6 +449,7 @@ class PaymentController extends Controller
     public function batchDisbursement(Request $request): JsonResponse
     {
         $request->validate([
+            'batch_name'        => 'nullable|string|max:100',
             'items'             => 'required|array|min:1|max:500',
             'items.*.phone'     => 'required|string|min:10|max:15',
             'items.*.amount'    => 'required|numeric|min:100',
@@ -456,6 +457,8 @@ class PaymentController extends Controller
             'items.*.reference' => 'nullable|string|max:100',
             'items.*.description' => 'nullable|string|max:255',
         ]);
+
+        $batchName = $request->input('batch_name');
 
         $user = $request->user();
         $accountId = $user->account_id ?? null;
@@ -526,6 +529,7 @@ class PaymentController extends Controller
                 'operator_name'   => $operator->name,
                 'status'          => 'pending',
                 'description'     => $item['description'] ?? null,
+                'batch_name'      => $batchName,
             ]);
 
             // Push to operator

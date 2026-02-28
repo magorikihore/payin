@@ -1277,6 +1277,13 @@
                     </div>
                     <p class="text-sm text-gray-500 mb-4">Upload a CSV file or paste data to send money to multiple recipients at once. Maximum 500 recipients per batch.</p>
 
+                    <!-- Batch Name -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Batch Name</label>
+                        <input type="text" x-model="batchName" placeholder="e.g. January Salaries, Commission Payout" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        <p class="text-xs text-gray-400 mt-1">Give this batch a name to easily identify it later.</p>
+                    </div>
+
                     <div x-show="batchMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="batchMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="batchMsg"></div>
 
                     <!-- CSV Format Info -->
@@ -1423,6 +1430,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batch</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
@@ -1434,6 +1442,7 @@
                                 <template x-for="d in recentDisbursements" :key="d.id">
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-3 text-sm font-mono text-gray-700" x-text="d.request_ref"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-600" x-text="d.batch_name || '—'"></td>
                                         <td class="px-4 py-3 text-sm" x-text="d.phone"></td>
                                         <td class="px-4 py-3 text-sm font-semibold text-red-600" x-text="'-' + formatAmount(d.amount) + ' TZS'"></td>
                                         <td class="px-4 py-3">
@@ -2016,7 +2025,7 @@ function dashboard() {
         payoutLoading: false, payoutMsg: '', payoutMsgType: 'success',
         lastPayoutResult: null,
         // Batch
-        batchCsvText: '', batchItems: [], batchLoading: false,
+        batchName: '', batchCsvText: '', batchItems: [], batchLoading: false,
         batchMsg: '', batchMsgType: 'success',
         batchResults: [], batchResultSummary: { sent: 0, failed: 0, total: 0 },
         manualRow: { phone: '', amount: '', reference: '', description: '' },
@@ -2721,6 +2730,7 @@ function dashboard() {
             this.batchResults = [];
             try {
                 const payload = {
+                    batch_name: this.batchName || null,
                     items: this.batchItems.map(i => ({
                         phone: i.phone,
                         amount: i.amount,
@@ -2744,6 +2754,7 @@ function dashboard() {
                 }
                 this.batchMsg = data.message || (res.ok ? 'Batch sent.' : 'Batch failed.');
                 this.batchMsgType = data.failed === 0 ? 'success' : 'error';
+                if (data.failed === 0) { this.batchName = ''; }
                 this.fetchRecentDisbursements();
             } catch (e) { this.batchMsg = 'Network error.'; this.batchMsgType = 'error'; }
             this.batchLoading = false;
