@@ -132,6 +132,7 @@ class SettlementController extends Controller
                 $errorMsg = $walletResponse->json('message') ?? 'Failed to debit collection wallet.';
                 return response()->json(['message' => $errorMsg], $walletResponse->status());
             }
+            $remainingBalance = $walletResponse->json('balance_after') ?? null;
         } catch (\Exception $e) {
             return response()->json(['message' => 'Wallet service unavailable. Cannot process settlement.'], 503);
         }
@@ -219,8 +220,10 @@ class SettlementController extends Controller
             \Log::warning('Admin settlement notification failed: ' . $e->getMessage());
         }
 
+        $balanceMsg = isset($remainingBalance) ? ' Available balance: ' . number_format((float) $remainingBalance, 2) . " {$currency}." : '';
+
         return response()->json([
-            'message' => "Settlement request created. " . number_format($totalDebit, 2) . " {$currency} debited from {$operator} collection wallet (Amount: " . number_format($settlementAmount, 2) . " {$currency}{$chargeMsg}).",
+            'message' => "Settlement request created. " . number_format($totalDebit, 2) . " {$currency} debited from {$operator} collection wallet (Amount: " . number_format($settlementAmount, 2) . " {$currency}{$chargeMsg}).{$balanceMsg}",
             'settlement' => $settlement,
             'charges' => [
                 'platform_charge' => number_format($platformCharge, 2, '.', ''),
@@ -228,6 +231,7 @@ class SettlementController extends Controller
                 'total_charge' => number_format($totalCharge, 2, '.', ''),
                 'total_debited' => number_format($totalDebit, 2, '.', ''),
             ],
+            'available_balance' => $remainingBalance,
         ], 201);
     }
 
