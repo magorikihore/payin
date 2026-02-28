@@ -58,12 +58,17 @@ class ChargeConfigController extends Controller
             'account_id' => 'nullable|integer',
             'operator' => 'required|string|in:' . implode(',', $this->operators),
             'transaction_type' => 'required|string|in:' . implode(',', $this->transactionTypes),
-            'charge_type' => 'required|in:fixed,percentage',
-            'charge_value' => 'required|numeric|min:0',
+            'charge_type' => 'required|in:fixed,percentage,dynamic',
+            'charge_value' => 'required_unless:charge_type,dynamic|numeric|min:0',
             'min_amount' => 'nullable|numeric|min:0',
             'max_amount' => 'nullable|numeric|min:0',
             'applies_to' => 'required|in:platform,operator',
             'status' => 'nullable|in:active,inactive',
+            'tiers' => 'required_if:charge_type,dynamic|array|min:1',
+            'tiers.*.min_amount' => 'required_if:charge_type,dynamic|numeric|min:0',
+            'tiers.*.max_amount' => 'required_if:charge_type,dynamic|numeric|min:0',
+            'tiers.*.charge_type' => 'required_if:charge_type,dynamic|in:fixed,percentage',
+            'tiers.*.charge_value' => 'required_if:charge_type,dynamic|numeric|min:0',
         ]);
 
         $charge = ChargeConfig::create([
@@ -72,9 +77,10 @@ class ChargeConfigController extends Controller
             'operator' => $request->operator,
             'transaction_type' => $request->transaction_type,
             'charge_type' => $request->charge_type,
-            'charge_value' => $request->charge_value,
-            'min_amount' => $request->min_amount ?? 0,
-            'max_amount' => $request->max_amount ?? 0,
+            'charge_value' => $request->charge_type === 'dynamic' ? 0 : $request->charge_value,
+            'tiers' => $request->charge_type === 'dynamic' ? $request->tiers : null,
+            'min_amount' => $request->charge_type === 'dynamic' ? 0 : ($request->min_amount ?? 0),
+            'max_amount' => $request->charge_type === 'dynamic' ? 0 : ($request->max_amount ?? 0),
             'applies_to' => $request->applies_to,
             'status' => $request->status ?? 'active',
         ]);
@@ -104,12 +110,17 @@ class ChargeConfigController extends Controller
             'account_id' => 'nullable|integer',
             'operator' => 'sometimes|string|in:' . implode(',', $this->operators),
             'transaction_type' => 'sometimes|string|in:' . implode(',', $this->transactionTypes),
-            'charge_type' => 'sometimes|in:fixed,percentage',
+            'charge_type' => 'sometimes|in:fixed,percentage,dynamic',
             'charge_value' => 'sometimes|numeric|min:0',
             'min_amount' => 'sometimes|numeric|min:0',
             'max_amount' => 'sometimes|numeric|min:0',
             'applies_to' => 'sometimes|in:platform,operator',
             'status' => 'sometimes|in:active,inactive',
+            'tiers' => 'nullable|array',
+            'tiers.*.min_amount' => 'required_with:tiers|numeric|min:0',
+            'tiers.*.max_amount' => 'required_with:tiers|numeric|min:0',
+            'tiers.*.charge_type' => 'required_with:tiers|in:fixed,percentage',
+            'tiers.*.charge_value' => 'required_with:tiers|numeric|min:0',
         ]);
 
         $updateData = $request->only([
@@ -118,6 +129,16 @@ class ChargeConfigController extends Controller
         ]);
         if ($request->has('account_id')) {
             $updateData['account_id'] = $request->account_id ?: null;
+        }
+        // Handle tiers for dynamic charge type
+        $chargeType = $request->charge_type ?? $charge->charge_type;
+        if ($chargeType === 'dynamic') {
+            $updateData['tiers'] = $request->tiers ?? $charge->tiers;
+            $updateData['charge_value'] = 0;
+            $updateData['min_amount'] = 0;
+            $updateData['max_amount'] = 0;
+        } elseif ($request->has('charge_type')) {
+            $updateData['tiers'] = null;
         }
         $charge->update($updateData);
 

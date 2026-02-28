@@ -15,6 +15,7 @@ Route::middleware('auth.service')->group(function () {
     // Admin: all wallets across all accounts
     Route::get('/admin/wallets', [WalletController::class, 'adminWallets']);
     Route::post('/admin/wallet/refund', [WalletController::class, 'adminRefund']);
+    Route::post('/admin/wallet/fund', [WalletController::class, 'adminFund']);
     Route::post('/admin/wallet/reverse', [WalletController::class, 'adminReverse']);
     Route::get('/admin/internal-transfers', [WalletController::class, 'adminTransfers']);
     Route::put('/admin/internal-transfers/{id}/approve', [WalletController::class, 'approveTransfer']);

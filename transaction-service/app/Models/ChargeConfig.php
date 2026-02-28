@@ -16,6 +16,7 @@ class ChargeConfig extends Model
         'transaction_type',
         'charge_type',
         'charge_value',
+        'tiers',
         'min_amount',
         'max_amount',
         'applies_to',
@@ -28,6 +29,7 @@ class ChargeConfig extends Model
             'charge_value' => 'decimal:4',
             'min_amount' => 'decimal:2',
             'max_amount' => 'decimal:2',
+            'tiers' => 'array',
         ];
     }
 
@@ -79,6 +81,22 @@ class ChargeConfig extends Model
                 $chargeAmount = (float) $config->charge_value;
             } elseif ($config->charge_type === 'percentage') {
                 $chargeAmount = round($amount * (float) $config->charge_value / 100, 2);
+            } elseif ($config->charge_type === 'dynamic' && is_array($config->tiers)) {
+                // Find the matching tier for this amount
+                foreach ($config->tiers as $tier) {
+                    $tierMin = (float) ($tier['min_amount'] ?? 0);
+                    $tierMax = (float) ($tier['max_amount'] ?? 0);
+                    if ($amount >= $tierMin && ($tierMax == 0 || $amount <= $tierMax)) {
+                        $tierType = $tier['charge_type'] ?? 'fixed';
+                        $tierValue = (float) ($tier['charge_value'] ?? 0);
+                        if ($tierType === 'percentage') {
+                            $chargeAmount = round($amount * $tierValue / 100, 2);
+                        } else {
+                            $chargeAmount = $tierValue;
+                        }
+                        break; // Use first matching tier
+                    }
+                }
             }
 
             if ($config->applies_to === 'platform') {

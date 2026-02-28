@@ -599,6 +599,67 @@ class WalletController extends Controller
     }
 
     /**
+     * Admin: Fund (top-up) a business's disbursement wallet.
+     */
+    public function adminFund(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!in_array($user->role ?? null, ['super_admin', 'admin_user'])) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'operator' => 'required|string|in:' . implode(',', $this->operators),
+            'account_id' => 'required|string',
+            'description' => 'nullable|string|max:255',
+        ]);
+
+        $operator = $request->operator;
+        $amount = (float) $request->amount;
+        $accountId = $request->account_id;
+
+        return DB::transaction(function () use ($operator, $amount, $accountId, $request, $user) {
+            $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => 'disbursement'],
+                ['user_id' => 0, 'balance' => 0, 'currency' => 'TZS', 'status' => 'active']
+            );
+
+            if ($wallet->status !== 'active') {
+                return response()->json(['message' => 'Disbursement wallet is not active.'], 403);
+            }
+
+            $balanceBefore = $wallet->balance;
+            $balanceAfter = $balanceBefore + $amount;
+
+            $wallet->update(['balance' => $balanceAfter]);
+
+            WalletTransaction::create([
+                'wallet_id' => $wallet->id,
+                'type' => 'credit',
+                'amount' => $amount,
+                'reference' => 'FUND-' . strtoupper(Str::random(12)),
+                'description' => $request->description ?? 'Admin fund disbursement wallet via ' . $operator,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $balanceAfter,
+                'status' => 'completed',
+                'metadata' => json_encode([
+                    'admin_fund' => true,
+                    'operator' => $operator,
+                    'funded_by' => $user->id,
+                ]),
+            ]);
+
+            return response()->json([
+                'message' => 'Disbursement wallet funded successfully.',
+                'balance_before' => number_format($balanceBefore, 2, '.', ''),
+                'balance_after' => number_format($balanceAfter, 2, '.', ''),
+                'amount_funded' => number_format($amount, 2, '.', ''),
+            ]);
+        });
+    }
+
+    /**
      * Admin: Refund a collection wallet (used when settlement is rejected).
      */
     public function adminRefund(Request $request): JsonResponse

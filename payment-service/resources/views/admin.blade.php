@@ -571,6 +571,51 @@
                     </div>
                 </div>
 
+                <!-- Fund Disbursement Wallet Form -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Fund Disbursement Wallet</h3>
+                    <div x-show="fundMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm"
+                        :class="fundMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'"
+                        x-text="fundMsg"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Business</label>
+                            <select x-model="fundForm.account_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                                <option value="">Select Business</option>
+                                <template x-for="[accId, accName] in Object.entries(accountMap)" :key="accId">
+                                    <option :value="accId" x-text="accName"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
+                            <select x-model="fundForm.operator" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                                <option value="M-Pesa">M-Pesa</option>
+                                <option value="Tigo Pesa">Tigo Pesa</option>
+                                <option value="Airtel Money">Airtel Money</option>
+                                <option value="Halopesa">Halopesa</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount (TZS)</label>
+                            <input type="number" step="0.01" x-model="fundForm.amount" placeholder="0.00"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                            <input type="text" x-model="fundForm.description" placeholder="e.g. Initial top-up"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-4">
+                        <button @click="fundDisbursementWallet()" :disabled="fundLoading"
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
+                            <span x-show="!fundLoading">Fund Wallet</span>
+                            <span x-show="fundLoading">Funding...</span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Per-account wallets -->
                 <template x-for="acctWallet in (walletData.accounts || [])" :key="acctWallet.account_id">
                     <div class="bg-white rounded-xl shadow-sm border mb-4">
@@ -754,9 +799,10 @@
                         <select x-model="chargeForm.charge_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
                             <option value="fixed">Fixed Amount (TZS)</option>
                             <option value="percentage">Percentage (%)</option>
+                            <option value="dynamic">Dynamic / Tiered</option>
                         </select>
                     </div>
-                    <div>
+                    <div x-show="chargeForm.charge_type !== 'dynamic'">
                         <label class="block text-sm font-medium text-gray-700 mb-1" x-text="chargeForm.charge_type === 'percentage' ? 'Percentage (%)' : 'Amount (TZS)'"></label>
                         <input type="number" step="0.01" x-model="chargeForm.charge_value" placeholder="0.00"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
@@ -768,17 +814,57 @@
                             <option value="operator">Operator Fee</option>
                         </select>
                     </div>
-                    <div>
+                    <div x-show="chargeForm.charge_type !== 'dynamic'">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Min Amount (TZS)</label>
                         <input type="number" step="0.01" x-model="chargeForm.min_amount" placeholder="0"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
                     </div>
-                    <div>
+                    <div x-show="chargeForm.charge_type !== 'dynamic'">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Max Amount (TZS, 0 = no limit)</label>
                         <input type="number" step="0.01" x-model="chargeForm.max_amount" placeholder="0"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
                     </div>
                 </div>
+
+                <!-- Dynamic Tiers Builder -->
+                <div x-show="chargeForm.charge_type === 'dynamic'" x-cloak class="mt-4 border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-gray-700">Amount Tiers</h4>
+                        <button type="button" @click="chargeForm.tiers.push({ min_amount: 0, max_amount: 0, charge_type: 'fixed', charge_value: '' })"
+                            class="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">+ Add Tier</button>
+                    </div>
+                    <template x-for="(tier, idx) in chargeForm.tiers" :key="idx">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3 bg-white p-3 rounded-lg border">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Min Amount (TZS)</label>
+                                <input type="number" step="0.01" x-model="tier.min_amount" placeholder="0"
+                                    class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Max Amount (TZS, 0=∞)</label>
+                                <input type="number" step="0.01" x-model="tier.max_amount" placeholder="0"
+                                    class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Charge Type</label>
+                                <select x-model="tier.charge_type" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+                                    <option value="fixed">Fixed (TZS)</option>
+                                    <option value="percentage">Percentage (%)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1" x-text="tier.charge_type === 'percentage' ? 'Percentage (%)' : 'Amount (TZS)'"></label>
+                                <input type="number" step="0.01" x-model="tier.charge_value" placeholder="0"
+                                    class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                            </div>
+                            <div class="flex items-end">
+                                <button type="button" @click="chargeForm.tiers.splice(idx, 1)" x-show="chargeForm.tiers.length > 1"
+                                    class="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded hover:bg-red-200">Remove</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
                 <div class="flex justify-end mt-4">
                     <button @click="addCharge()" :disabled="chargeLoading"
                         class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50">
@@ -850,8 +936,18 @@
                                         </td>
                                         <td class="px-4 py-3 text-sm capitalize" x-text="ch.transaction_type === 'all' ? 'All Types' : ch.transaction_type"></td>
                                         <td class="px-4 py-3 text-sm font-semibold text-gray-800">
-                                            <span x-text="ch.charge_type === 'fixed' ? formatAmount(ch.charge_value) + ' TZS' : ch.charge_value + '%'"></span>
-                                            <span class="text-xs text-gray-400 ml-1" x-text="'(' + ch.charge_type + ')'"></span>
+                                            <template x-if="ch.charge_type !== 'dynamic'">
+                                                <span>
+                                                    <span x-text="ch.charge_type === 'fixed' ? formatAmount(ch.charge_value) + ' TZS' : ch.charge_value + '%'"></span>
+                                                    <span class="text-xs text-gray-400 ml-1" x-text="'(' + ch.charge_type + ')'"></span>
+                                                </span>
+                                            </template>
+                                            <template x-if="ch.charge_type === 'dynamic'">
+                                                <span>
+                                                    <span class="text-xs text-purple-600 font-medium">Dynamic / Tiered</span>
+                                                    <button @click="ch._showTiers = !ch._showTiers" class="ml-1 text-xs text-blue-500 hover:underline" x-text="ch._showTiers ? 'Hide' : 'View'"></button>
+                                                </span>
+                                            </template>
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -859,7 +955,12 @@
                                                 x-text="ch.applies_to"></span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-600">
-                                            <span x-text="formatAmount(ch.min_amount)"></span> - <span x-text="ch.max_amount == 0 ? '∞' : formatAmount(ch.max_amount)"></span> TZS
+                                            <template x-if="ch.charge_type !== 'dynamic'">
+                                                <span><span x-text="formatAmount(ch.min_amount)"></span> - <span x-text="ch.max_amount == 0 ? '∞' : formatAmount(ch.max_amount)"></span> TZS</span>
+                                            </template>
+                                            <template x-if="ch.charge_type === 'dynamic'">
+                                                <span class="text-xs text-gray-500" x-text="(ch.tiers || []).length + ' tier(s)'"></span>
+                                            </template>
                                         </td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -874,6 +975,24 @@
                                                     x-text="ch.status === 'active' ? 'Disable' : 'Enable'"></button>
                                                 <button @click="deleteCharge(ch.id)"
                                                     class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- Expandable Tier Details -->
+                                    <tr x-show="ch.charge_type === 'dynamic' && ch._showTiers" x-cloak>
+                                        <td colspan="9" class="px-4 py-3 bg-purple-50 border-b">
+                                            <div class="text-xs font-semibold text-gray-600 mb-2">Tiers:</div>
+                                            <div class="grid gap-2">
+                                                <template x-for="(tier, ti) in (ch.tiers || [])" :key="ti">
+                                                    <div class="flex items-center gap-4 bg-white rounded px-3 py-2 border text-xs">
+                                                        <span class="text-gray-500 font-medium" x-text="'Tier ' + (ti+1) + ':'"></span>
+                                                        <span x-text="formatAmount(tier.min_amount) + ' - ' + (tier.max_amount == 0 ? '∞' : formatAmount(tier.max_amount)) + ' TZS'"></span>
+                                                        <span class="mx-1">→</span>
+                                                        <span class="font-semibold" :class="tier.charge_type === 'percentage' ? 'text-blue-700' : 'text-green-700'"
+                                                            x-text="tier.charge_type === 'percentage' ? tier.charge_value + '%' : formatAmount(tier.charge_value) + ' TZS'"></span>
+                                                        <span class="text-gray-400" x-text="'(' + tier.charge_type + ')'"></span>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </td>
                                     </tr>
@@ -2763,6 +2882,8 @@ function adminPanel() {
 
         // Wallets (admin)
         walletData: {}, wltLoading: false,
+        fundForm: { account_id: '', operator: 'M-Pesa', amount: '', description: '' },
+        fundLoading: false, fundMsg: '', fundMsgType: 'success',
 
         // Settlements (admin)
         adminSettlements: [], stlLoading: false, stlSearch: '', stlStatusFilter: '', stlPage: 1, stlPagination: {},
@@ -2805,7 +2926,7 @@ function adminPanel() {
         // Charges
         charges: [], chargesLoading: false, chargeLoading: false, chargeMsg: '', chargeMsgType: 'success',
         chargeOperatorFilter: '', chargeStatusFilter: '',
-        chargeForm: { name: '', account_id: '', operator: 'all', transaction_type: 'all', charge_type: 'fixed', charge_value: '', min_amount: 0, max_amount: 0, applies_to: 'platform' },
+        chargeForm: { name: '', account_id: '', operator: 'all', transaction_type: 'all', charge_type: 'fixed', charge_value: '', min_amount: 0, max_amount: 0, applies_to: 'platform', tiers: [{ min_amount: 0, max_amount: 0, charge_type: 'fixed', charge_value: '' }] },
 
         // Charge filters
         chargeAccountFilter: '',
@@ -3054,6 +3175,30 @@ function adminPanel() {
                 if (res.ok) this.walletData = await res.json();
             } catch (e) { console.error(e); }
             this.wltLoading = false;
+        },
+
+        async fundDisbursementWallet() {
+            if (!this.fundForm.account_id || !this.fundForm.amount || this.fundForm.amount <= 0) {
+                this.fundMsg = 'Please select a business and enter a valid amount.'; this.fundMsgType = 'error'; return;
+            }
+            if (!confirm(`Fund ${this.fundForm.operator} disbursement wallet for ${this.accountName(this.fundForm.account_id)} with ${this.formatAmount(this.fundForm.amount)} TZS?`)) return;
+            this.fundLoading = true; this.fundMsg = '';
+            try {
+                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/wallet/fund', {
+                    method: 'POST', headers: this.getHeaders(), body: JSON.stringify(this.fundForm)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.fundMsg = data.message + ' Balance: ' + this.formatAmount(data.balance_after) + ' TZS'; this.fundMsgType = 'success';
+                    this.fundForm = { account_id: '', operator: 'M-Pesa', amount: '', description: '' };
+                    this.fetchAdminWallets();
+                } else {
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+                    this.fundMsg = errors || 'Failed to fund wallet.'; this.fundMsgType = 'error';
+                }
+            } catch (e) { this.fundMsg = 'Service unavailable.'; this.fundMsgType = 'error'; }
+            this.fundLoading = false;
+            setTimeout(() => { this.fundMsg = ''; }, 5000);
         },
 
         // ---- Admin Settlements ----
@@ -3436,13 +3581,26 @@ function adminPanel() {
         },
 
         async addCharge() {
-            if (!this.chargeForm.name || !this.chargeForm.charge_value) {
-                this.chargeMsg = 'Please fill in name and charge value.'; this.chargeMsgType = 'error'; return;
+            if (!this.chargeForm.name) {
+                this.chargeMsg = 'Please fill in the charge name.'; this.chargeMsgType = 'error'; return;
+            }
+            if (this.chargeForm.charge_type !== 'dynamic' && !this.chargeForm.charge_value) {
+                this.chargeMsg = 'Please fill in the charge value.'; this.chargeMsgType = 'error'; return;
+            }
+            if (this.chargeForm.charge_type === 'dynamic') {
+                const hasEmptyTier = this.chargeForm.tiers.some(t => t.charge_value === '' || t.charge_value === null);
+                if (this.chargeForm.tiers.length === 0 || hasEmptyTier) {
+                    this.chargeMsg = 'Please add at least one tier with a charge value.'; this.chargeMsgType = 'error'; return;
+                }
             }
             this.chargeLoading = true; this.chargeMsg = '';
             try {
+                const payload = { ...this.chargeForm };
+                if (payload.charge_type !== 'dynamic') {
+                    delete payload.tiers;
+                }
                 const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges', {
-                    method: 'POST', headers: this.getHeaders(), body: JSON.stringify(this.chargeForm)
+                    method: 'POST', headers: this.getHeaders(), body: JSON.stringify(payload)
                 });
                 const data = await res.json();
                 if (!res.ok) {
@@ -3450,7 +3608,7 @@ function adminPanel() {
                     this.chargeMsg = errors || 'Failed.'; this.chargeMsgType = 'error'; return;
                 }
                 this.chargeMsg = data.message; this.chargeMsgType = 'success';
-                this.chargeForm = { name: '', account_id: '', operator: 'all', transaction_type: 'all', charge_type: 'fixed', charge_value: '', min_amount: 0, max_amount: 0, applies_to: 'platform' };
+                this.chargeForm = { name: '', account_id: '', operator: 'all', transaction_type: 'all', charge_type: 'fixed', charge_value: '', min_amount: 0, max_amount: 0, applies_to: 'platform', tiers: [{ min_amount: 0, max_amount: 0, charge_type: 'fixed', charge_value: '' }] };
                 this.fetchCharges();
                 setTimeout(() => { this.chargeMsg = ''; }, 3000);
             } catch (e) { this.chargeMsg = 'Service unavailable.'; this.chargeMsgType = 'error'; }
