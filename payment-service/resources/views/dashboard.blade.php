@@ -170,7 +170,7 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="text-3xl font-bold text-gray-900" x-text="formatAmount(collectionTotal) + ' TZS'"></p>
+                        <p class="text-xl font-bold text-gray-900" x-text="formatAmount(collectionTotal) + ' TZS'"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <button @click="activeTab = 'wallet'; fetchWallet()" class="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -192,7 +192,7 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="text-3xl font-bold text-gray-900" x-text="formatAmount(disbursementTotal) + ' TZS'"></p>
+                        <p class="text-xl font-bold text-gray-900" x-text="formatAmount(disbursementTotal) + ' TZS'"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <button @click="activeTab = 'send-money'; fetchPayoutOperators()" class="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
