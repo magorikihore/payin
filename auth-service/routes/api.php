@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApiKeyController;
+use App\Http\Controllers\InternalNotificationController;
 use App\Http\Controllers\IpWhitelistController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\PasswordResetController;
@@ -23,6 +24,9 @@ Route::middleware('throttle:5,1')->group(function () {
 
 // Internal: API key validation (called by other services)
 Route::post('/internal/validate-api-key', [ApiKeyController::class, 'validate']);
+
+// Internal: Send notification email (called by other services)
+Route::post('/internal/send-notification', [InternalNotificationController::class, 'send']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);

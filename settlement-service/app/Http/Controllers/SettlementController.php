@@ -275,6 +275,25 @@ class SettlementController extends Controller
             'timestamp' => now()->toIso8601String(),
         ]);
 
+        // Notify account owner via auth-service
+        try {
+            Http::post(config('services.auth_service.url') . '/api/internal/send-notification', [
+                'account_id' => $settlement->account_id,
+                'type' => 'settlement_approved',
+                'data' => [
+                    'settlement_ref' => $settlement->settlement_ref,
+                    'operator' => $settlement->operator,
+                    'amount' => $settlement->amount,
+                    'currency' => $settlement->currency,
+                    'bank_name' => $settlement->bank_name,
+                    'account_number' => $settlement->account_number,
+                    'account_name' => $settlement->account_name,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Settlement approval notification failed: ' . $e->getMessage());
+        }
+
         return response()->json([
             'message' => 'Settlement approved. Ref: ' . $settlement->settlement_ref,
             'settlement' => $settlement->fresh(),

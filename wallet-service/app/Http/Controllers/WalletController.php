@@ -405,6 +405,22 @@ class WalletController extends Controller
                 'approved_at' => now(),
             ]);
 
+            // Notify account owner via auth-service
+            try {
+                Http::post(config('services.auth_service.url') . '/api/internal/send-notification', [
+                    'account_id' => $accountId,
+                    'type' => 'transfer_approved',
+                    'data' => [
+                        'reference' => $transfer->reference,
+                        'operator' => $transfer->operator,
+                        'amount' => $transfer->amount,
+                        'currency' => $sourceWallet->currency ?? 'TZS',
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                \Log::warning('Transfer approval notification failed: ' . $e->getMessage());
+            }
+
             return response()->json([
                 'message' => 'Transfer approved and executed.',
                 'transfer' => $transfer->fresh(),

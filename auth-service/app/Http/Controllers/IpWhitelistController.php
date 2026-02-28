@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\IpWhitelist;
+use App\Notifications\IpWhitelistApprovedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -147,6 +148,16 @@ class IpWhitelistController extends Controller
             'approved_at' => now(),
             'admin_notes' => $request->admin_notes ?? null,
         ]);
+
+        // Notify the account owner
+        try {
+            $owner = $ip->account->owner ?? null;
+            if ($owner) {
+                $owner->notify(new IpWhitelistApprovedNotification($ip->ip_address, $ip->label));
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to send IP approval email: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'IP address approved.',
