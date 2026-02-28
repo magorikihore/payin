@@ -364,20 +364,28 @@ class SettlementController extends Controller
         }
 
         // Refund: credit back the collection wallet via wallet-service
+        // Must refund total_debited (amount + charges), not just the settlement amount
+        $metadata = json_decode($settlement->metadata, true) ?? [];
+        $totalDebited = (float) ($metadata['total_debited'] ?? $settlement->amount);
         $token = $request->bearerToken();
         try {
             $walletUrl = config('services.wallet_service.url') . '/api/admin/wallet/refund';
-            Http::withHeaders([
+            $refundRes = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $token,
                 'Accept' => 'application/json',
             ])->post($walletUrl, [
-                'amount' => $settlement->amount,
+                'amount' => $totalDebited,
                 'operator' => $settlement->operator,
                 'account_id' => $settlement->account_id,
-                'description' => 'Settlement rejected - refund: ' . $settlement->settlement_ref,
+                'description' => 'Settlement rejected - refund: ' . $settlement->settlement_ref . ' (' . number_format($totalDebited, 2) . ' ' . $settlement->currency . ')',
             ]);
+
+            if ($refundRes->failed()) {
+                $errMsg = $refundRes->json('message') ?? 'Wallet refund failed.';
+                return response()->json(['message' => 'Cannot reject: ' . $errMsg], 500);
+            }
         } catch (\Exception $e) {
-            // Log but proceed with rejection — admin can manually reconcile
+            return response()->json(['message' => 'Wallet service unavailable. Cannot process refund.'], 503);
         }
 
         $settlement->update(['status' => 'rejected']);
