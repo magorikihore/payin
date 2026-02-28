@@ -1763,6 +1763,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batch</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
@@ -1775,6 +1776,7 @@
                                 <template x-for="d in recentDisbursements" :key="d.id">
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-3 text-sm font-mono text-gray-700" x-text="d.request_ref"></td>
+                                        <td class="px-4 py-3 text-sm font-mono text-gray-600" x-text="d.receipt_number || '—'"></td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="d.batch_name || '—'"></td>
                                         <td class="px-4 py-3 text-sm" x-text="d.phone"></td>
                                         <td class="px-4 py-3 text-sm font-semibold text-red-600" x-text="'-' + formatAmount(d.amount) + ' ' + walletCurrency"></td>
@@ -1866,8 +1868,12 @@
                         <h5 class="text-sm font-semibold text-gray-700 mb-2">Sample Payload (payin.completed)</h5>
                         <pre class="bg-gray-900 text-green-400 rounded-lg p-4 text-xs overflow-x-auto">{
   "event": "payin.completed",
-  "transaction_ref": "TXN-ABCDEF123456",
+  "request_ref": "PAY-ABCDEF123456",
+  "external_ref": "your-order-123",
+  "operator_ref": "3000009866588",
+  "receipt_number": "QJI23FABC9",
   "type": "collection",
+  "phone": "255712345678",
   "operator": "M-Pesa",
   "gross_amount": 10000,
   "net_amount": 9800,

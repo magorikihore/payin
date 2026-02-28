@@ -328,7 +328,8 @@ class PaymentController extends Controller
 
             $paymentRequest->update([
                 'callback_data' => $request->all(),
-                'operator_ref'  => $receiptNumber ?: ($reference ?: $paymentRequest->operator_ref),
+                'receipt_number' => $receiptNumber ?: $paymentRequest->receipt_number,
+                'operator_ref'  => $gatewayId ? (string) $gatewayId : ($reference ?: $paymentRequest->operator_ref),
                 'gateway_id'    => $gatewayId ? (string) $gatewayId : $paymentRequest->gateway_id,
                 'status'        => $newStatus,
                 'error_message' => ($newStatus === 'failed') ? 'Collection callback without receipt number' : null,
@@ -387,7 +388,8 @@ class PaymentController extends Controller
 
             $paymentRequest->update([
                 'callback_data' => $request->all(),
-                'operator_ref'  => $receiptNumber ?: ($transactionNumber ?: ($referenceNumber ?: $paymentRequest->operator_ref)),
+                'receipt_number' => $receiptNumber ?: $paymentRequest->receipt_number,
+                'operator_ref'  => $transactionNumber ?: ($referenceNumber ?: $paymentRequest->operator_ref),
                 'gateway_id'    => $gatewayId ? (string) $gatewayId : $paymentRequest->gateway_id,
                 'status'        => $newStatus,
                 'error_message' => ($newStatus === 'failed') ? ($resultStatus ?: 'Operator returned error code: ' . $resultCode) : null,
@@ -854,7 +856,7 @@ class PaymentController extends Controller
                     'currency'         => $paymentRequest->currency,
                     'description'      => $paymentRequest->description ?? ($paymentRequest->type === 'collection' ? 'USSD Collection' : 'Disbursement'),
                     'payment_method'   => 'mobile_money',
-                    'operator_receipt' => $paymentRequest->operator_ref,
+                    'operator_receipt' => $paymentRequest->receipt_number ?: $paymentRequest->operator_ref,
                 ]);
 
             if ($response->successful()) {
@@ -931,6 +933,7 @@ class PaymentController extends Controller
                 'request_ref'    => $paymentRequest->request_ref,
                 'external_ref'   => $paymentRequest->external_ref,
                 'operator_ref'   => $paymentRequest->operator_ref,
+                'receipt_number' => $paymentRequest->receipt_number,
                 'type'           => $paymentRequest->type,
                 'phone'          => $paymentRequest->phone,
                 'gross_amount'   => (float) $paymentRequest->amount,

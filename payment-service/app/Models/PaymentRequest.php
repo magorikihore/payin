@@ -14,6 +14,7 @@ class PaymentRequest extends Model
         'request_ref',
         'external_ref',
         'operator_ref',
+        'receipt_number',
         'gateway_id',
         'type',
         'phone',
