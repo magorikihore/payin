@@ -1733,7 +1733,12 @@
                     <div class="mt-6 p-4 border border-dashed border-gray-300 rounded-lg">
                         <h4 class="text-sm font-semibold text-gray-700 mb-3">Add Recipient Manually</h4>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <input type="text" x-model="manualRow.phone" placeholder="Phone (e.g. 0712345678)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <div>
+                                <input type="text" x-model="manualRow.phone" placeholder="Phone (e.g. 0712345678)" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" :class="manualRow.phone && !validatePhone(manualRow.phone).valid ? 'border-red-400 bg-red-50' : 'border-gray-300'">
+                                <template x-if="manualRow.phone && manualRow.phone.replace(/[\s\-\.+]/g, '').length >= 9">
+                                    <p class="text-xs mt-1" :class="validatePhone(manualRow.phone).valid ? 'text-green-600' : 'text-red-500'" x-text="validatePhone(manualRow.phone).valid ? 'Operator: ' + validatePhone(manualRow.phone).operator : validatePhone(manualRow.phone).error"></p>
+                                </template>
+                            </div>
                             <input type="text" inputmode="numeric" x-model="manualAmountDisplay" @input="formatAmountInput($event, 'manual')" placeholder="Amount" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <input type="text" x-model="manualRow.reference" placeholder="Reference (optional)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <button @click="addManualRow()" class="px-4 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium">+ Add</button>
@@ -3062,17 +3067,22 @@ function dashboard() {
             }
 
             const items = [];
+            const warnings = [];
             for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(',').map(c => c.trim());
                 const phone = cols[phoneIdx] || '';
                 const amount = parseFloat(cols[amountIdx]) || 0;
                 if (!phone || amount < 100) {
-                    this.batchMsg = `Row ${i + 1}: invalid data (phone and amount >= 100 required).`;
-                    this.batchMsgType = 'error';
+                    warnings.push(`Row ${i + 1}: invalid data (phone and amount >= 100 required).`);
+                    continue;
+                }
+                const phoneCheck = this.validatePhone(phone);
+                if (!phoneCheck.valid) {
+                    warnings.push(`Row ${i + 1}: ${phoneCheck.error} (${phone})`);
                     continue;
                 }
                 items.push({
-                    phone,
+                    phone: phoneCheck.normalized,
                     amount,
                     reference: refIdx !== -1 ? (cols[refIdx] || '') : '',
                     description: descIdx !== -1 ? (cols[descIdx] || '') : '',
@@ -3080,7 +3090,10 @@ function dashboard() {
                 });
             }
             this.batchItems = items;
-            if (items.length > 0 && !this.batchMsg) {
+            if (warnings.length > 0) {
+                this.batchMsg = warnings.join(' | ');
+                this.batchMsgType = 'error';
+            } else if (items.length > 0) {
                 this.batchMsg = items.length + ' recipient(s) parsed successfully.';
                 this.batchMsgType = 'success';
             }
@@ -3092,9 +3105,22 @@ function dashboard() {
                 this.batchMsgType = 'error';
                 return;
             }
+            const phoneCheck = this.validatePhone(this.manualRow.phone);
+            if (!phoneCheck.valid) {
+                this.batchMsg = phoneCheck.error;
+                this.batchMsgType = 'error';
+                return;
+            }
+            const amount = parseFloat(this.manualRow.amount);
+            if (!amount || amount < 100) {
+                this.batchMsg = 'Amount must be at least 100.';
+                this.batchMsgType = 'error';
+                return;
+            }
             this.batchItems.push({
                 ...this.manualRow,
-                amount: parseFloat(this.manualRow.amount),
+                phone: phoneCheck.normalized,
+                amount: amount,
                 _status: 'ready'
             });
             this.manualRow = { phone: '', amount: '', reference: '', description: '' };
@@ -3103,14 +3129,32 @@ function dashboard() {
             this.batchCharges = null;
         },
 
-        detectOperatorFromPhone(phone) {
-            if (!phone) return null;
+        normalizePhone(phone) {
+            if (!phone) return '';
             let cleaned = phone.replace(/[\s\-\.+]/g, '');
             if (cleaned.startsWith('255') && cleaned.length >= 12) {
                 cleaned = '0' + cleaned.substring(3);
             } else if (!cleaned.startsWith('0') && cleaned.length === 9) {
                 cleaned = '0' + cleaned;
             }
+            return cleaned;
+        },
+
+        validatePhone(phone) {
+            const cleaned = this.normalizePhone(phone);
+            if (!/^0\d{9}$/.test(cleaned)) {
+                return { valid: false, error: 'Phone must be 10 digits (e.g. 0712345678) or 12 digits with country code (255712345678)' };
+            }
+            const operator = this.detectOperatorFromPhone(phone);
+            if (!operator) {
+                return { valid: false, error: 'Unrecognized operator. Supported prefixes: 074/075/076 (M-Pesa), 065/067/071 (Tigo Pesa), 078 (Airtel), 068/069 (Halotel)' };
+            }
+            return { valid: true, operator: operator, normalized: cleaned };
+        },
+
+        detectOperatorFromPhone(phone) {
+            if (!phone) return null;
+            const cleaned = this.normalizePhone(phone);
             if (cleaned.startsWith('0') && cleaned.length >= 10) {
                 const prefix = cleaned.substring(0, 3);
                 for (const op of this.payoutOperators) {
