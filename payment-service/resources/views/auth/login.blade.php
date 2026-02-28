@@ -13,7 +13,7 @@
             <div class="flex-1 bg-ggreen-500"></div>
         </div>
 
-        <div class="text-center mb-8">
+        <div class="text-center mb-8" x-show="!showRegister">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-gblue-50 rounded-full mb-4">
                 <svg class="w-8 h-8 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -21,6 +21,26 @@
             </div>
             <h2 class="text-2xl font-bold text-gray-800">Payin</h2>
             <p class="text-gray-500 mt-1">Sign in to your account</p>
+        </div>
+
+        <!-- Register Header -->
+        <div x-show="showRegister" x-cloak class="mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Let's get Started</h2>
+            <p class="text-gray-500 text-sm mb-3">To accelerate your application, you will need:</p>
+            <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex items-start gap-2">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gblue-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                    <span>Your Company information</span>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gblue-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                    <span>Directors' Documents</span>
+                </div>
+                <div class="flex items-start gap-2">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gblue-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                    <span>Basic Compliance documents</span>
+                </div>
+            </div>
         </div>
 
         <!-- Error Message -->
@@ -124,7 +144,7 @@
 
             <button type="submit" :disabled="loading"
                 class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                <span x-show="!loading">Create Account</span>
+                <span x-show="!loading">Get Started</span>
                 <span x-show="loading">Creating...</span>
             </button>
             <p class="text-center text-sm text-gray-500 mt-4">
