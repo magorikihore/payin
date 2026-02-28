@@ -2780,9 +2780,9 @@ function dashboard() {
                 const data = await res.json();
                 this.collectionWallets = data.collection_wallets || [];
                 this.disbursementWallets = data.disbursement_wallets || [];
-                this.overallBalance = data.overall_balance || 0;
-                this.collectionTotal = data.collection_total || 0;
-                this.disbursementTotal = data.disbursement_total || 0;
+                this.overallBalance = parseFloat(data.overall_balance) || 0;
+                this.collectionTotal = parseFloat(data.collection_total) || 0;
+                this.disbursementTotal = parseFloat(data.disbursement_total) || 0;
                 this.operators = data.operators || [];
                 this.walletCurrency = data.currency || 'TZS';
                 // Init per-operator reactive state
@@ -3292,7 +3292,7 @@ function dashboard() {
         },
 
         // ---- Helpers ----
-        formatAmount(a) { return Number(a).toLocaleString('en-US', { minimumFractionDigits: 2 }); },
+        formatAmount(a) { const n = Number(a); return isNaN(n) ? '0.00' : n.toLocaleString('en-US', { minimumFractionDigits: 2 }); },
         formatAmountInput(event, target, key) {
             let raw = event.target.value.replace(/[^0-9]/g, '');
             let num = parseInt(raw, 10) || 0;
