@@ -7,7 +7,7 @@
 set -e
 
 PROJECT_DIR="/var/www/payment"
-SERVICES=("auth-service" "payment-service" "transaction-service" "wallet-service" "settlement-service")
+SERVICES=("auth-service" "payment-service" "transaction-service" "wallet-service" "settlement-service" "test-operator")
 
 echo "========================================"
 echo "  Payin — Deploying all services"
