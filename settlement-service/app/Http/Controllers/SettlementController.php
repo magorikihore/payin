@@ -60,6 +60,7 @@ class SettlementController extends Controller
         $operator = $request->operator;
         $settlementRef = 'STL-' . strtoupper(Str::random(12));
         $settlementAmount = (float) $request->amount;
+        $currency = $user->account['currency'] ?? 'TZS';
 
         // Calculate charges from transaction-service
         $platformCharge = 0;
@@ -101,7 +102,7 @@ class SettlementController extends Controller
                 'amount' => $totalDebit,
                 'operator' => $operator,
                 'settlement_ref' => $settlementRef,
-                'description' => 'Settlement: ' . ($request->description ?? $settlementRef) . ($totalCharge > 0 ? " (incl. charges: " . number_format($totalCharge, 2) . " TZS)" : ''),
+                'description' => 'Settlement: ' . ($request->description ?? $settlementRef) . ($totalCharge > 0 ? " (incl. charges: " . number_format($totalCharge, 2) . " {$currency})" : ''),
             ]);
 
             if ($walletResponse->failed()) {
@@ -126,7 +127,7 @@ class SettlementController extends Controller
                 'status' => 'completed',
                 'platform_charge' => $platformCharge,
                 'operator_charge' => $operatorCharge,
-                'currency' => 'TZS',
+                'currency' => $currency,
                 'description' => 'Settlement to ' . $request->bank_name . ' - ' . $request->account_name,
                 'payment_method' => 'bank_transfer',
             ]);
@@ -140,7 +141,7 @@ class SettlementController extends Controller
             'account_id' => $user->account_id,
             'settlement_ref' => $settlementRef,
             'amount' => $settlementAmount,
-            'currency' => 'TZS',
+            'currency' => $currency,
             'operator' => $operator,
             'status' => 'pending',
             'bank_name' => $request->bank_name,
@@ -155,7 +156,7 @@ class SettlementController extends Controller
             ]),
         ]);
 
-        $chargeMsg = $totalCharge > 0 ? " Charges: " . number_format($totalCharge, 2) . " TZS." : '';
+        $chargeMsg = $totalCharge > 0 ? " Charges: " . number_format($totalCharge, 2) . " {$currency}." : '';
 
         // Send webhook callback for payout created
         $this->sendWebhook($token, $user->account_id, [
@@ -167,7 +168,7 @@ class SettlementController extends Controller
             'platform_charge' => $platformCharge,
             'operator_charge' => $operatorCharge,
             'total_debited' => $totalDebit,
-            'currency' => 'TZS',
+            'currency' => $currency,
             'status' => 'pending',
             'bank_name' => $request->bank_name,
             'account_number' => $request->account_number,
@@ -177,7 +178,7 @@ class SettlementController extends Controller
         ]);
 
         return response()->json([
-            'message' => "Settlement request created. " . number_format($totalDebit, 2) . " TZS debited from {$operator} disbursement wallet (Amount: " . number_format($settlementAmount, 2) . " TZS{$chargeMsg}).",
+            'message' => "Settlement request created. " . number_format($totalDebit, 2) . " {$currency} debited from {$operator} disbursement wallet (Amount: " . number_format($settlementAmount, 2) . " {$currency}{$chargeMsg}).",
             'settlement' => $settlement,
             'charges' => [
                 'platform_charge' => number_format($platformCharge, 2, '.', ''),

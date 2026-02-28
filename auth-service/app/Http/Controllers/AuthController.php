@@ -19,12 +19,22 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
+        // Map country to default currency if not provided
+        $currencyMap = [
+            'Tanzania' => 'TZS', 'Kenya' => 'KES', 'Uganda' => 'UGX', 'Rwanda' => 'RWF',
+            'Burundi' => 'BIF', 'DRC' => 'CDF', 'Mozambique' => 'MZN', 'Malawi' => 'MWK',
+            'Zambia' => 'ZMW', 'South Africa' => 'ZAR', 'Nigeria' => 'NGN', 'Ghana' => 'GHS',
+        ];
+        $country = $validated['country'] ?? 'Tanzania';
+        $currency = $validated['currency'] ?? ($currencyMap[$country] ?? 'USD');
+
         // Create account (KYC not yet submitted — user must complete after login)
         $account = Account::create([
             'account_ref' => 'ACC-' . strtoupper(Str::random(8)),
             'business_name' => $validated['business_name'],
             'email' => $validated['email'],
-            'country' => $validated['country'] ?? 'Tanzania',
+            'country' => $country,
+            'currency' => $currency,
             'kyc_submitted_at' => null,
             'status' => 'pending',
         ]);

@@ -23,6 +23,7 @@ class Account extends Model
         'address',
         'city',
         'country',
+        'currency',
         'bank_name',
         'bank_account_name',
         'bank_account_number',

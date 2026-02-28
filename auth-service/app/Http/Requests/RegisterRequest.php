@@ -27,6 +27,7 @@ class RegisterRequest extends FormRequest
             'lastname' => ['required', 'string', 'max:255'],
             'business_name' => ['required', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:100'],
+            'currency' => ['nullable', 'string', 'max:10'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'confirmed', 'min:6'],
             // Honeypot: must be empty (bots fill hidden fields)

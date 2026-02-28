@@ -23,13 +23,14 @@ class WalletController extends Controller
     {
         $user = $request->user();
         $accountId = $user->account_id;
+        $currency = $user->account['currency'] ?? 'TZS';
 
         // Ensure wallets exist for all operators and both types
         foreach ($this->operators as $operator) {
             foreach ($this->walletTypes as $type) {
                 Wallet::firstOrCreate(
                     ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => $type],
-                    ['user_id' => $user->id, 'balance' => 0, 'currency' => 'TZS', 'status' => 'active']
+                    ['user_id' => $user->id, 'balance' => 0, 'currency' => $currency, 'status' => 'active']
                 );
             }
         }
@@ -62,7 +63,7 @@ class WalletController extends Controller
             'collection_total' => number_format($collectionTotal, 2, '.', ''),
             'disbursement_total' => number_format($disbursementTotal, 2, '.', ''),
             'overall_balance' => number_format($overallBalance, 2, '.', ''),
-            'currency' => 'TZS',
+            'currency' => $currency,
             'operators' => $this->operators,
             'recent_transactions' => $recentTransactions,
         ]);
@@ -85,6 +86,7 @@ class WalletController extends Controller
         $accountId = $user->account_id;
         $grossAmount = (float) $request->amount;
         $token = $request->bearerToken();
+        $currency = $user->account['currency'] ?? 'TZS';
 
         // Calculate charges from transaction-service
         $platformCharge = 0;
@@ -115,15 +117,15 @@ class WalletController extends Controller
         $netAmount = $grossAmount - $totalCharge;
 
         if ($netAmount <= 0) {
-            return response()->json(['message' => 'Amount too small to cover charges. Charges: ' . number_format($totalCharge, 2) . ' TZS'], 422);
+            return response()->json(['message' => 'Amount too small to cover charges. Charges: ' . number_format($totalCharge, 2) . ' ' . $currency], 422);
         }
 
         $txnRef = 'TXN-' . strtoupper(Str::random(12));
 
-        $result = DB::transaction(function () use ($user, $request, $operator, $accountId, $netAmount, $grossAmount, $platformCharge, $operatorCharge, $txnRef) {
+        $result = DB::transaction(function () use ($user, $request, $operator, $accountId, $netAmount, $grossAmount, $platformCharge, $operatorCharge, $txnRef, $currency) {
             $wallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => 'collection'],
-                ['user_id' => $user->id, 'balance' => 0, 'currency' => 'TZS', 'status' => 'active']
+                ['user_id' => $user->id, 'balance' => 0, 'currency' => $currency, 'status' => 'active']
             );
 
             if ($wallet->status !== 'active') {
@@ -140,7 +142,7 @@ class WalletController extends Controller
                 'type' => 'credit',
                 'amount' => $netAmount,
                 'reference' => $txnRef,
-                'description' => ($request->description ?? "Payin via {$operator}") . ($platformCharge > 0 ? " (Charge: " . number_format($platformCharge + ($operatorCharge ?? 0), 2) . " TZS)" : ''),
+                'description' => ($request->description ?? "Payin via {$operator}") . ($platformCharge > 0 ? " (Charge: " . number_format($platformCharge + ($operatorCharge ?? 0), 2) . " {$currency})" : ''),
                 'balance_before' => $balanceBefore,
                 'balance_after' => $balanceAfter,
                 'status' => 'completed',
@@ -174,7 +176,7 @@ class WalletController extends Controller
                 'status' => 'completed',
                 'platform_charge' => $platformCharge,
                 'operator_charge' => $operatorCharge,
-                'currency' => 'TZS',
+                'currency' => $currency,
                 'description' => $request->description ?? "Payin via {$operator}",
                 'payment_method' => 'mobile_money',
             ]);
@@ -192,13 +194,13 @@ class WalletController extends Controller
             'net_amount' => $netAmount,
             'platform_charge' => $platformCharge,
             'operator_charge' => $operatorCharge,
-            'currency' => 'TZS',
+            'currency' => $currency,
             'status' => 'completed',
             'description' => $request->description ?? "Payin via {$operator}",
             'timestamp' => now()->toIso8601String(),
         ]);
 
-        $walletSummary = $this->walletSummary($user, "Collection wallet credited via {$operator}. Gross: " . number_format($grossAmount, 2) . " TZS, Charges: " . number_format($platformCharge + $operatorCharge, 2) . " TZS, Net: " . number_format($netAmount, 2) . " TZS");
+        $walletSummary = $this->walletSummary($user, "Collection wallet credited via {$operator}. Gross: " . number_format($grossAmount, 2) . " {$currency}, Charges: " . number_format($platformCharge + $operatorCharge, 2) . " {$currency}, Net: " . number_format($netAmount, 2) . " {$currency}");
 
         $data = $walletSummary->getData(true);
         $data['charges'] = [
@@ -354,7 +356,7 @@ class WalletController extends Controller
             // Lock destination (disbursement) wallet
             $destWallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => 'disbursement'],
-                ['user_id' => $transfer->requested_by, 'balance' => 0, 'currency' => 'TZS', 'status' => 'active']
+                ['user_id' => $transfer->requested_by, 'balance' => 0, 'currency' => $sourceWallet->currency, 'status' => 'active']
             );
 
             $desc = $transfer->description ?? "Transfer {$operator}: Collection → Disbursement";
@@ -472,7 +474,7 @@ class WalletController extends Controller
             }
 
             if ($wallet->balance < $amount) {
-                return response()->json(['message' => 'Insufficient collection balance for ' . $operator . '. Available: ' . number_format($wallet->balance, 2) . ' TZS'], 422);
+                return response()->json(['message' => 'Insufficient collection balance for ' . $operator . '. Available: ' . number_format($wallet->balance, 2) . ' ' . $wallet->currency], 422);
             }
 
             $balanceBefore = $wallet->balance;
@@ -593,7 +595,6 @@ class WalletController extends Controller
             'platform_collection_total' => number_format($totalCollection, 2, '.', ''),
             'platform_disbursement_total' => number_format($totalDisbursement, 2, '.', ''),
             'platform_overall_total' => number_format($totalCollection + $totalDisbursement, 2, '.', ''),
-            'currency' => 'TZS',
         ]);
     }
 
@@ -698,7 +699,7 @@ class WalletController extends Controller
                 }
 
                 if ($wallet->balance < $netAmount) {
-                    return response()->json(['message' => 'Insufficient balance in collection wallet for reversal. Available: ' . number_format($wallet->balance, 2) . ' TZS, Required: ' . number_format($netAmount, 2) . ' TZS'], 422);
+                    return response()->json(['message' => 'Insufficient balance in collection wallet for reversal. Available: ' . number_format($wallet->balance, 2) . ' ' . $wallet->currency . ', Required: ' . number_format($netAmount, 2) . ' ' . $wallet->currency], 422);
                 }
 
                 $balanceBefore = $wallet->balance;
@@ -727,7 +728,7 @@ class WalletController extends Controller
                 ]);
 
                 return response()->json([
-                    'message' => 'Collection reversal completed. Wallet debited ' . number_format($netAmount, 2) . ' TZS.',
+                    'message' => 'Collection reversal completed. Wallet debited ' . number_format($netAmount, 2) . ' ' . $wallet->currency . '.',
                     'balance_after' => number_format($balanceAfter, 2, '.', ''),
                 ]);
             });
@@ -770,7 +771,7 @@ class WalletController extends Controller
                 ]);
 
                 return response()->json([
-                    'message' => 'Disbursement reversal completed. Wallet credited ' . number_format($netAmount, 2) . ' TZS.',
+                    'message' => 'Disbursement reversal completed. Wallet credited ' . number_format($netAmount, 2) . ' ' . $wallet->currency . '.',
                     'balance_after' => number_format($balanceAfter, 2, '.', ''),
                 ]);
             });

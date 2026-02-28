@@ -169,7 +169,7 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="text-xl font-bold text-gray-900" x-text="formatAmount(collectionTotal) + ' TZS'"></p>
+                        <p class="text-xl font-bold text-gray-900" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <button @click="activeTab = 'wallet'; fetchWallet()" class="inline-flex items-center px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -191,7 +191,7 @@
                                 </div>
                             </div>
                         </div>
-                        <p class="text-xl font-bold text-gray-900" x-text="formatAmount(disbursementTotal) + ' TZS'"></p>
+                        <p class="text-xl font-bold text-gray-900" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <button @click="activeTab = 'send-money'; fetchPayoutOperators()" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
@@ -261,7 +261,7 @@
                                         </div>
                                         <div class="text-right flex-shrink-0 ml-3">
                                             <p class="text-sm font-semibold text-gray-800"
-                                                x-text="(txn.type === 'collection' ? '+' : '-') + ' ' + formatAmount(txn.amount) + ' TZS'"></p>
+                                                x-text="(txn.type === 'collection' ? '+' : '-') + ' ' + formatAmount(txn.amount) + ' ' + walletCurrency"></p>
                                             <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium capitalize bg-gray-100 text-gray-600"
                                                 x-text="txn.status"></span>
                                         </div>
@@ -300,18 +300,18 @@
                                                 <span class="text-sm font-medium text-gray-700" x-text="op"></span>
                                             </div>
                                         </td>
-                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
-                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((disbursementWallets.find(w => w.operator === op)?.balance) || 0) + ' TZS'"></td>
-                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ((disbursementWallets.find(w => w.operator === op)?.balance) || 0)) + ' TZS'"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ' ' + walletCurrency"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((disbursementWallets.find(w => w.operator === op)?.balance) || 0) + ' ' + walletCurrency"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ((disbursementWallets.find(w => w.operator === op)?.balance) || 0)) + ' ' + walletCurrency"></td>
                                     </tr>
                                 </template>
                             </tbody>
                             <tfoot class="bg-gray-50 border-t">
                                 <tr>
                                     <td class="px-5 py-3 text-sm font-bold text-gray-700">Total</td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(collectionTotal) + ' TZS'"></td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(disbursementTotal) + ' TZS'"></td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-900" x-text="formatAmount(overallBalance) + ' TZS'"></td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></td>
+                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-900" x-text="formatAmount(overallBalance) + ' ' + walletCurrency"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -345,7 +345,7 @@
                                         </div>
                                     </div>
                                     <div class="text-right flex-shrink-0 ml-3">
-                                        <p class="text-sm font-semibold text-gray-800" x-text="formatAmount(stl.amount) + ' TZS'"></p>
+                                        <p class="text-sm font-semibold text-gray-800" x-text="formatAmount(stl.amount) + ' ' + walletCurrency"></p>
                                         <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium capitalize bg-gray-100 text-gray-600"
                                             x-text="stl.status"></span>
                                     </div>
@@ -364,7 +364,7 @@
                     <div class="p-5">
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-sm text-gray-500">Total Charges</span>
-                            <span class="text-xl font-bold text-gray-800" x-text="formatAmount(myCharges.total_charges || 0) + ' TZS'"></span>
+                            <span class="text-xl font-bold text-gray-800" x-text="formatAmount(myCharges.total_charges || 0) + ' ' + walletCurrency"></span>
                         </div>
                         <div x-show="myCharges.by_type && myCharges.by_type.length > 0" class="space-y-2">
                             <template x-for="bt in (myCharges.by_type || [])" :key="'dash_charge_'+bt.type">
@@ -373,7 +373,7 @@
                                         <span class="text-sm font-medium text-gray-700 capitalize" x-text="bt.type"></span>
                                         <span class="text-xs text-gray-400 ml-1" x-text="'(' + bt.transaction_count + ' txns)'"></span>
                                     </div>
-                                    <span class="text-sm font-semibold text-gray-800" x-text="formatAmount(Number(bt.platform_charges) + Number(bt.operator_charges)) + ' TZS'"></span>
+                                    <span class="text-sm font-semibold text-gray-800" x-text="formatAmount(Number(bt.platform_charges) + Number(bt.operator_charges)) + ' ' + walletCurrency"></span>
                                 </div>
                             </template>
                         </div>
@@ -522,17 +522,17 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-gradient-to-br from-gblue-500 to-gblue-600 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Overall Balance</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(overallBalance) + ' TZS'"></p>
+                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(overallBalance) + ' ' + walletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Collection + Disbursement</p>
                 </div>
                 <div class="bg-gradient-to-br from-ggreen-500 to-ggreen-600 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Collection (Payin)</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(collectionTotal) + ' TZS'"></p>
+                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Money received from customers</p>
                 </div>
                 <div class="bg-gradient-to-br from-gred-400 to-gred-500 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Disbursement (Payout)</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(disbursementTotal) + ' TZS'"></p>
+                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Available for payouts</p>
                 </div>
             </div>
@@ -559,7 +559,7 @@
                                 </div>
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Collection</span>
                             </div>
-                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' TZS'"></p>
+                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
                         </div>
                     </template>
                 </div>
@@ -574,7 +574,7 @@
                                 <div class="flex items-center space-x-2 mb-2">
                                     <div class="w-2.5 h-2.5 rounded-full" :class="operatorColor(w.operator)"></div>
                                     <span class="text-sm font-semibold text-gray-700" x-text="w.operator"></span>
-                                    <span class="text-xs text-gray-400" x-text="'(' + formatAmount(w.balance) + ' TZS)'"></span>
+                                    <span class="text-xs text-gray-400" x-text="'(' + formatAmount(w.balance) + ' ' + walletCurrency + ')'"></span>
                                 </div>
                                 <div x-show="walletMsg['trf_'+w.operator]" x-cloak class="mb-2 p-2 rounded text-xs"
                                     :class="walletMsgType['trf_'+w.operator] === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
@@ -604,7 +604,7 @@
                                 </div>
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-gblue-50 text-gblue-700">Disbursement</span>
                             </div>
-                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' TZS'"></p>
+                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
                             <p class="text-xs text-gray-500 mt-2">Funds available for payout / settlement</p>
                         </div>
                     </template>
@@ -643,7 +643,7 @@
                                                 :class="operatorBadgeColor(t.operator)"
                                                 x-text="t.operator"></span>
                                         </td>
-                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(t.amount) + ' TZS'"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(t.amount) + ' ' + walletCurrency"></td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
                                                 :class="{'bg-gyellow-50 text-gyellow-700': t.status==='pending', 'bg-ggreen-50 text-ggreen-700': t.status==='approved', 'bg-gred-50 text-gred-700': t.status==='rejected'}"
@@ -716,9 +716,9 @@
                                                 x-text="wt.type"></span>
                                         </td>
                                         <td class="px-6 py-4 text-sm font-semibold" :class="wt.type==='credit' ? 'text-green-600' : 'text-red-600'">
-                                            <span x-text="(wt.type==='credit' ? '+' : '-') + ' ' + formatAmount(wt.amount) + ' TZS'"></span>
+                                            <span x-text="(wt.type==='credit' ? '+' : '-') + ' ' + formatAmount(wt.amount) + ' ' + walletCurrency"></span>
                                         </td>
-                                        <td class="px-6 py-4 text-sm text-gray-700" x-text="formatAmount(wt.balance_after) + ' TZS'"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-700" x-text="formatAmount(wt.balance_after) + ' ' + walletCurrency"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="wt.description || '-'"></td>
                                         <td class="px-6 py-4 text-sm text-gray-500" x-text="formatDate(wt.created_at)"></td>
                                     </tr>
@@ -749,7 +749,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount (min 1,000 TZS)</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (min 1,000 ' + walletCurrency + ')'"></label>
                         <input type="number" x-model="stlForm.amount" min="1000" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                     </div>
                     <div>
@@ -1486,7 +1486,7 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount (TZS, min 100)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (' + walletCurrency + ', min 100)'"></label>
                             <input type="number" x-model="payoutForm.amount" min="100" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                         </div>
                         <div>
@@ -1512,7 +1512,7 @@
                             <span class="text-gray-500">Phone:</span>
                             <span x-text="lastPayoutResult.phone"></span>
                             <span class="text-gray-500">Amount:</span>
-                            <span x-text="formatAmount(lastPayoutResult.amount) + ' TZS'"></span>
+                            <span x-text="formatAmount(lastPayoutResult.amount) + ' ' + walletCurrency"></span>
                             <span class="text-gray-500">Status:</span>
                             <span class="capitalize font-medium" :class="lastPayoutResult.status === 'processing' ? 'text-gblue-600' : 'text-gred-600'" x-text="lastPayoutResult.status"></span>
                         </div>
@@ -1592,7 +1592,7 @@
                                         <tr class="hover:bg-gray-50">
                                             <td class="px-4 py-2 text-sm text-gray-500" x-text="idx + 1"></td>
                                             <td class="px-4 py-2 text-sm font-mono" x-text="item.phone"></td>
-                                            <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(item.amount) + ' TZS'"></td>
+                                            <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(item.amount) + ' ' + walletCurrency"></td>
                                             <td class="px-4 py-2 text-sm text-gray-600" x-text="item.reference || '—'"></td>
                                             <td class="px-4 py-2 text-sm text-gray-600" x-text="item.description || '—'"></td>
                                             <td class="px-4 py-2">
@@ -1609,7 +1609,7 @@
                             </table>
                         </div>
                         <div class="flex items-center justify-between mt-3">
-                            <p class="text-sm text-gray-600">Total: <strong x-text="formatAmount(batchItems.reduce((s, i) => s + Number(i.amount), 0)) + ' TZS'"></strong> to <strong x-text="batchItems.length"></strong> recipient(s)</p>
+                            <p class="text-sm text-gray-600">Total: <strong x-text="formatAmount(batchItems.reduce((s, i) => s + Number(i.amount), 0)) + ' ' + walletCurrency"></strong> to <strong x-text="batchItems.length"></strong> recipient(s)</p>
                             <button @click="sendBatchPayout()" :disabled="batchLoading" class="px-6 py-2.5 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
                                 <span x-show="!batchLoading">Send Batch</span>
                                 <span x-show="batchLoading">Sending...</span>
@@ -1640,7 +1640,7 @@
                                         <tr class="hover:bg-gray-50">
                                             <td class="px-4 py-2 text-sm text-gray-500" x-text="r.index + 1"></td>
                                             <td class="px-4 py-2 text-sm font-mono" x-text="r.phone"></td>
-                                            <td class="px-4 py-2 text-sm" x-text="formatAmount(r.amount) + ' TZS'"></td>
+                                            <td class="px-4 py-2 text-sm" x-text="formatAmount(r.amount) + ' ' + walletCurrency"></td>
                                             <td class="px-4 py-2">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                                                     :class="r.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
@@ -1698,7 +1698,7 @@
                                         <td class="px-4 py-3 text-sm font-mono text-gray-700" x-text="d.request_ref"></td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="d.batch_name || '—'"></td>
                                         <td class="px-4 py-3 text-sm" x-text="d.phone"></td>
-                                        <td class="px-4 py-3 text-sm font-semibold text-red-600" x-text="'-' + formatAmount(d.amount) + ' TZS'"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-red-600" x-text="'-' + formatAmount(d.amount) + ' ' + walletCurrency"></td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
                                                 :class="operatorBadgeColor(d.operator_name)"
@@ -2260,6 +2260,7 @@ function dashboard() {
 
         // Wallet
         walletSubTab: 'collection',
+        walletCurrency: 'TZS',
         collectionWallets: [], disbursementWallets: [], operators: [],
         overallBalance: 0, collectionTotal: 0, disbursementTotal: 0,
         walletTransactions: [], walletTxnOperatorFilter: '', walletTxnTypeFilter: '',
@@ -2693,6 +2694,7 @@ function dashboard() {
                 this.collectionTotal = data.collection_total || 0;
                 this.disbursementTotal = data.disbursement_total || 0;
                 this.operators = data.operators || [];
+                this.walletCurrency = data.currency || 'TZS';
                 // Init per-operator reactive state
                 this.operators.forEach(op => {
                     if (!this.creditAmounts[op]) this.creditAmounts[op] = '';
@@ -2711,6 +2713,7 @@ function dashboard() {
             if (data.overall_balance) this.overallBalance = data.overall_balance;
             if (data.collection_total) this.collectionTotal = data.collection_total;
             if (data.disbursement_total) this.disbursementTotal = data.disbursement_total;
+            if (data.currency) this.walletCurrency = data.currency;
         },
         async fetchWalletTransactions() {
             this.walletLoading.txns = true;
@@ -2741,7 +2744,7 @@ function dashboard() {
                 // Show charge info if present
                 let msg = data.message;
                 if (data.charges && Number(data.charges.total_charge) > 0) {
-                    msg = `Credited ${this.formatAmount(data.charges.net_amount)} TZS (Charges: ${this.formatAmount(data.charges.total_charge)} TZS deducted from ${this.formatAmount(data.charges.gross_amount)} TZS)`;
+                    msg = `Credited ${this.formatAmount(data.charges.net_amount)} ${this.walletCurrency} (Charges: ${this.formatAmount(data.charges.total_charge)} ${this.walletCurrency} deducted from ${this.formatAmount(data.charges.gross_amount)} ${this.walletCurrency})`;
                 }
                 this.walletMsg[key] = msg; this.walletMsgType[key] = 'success';
                 this.updateWalletData(data);

@@ -337,8 +337,8 @@
                                         <td class="px-6 py-4 text-sm font-mono font-semibold text-indigo-700" x-text="acc.paybill || '—'"></td>
                                         <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="acc.business_name"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="acc.email"></td>
-                                        <td class="px-6 py-4 text-sm text-right font-semibold text-green-700" x-text="formatAmount(acc.collection_balance || 0) + ' TZS'"></td>
-                                        <td class="px-6 py-4 text-sm text-right font-semibold text-blue-700" x-text="formatAmount(acc.disbursement_balance || 0) + ' TZS'"></td>
+                                        <td class="px-6 py-4 text-sm text-right font-semibold text-green-700" x-text="formatAmount(acc.collection_balance || 0) + ' ' + (acc.currency || 'TZS')"></td>
+                                        <td class="px-6 py-4 text-sm text-right font-semibold text-blue-700" x-text="formatAmount(acc.disbursement_balance || 0) + ' ' + (acc.currency || 'TZS')"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="acc.users_count"></td>
                                         <td class="px-6 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -510,7 +510,7 @@
                                                 x-text="txn.type"></span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="txn.operator"></td>
-                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(txn.amount) + ' TZS'"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(txn.amount) + ' ' + (txn.currency || 'TZS')"></td>
                                         <td class="px-4 py-3 text-xs text-gray-500">
                                             <span x-show="txn.platform_charge > 0" x-text="'P:' + formatAmount(txn.platform_charge)"></span>
                                             <span x-show="txn.operator_charge > 0" x-text="' O:' + formatAmount(txn.operator_charge)"></span>
@@ -572,9 +572,9 @@
                         <div class="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
                             <div>
                                 <span class="font-semibold text-gray-800" x-text="accountName(acctWallet.account_id)"></span>
-                                <span class="ml-4 text-sm text-gray-500">Collection: <span class="font-medium text-green-600" x-text="formatAmount(acctWallet.collection_total) + ' TZS'"></span></span>
-                                <span class="ml-3 text-sm text-gray-500">Disbursement: <span class="font-medium text-blue-600" x-text="formatAmount(acctWallet.disbursement_total) + ' TZS'"></span></span>
-                                <span class="ml-3 text-sm text-gray-500">Total: <span class="font-bold text-gray-800" x-text="formatAmount(acctWallet.overall_balance) + ' TZS'"></span></span>
+                                <span class="ml-4 text-sm text-gray-500">Collection: <span class="font-medium text-green-600" x-text="formatAmount(acctWallet.collection_total) + ' ' + (acctWallet.wallets?.[0]?.currency || 'TZS')"></span></span>
+                                <span class="ml-3 text-sm text-gray-500">Disbursement: <span class="font-medium text-blue-600" x-text="formatAmount(acctWallet.disbursement_total) + ' ' + (acctWallet.wallets?.[0]?.currency || 'TZS')"></span></span>
+                                <span class="ml-3 text-sm text-gray-500">Total: <span class="font-bold text-gray-800" x-text="formatAmount(acctWallet.overall_balance) + ' ' + (acctWallet.wallets?.[0]?.currency || 'TZS')"></span></span>
                             </div>
                         </div>
                         <div class="overflow-x-auto">
@@ -596,7 +596,7 @@
                                                     :class="w.wallet_type === 'collection' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'"
                                                     x-text="w.wallet_type"></span>
                                             </td>
-                                            <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(w.balance) + ' TZS'"></td>
+                                            <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(w.balance) + ' ' + (w.currency || 'TZS')"></td>
                                             <td class="px-4 py-2">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
                                                     :class="w.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
@@ -666,7 +666,7 @@
                                         <td class="px-4 py-3 text-xs font-mono text-gray-700" x-text="stl.settlement_ref"></td>
                                         <td class="px-4 py-3 text-xs text-gray-600" x-text="accountName(stl.account_id)"></td>
                                         <td class="px-4 py-3 text-sm" x-text="stl.operator"></td>
-                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(stl.amount) + ' TZS'"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(stl.amount) + ' ' + (stl.currency || 'TZS')"></td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="stl.bank_name || '-'"></td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="stl.account_name || '-'"></td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="stl.account_number || '-'"></td>
@@ -1007,7 +1007,7 @@
                                                 :class="{'bg-green-100 text-green-800': t.operator==='M-Pesa', 'bg-blue-100 text-blue-800': t.operator==='Tigo Pesa', 'bg-red-100 text-red-800': t.operator==='Airtel Money', 'bg-orange-100 text-orange-800': t.operator==='Halopesa'}"
                                                 x-text="t.operator"></span>
                                         </td>
-                                        <td class="px-5 py-4 text-sm font-semibold text-gray-800" x-text="formatAmount(t.amount) + ' TZS'"></td>
+                                        <td class="px-5 py-4 text-sm font-semibold text-gray-800" x-text="formatAmount(t.amount) + ' ' + (t.currency || 'TZS')"></td>
                                         <td class="px-5 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
                                                 :class="{'bg-orange-100 text-orange-800': t.status==='pending', 'bg-green-100 text-green-800': t.status==='approved', 'bg-red-100 text-red-800': t.status==='rejected'}"
@@ -1535,7 +1535,7 @@
                                                 x-text="rev.type"></span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="rev.operator"></td>
-                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(rev.amount) + ' TZS'"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="formatAmount(rev.amount) + ' ' + (rev.currency || 'TZS')"></td>
                                         <td class="px-4 py-3 text-xs text-gray-600 max-w-[200px] truncate" x-text="rev.reason" :title="rev.reason"></td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -1864,7 +1864,7 @@
                 <div class="mb-3 text-sm text-gray-600">
                     <p><strong>Reference:</strong> <span x-text="directRevTxn?.transaction_ref"></span></p>
                     <p><strong>Type:</strong> <span class="capitalize" x-text="directRevTxn?.type"></span></p>
-                    <p><strong>Amount:</strong> <span x-text="formatAmount(directRevTxn?.amount || 0) + ' TZS'"></span></p>
+                    <p><strong>Amount:</strong> <span x-text="formatAmount(directRevTxn?.amount || 0) + ' ' + (directRevTxn?.currency || 'TZS')"></span></p>
                     <p><strong>Operator:</strong> <span x-text="directRevTxn?.operator"></span></p>
                     <p class="mt-2 text-xs text-purple-700 bg-purple-50 rounded-lg p-2">
                         <span x-show="directRevTxn?.type === 'collection'">This will <strong>debit</strong> the collection wallet by the net amount.</span>
