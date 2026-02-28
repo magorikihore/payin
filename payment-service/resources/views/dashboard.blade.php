@@ -581,13 +581,37 @@
                                     x-text="walletMsg['trf_'+w.operator]"></div>
                                 <input type="text" inputmode="numeric" :value="transferAmountDisplays[w.operator] || ''" @input="formatAmountInput($event, 'transfer', w.operator)" placeholder="Amount"
                                     class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none mb-2">
-                                <button @click="transferToDisbursement(w.operator)" :disabled="walletTransferLoading[w.operator]"
+                                <button @click="previewTransfer(w.operator, w.balance)" :disabled="walletTransferLoading[w.operator]"
                                     class="w-full py-1.5 bg-gblue-500 text-white rounded-lg text-xs font-medium hover:bg-gblue-600 transition disabled:opacity-50">
-                                    <span x-show="!walletTransferLoading[w.operator]">Request →</span>
+                                    <span x-show="!walletTransferLoading[w.operator]">Review & Request →</span>
                                     <span x-show="walletTransferLoading[w.operator]">...</span>
                                 </button>
                             </div>
                         </template>
+                    </div>
+                </div>
+
+                <!-- Transfer Summary/Confirmation Modal -->
+                <div x-show="trfSummaryOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @keydown.escape.window="trfSummaryOpen = false">
+                    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm" @click.outside="trfSummaryOpen = false">
+                        <div class="px-6 py-4 border-b bg-gray-50 rounded-t-2xl">
+                            <h3 class="text-lg font-semibold text-gray-800">Transfer Summary</h3>
+                            <p class="text-xs text-gray-500 mt-1">Review before submitting. Requires admin approval.</p>
+                        </div>
+                        <div class="px-6 py-5 space-y-3">
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">Operator</span><span class="font-medium text-gray-800" x-text="trfSummary.operator"></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">Amount</span><span class="font-bold text-gray-800" x-text="formatAmount(trfSummary.amount) + ' ' + walletCurrency"></span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">From</span><span class="font-medium text-green-600">Collection Wallet</span></div>
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">To</span><span class="font-medium text-blue-600">Disbursement Wallet</span></div>
+                            <div class="border-t pt-3 flex justify-between text-sm"><span class="text-gray-500">Available Balance</span><span class="font-medium" :class="trfSummary.available >= trfSummary.amount ? 'text-green-600' : 'text-red-600'" x-text="formatAmount(trfSummary.available) + ' ' + walletCurrency"></span></div>
+                        </div>
+                        <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-end space-x-3">
+                            <button @click="trfSummaryOpen = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                            <button @click="confirmTransfer()" :disabled="walletTransferLoading[trfSummary.operator]" class="px-5 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition disabled:opacity-50">
+                                <span x-show="!walletTransferLoading[trfSummary.operator]">Confirm Request</span>
+                                <span x-show="walletTransferLoading[trfSummary.operator]">Submitting...</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -735,9 +759,9 @@
             <!-- New Settlement Form -->
             <div x-show="hasPerm('create_settlement')" class="bg-white rounded-xl shadow-md border p-6 mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Request Settlement</h3>
-                <p class="text-sm text-gray-500 mb-4">Settlement debits from the selected operator's <span class="font-medium text-ggreen-600">Disbursement wallet</span>. Make sure you have enough balance.</p>
+                <p class="text-sm text-gray-500 mb-4">Settlement debits from the selected operator's <span class="font-medium text-ggreen-600">Collection wallet</span>. Make sure you have enough balance.</p>
                 <div x-show="settlementMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="settlementMsgType==='success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="settlementMsg"></div>
-                <form @submit.prevent="createSettlement()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form @submit.prevent="previewSettlement()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
                         <select x-model="stlForm.operator" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
@@ -747,9 +771,9 @@
                             <option value="Airtel Money">Airtel Money</option>
                             <option value="Halopesa">Halopesa</option>
                         </select>
-                        <p x-show="stlForm.operator" x-cloak class="mt-1.5 text-xs font-medium" :class="(disbursementWallets.find(w => w.operator === stlForm.operator)?.balance || 0) > 0 ? 'text-green-600' : 'text-red-500'">
+                        <p x-show="stlForm.operator" x-cloak class="mt-1.5 text-xs font-medium" :class="(collectionWallets.find(w => w.operator === stlForm.operator)?.balance || 0) > 0 ? 'text-green-600' : 'text-red-500'">
                             <span class="text-gray-500">Available:</span>
-                            <span x-text="formatAmount(disbursementWallets.find(w => w.operator === stlForm.operator)?.balance || 0) + ' ' + walletCurrency"></span>
+                            <span x-text="formatAmount(collectionWallets.find(w => w.operator === stlForm.operator)?.balance || 0) + ' ' + walletCurrency"></span>
                         </p>
                     </div>
                     <div>
@@ -771,12 +795,43 @@
                         <input type="text" x-model="stlForm.description" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Settlement description">
                     </div>
                     <div class="md:col-span-2">
-                        <button type="submit" :disabled="stlLoading" class="bg-gblue-500 text-white px-6 py-2 rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
-                            <span x-show="!stlLoading">Submit Settlement Request</span>
-                            <span x-show="stlLoading">Submitting...</span>
+                        <button type="submit" :disabled="stlPreviewLoading" class="bg-gblue-500 text-white px-6 py-2 rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
+                            <span x-show="!stlPreviewLoading">Review & Submit</span>
+                            <span x-show="stlPreviewLoading">Calculating...</span>
                         </button>
                     </div>
                 </form>
+            </div>
+
+            <!-- Settlement Summary/Confirmation Modal -->
+            <div x-show="stlSummaryOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @keydown.escape.window="stlSummaryOpen = false">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md" @click.outside="stlSummaryOpen = false">
+                    <div class="px-6 py-4 border-b bg-gray-50 rounded-t-2xl">
+                        <h3 class="text-lg font-semibold text-gray-800">Settlement Summary</h3>
+                        <p class="text-xs text-gray-500 mt-1">Please review the details below before confirming.</p>
+                    </div>
+                    <div class="px-6 py-5 space-y-3">
+                        <div class="flex justify-between text-sm"><span class="text-gray-500">Operator</span><span class="font-medium text-gray-800" x-text="stlSummary.operator"></span></div>
+                        <div class="flex justify-between text-sm"><span class="text-gray-500">Settlement Amount</span><span class="font-medium text-gray-800" x-text="formatAmount(stlSummary.amount) + ' ' + walletCurrency"></span></div>
+                        <div class="flex justify-between text-sm"><span class="text-gray-500">Platform Charge</span><span class="font-medium" :class="stlSummary.platform_charge > 0 ? 'text-orange-600' : 'text-gray-800'" x-text="formatAmount(stlSummary.platform_charge) + ' ' + walletCurrency"></span></div>
+                        <div class="flex justify-between text-sm"><span class="text-gray-500">Operator Charge</span><span class="font-medium" :class="stlSummary.operator_charge > 0 ? 'text-orange-600' : 'text-gray-800'" x-text="formatAmount(stlSummary.operator_charge) + ' ' + walletCurrency"></span></div>
+                        <div class="border-t pt-3 flex justify-between text-sm font-semibold"><span class="text-gray-700">Total Charges</span><span :class="stlSummary.total_charge > 0 ? 'text-red-600' : 'text-gray-800'" x-text="formatAmount(stlSummary.total_charge) + ' ' + walletCurrency"></span></div>
+                        <div class="flex justify-between text-sm font-bold bg-blue-50 rounded-lg px-3 py-2"><span class="text-gray-700">Total Debit</span><span class="text-blue-700" x-text="formatAmount(stlSummary.total_debit) + ' ' + walletCurrency"></span></div>
+                        <div class="border-t pt-3">
+                            <div class="flex justify-between text-sm"><span class="text-gray-500">Bank</span><span class="font-medium text-gray-800" x-text="stlSummary.bank_name"></span></div>
+                            <div class="flex justify-between text-sm mt-1"><span class="text-gray-500">Account</span><span class="font-medium text-gray-800" x-text="stlSummary.account_number + ' (' + stlSummary.account_name + ')'"></span></div>
+                        </div>
+                        <div x-show="stlSummary.description" class="flex justify-between text-sm"><span class="text-gray-500">Description</span><span class="font-medium text-gray-800" x-text="stlSummary.description"></span></div>
+                        <div class="flex justify-between text-sm"><span class="text-gray-500">Wallet Balance</span><span class="font-medium" :class="stlSummary.available_balance >= stlSummary.total_debit ? 'text-green-600' : 'text-red-600'" x-text="formatAmount(stlSummary.available_balance) + ' ' + walletCurrency"></span></div>
+                    </div>
+                    <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-end space-x-3">
+                        <button @click="stlSummaryOpen = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">Cancel</button>
+                        <button @click="confirmSettlement()" :disabled="stlLoading" class="px-5 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition disabled:opacity-50">
+                            <span x-show="!stlLoading">Confirm & Submit</span>
+                            <span x-show="stlLoading">Submitting...</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Settlements Table -->
@@ -2372,6 +2427,7 @@ function dashboard() {
         walletTransactions: [], walletTxnOperatorFilter: '', walletTxnTypeFilter: '',
         creditAmounts: {}, creditDescs: {}, transferAmounts: {}, transferAmountDisplays: {},
         walletCreditLoading: {}, walletTransferLoading: {},
+        trfSummaryOpen: false, trfSummary: { operator: '', amount: 0, available: 0 },
         walletMsg: {}, walletMsgType: {},
         walletLoading: { txns: false },
 
@@ -2380,6 +2436,8 @@ function dashboard() {
         stlForm: { operator: '', amount: '', bank_account_id: '', description: '' },
         stlAmountDisplay: '',
         settlementMsg: '', settlementMsgType: '',
+        stlPreviewLoading: false, stlSummaryOpen: false,
+        stlSummary: { operator: '', amount: 0, platform_charge: 0, operator_charge: 0, total_charge: 0, total_debit: 0, bank_name: '', account_number: '', account_name: '', description: '', available_balance: 0 },
         bankAccounts: [], bankAccountsLoading: false,
         bankForm: { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '', label: '' },
         bankFormLoading: false, bankMsg: '', bankMsgType: '', showBankForm: false,
@@ -2888,9 +2946,28 @@ function dashboard() {
                 this.transferAmounts[operator] = '';
                 this.transferAmountDisplays[operator] = '';
                 this.fetchMyTransfers();
+                this.fetchWallets();
                 setTimeout(() => { this.walletMsg[key] = ''; }, 5000);
             } catch (e) { this.walletMsg[key] = 'Service unavailable.'; this.walletMsgType[key] = 'error'; }
             finally { this.walletTransferLoading[operator] = false; }
+        },
+
+        previewTransfer(operator, balance) {
+            const key = 'trf_' + operator;
+            if (!this.transferAmounts[operator] || this.transferAmounts[operator] < 1) {
+                this.walletMsg[key] = 'Enter a valid amount.'; this.walletMsgType[key] = 'error'; return;
+            }
+            this.trfSummary = {
+                operator: operator,
+                amount: Number(this.transferAmounts[operator]),
+                available: balance || 0,
+            };
+            this.trfSummaryOpen = true;
+        },
+
+        async confirmTransfer() {
+            await this.transferToDisbursement(this.trfSummary.operator);
+            this.trfSummaryOpen = false;
         },
         operatorColor(op) {
             return { 'bg-green-500': op==='M-Pesa', 'bg-blue-500': op==='Tigo Pesa', 'bg-red-500': op==='Airtel Money', 'bg-orange-500': op==='Halopesa' };
@@ -2928,11 +3005,53 @@ function dashboard() {
             } catch (e) {}
             finally { this.stlLoadingList = false; }
         },
-        async createSettlement() {
-            this.stlLoading = true; this.settlementMsg = '';
-            if (!this.stlForm.bank_account_id) {
-                this.settlementMsg = 'Please select a bank account.'; this.settlementMsgType = 'error'; this.stlLoading = false; return;
-            }
+        async previewSettlement() {
+            this.settlementMsg = '';
+            if (!this.stlForm.operator) { this.settlementMsg = 'Please select an operator.'; this.settlementMsgType = 'error'; return; }
+            if (!this.stlForm.amount || Number(this.stlForm.amount) < 1000) { this.settlementMsg = 'Minimum amount is 1,000 ' + this.walletCurrency + '.'; this.settlementMsgType = 'error'; return; }
+            if (!this.stlForm.bank_account_id) { this.settlementMsg = 'Please select a bank account.'; this.settlementMsgType = 'error'; return; }
+
+            this.stlPreviewLoading = true;
+            const amount = Number(this.stlForm.amount);
+            let platformCharge = 0, operatorCharge = 0, totalCharge = 0;
+
+            try {
+                const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges/calculate', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ amount: amount, operator: this.stlForm.operator, transaction_type: 'settlement' })
+                });
+                if (res.ok) {
+                    const cd = await res.json();
+                    platformCharge = Number(cd.platform_charge || 0);
+                    operatorCharge = Number(cd.operator_charge || 0);
+                    totalCharge = Number(cd.total_charge || 0);
+                }
+            } catch (e) { /* proceed with zero charges */ }
+
+            const totalDebit = amount + platformCharge;
+            const ba = this.bankAccounts.find(b => b.id == this.stlForm.bank_account_id);
+            const wallet = this.collectionWallets.find(w => w.operator === this.stlForm.operator);
+
+            this.stlSummary = {
+                operator: this.stlForm.operator,
+                amount: amount,
+                platform_charge: platformCharge,
+                operator_charge: operatorCharge,
+                total_charge: totalCharge,
+                total_debit: totalDebit,
+                bank_name: ba ? ba.bank_name : '',
+                account_number: ba ? ba.account_number : '',
+                account_name: ba ? ba.account_name : '',
+                description: this.stlForm.description || '',
+                available_balance: wallet ? wallet.balance : 0,
+            };
+            this.stlSummaryOpen = true;
+            this.stlPreviewLoading = false;
+        },
+
+        async confirmSettlement() {
+            this.stlLoading = true;
+            this.settlementMsg = '';
             try {
                 const res = await fetch('{{ config("services.settlement_service.url") }}/api/settlements', {
                     method: 'POST', headers: this.getHeaders(),
@@ -2941,16 +3060,18 @@ function dashboard() {
                 const data = await res.json();
                 if (!res.ok) {
                     const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
-                    this.settlementMsg = errors || 'Failed.'; this.settlementMsgType = 'error'; return;
+                    this.settlementMsg = errors || 'Failed.'; this.settlementMsgType = 'error';
+                } else {
+                    this.settlementMsg = data.message; this.settlementMsgType = 'success';
+                    this.stlForm = { operator: '', amount: '', bank_account_id: '', description: '' };
+                    this.stlAmountDisplay = '';
+                    this.fetchSettlements();
+                    this.fetchMyCharges();
+                    this.fetchTransactions();
+                    this.fetchWallets();
                 }
-                this.settlementMsg = data.message; this.settlementMsgType = 'success';
-                this.stlForm = { operator: '', amount: '', bank_account_id: '', description: '' };
-                this.stlAmountDisplay = '';
-                this.fetchSettlements();
-                this.fetchMyCharges();
-                this.fetchTransactions();
             } catch (e) { this.settlementMsg = 'Service unavailable.'; this.settlementMsgType = 'error'; }
-            finally { this.stlLoading = false; }
+            finally { this.stlLoading = false; this.stlSummaryOpen = false; }
         },
 
         // ---- Bank Accounts ----

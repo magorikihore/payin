@@ -497,19 +497,19 @@ class WalletController extends Controller
             $wallet = Wallet::lockForUpdate()
                 ->where('account_id', $accountId)
                 ->where('operator', $operator)
-                ->where('wallet_type', 'disbursement')
+                ->where('wallet_type', 'collection')
                 ->first();
 
             if (!$wallet) {
-                return response()->json(['message' => 'Disbursement wallet not found for ' . $operator . '.'], 404);
+                return response()->json(['message' => 'Collection wallet not found for ' . $operator . '.'], 404);
             }
 
             if ($wallet->status !== 'active') {
-                return response()->json(['message' => 'Disbursement wallet is not active.'], 403);
+                return response()->json(['message' => 'Collection wallet is not active.'], 403);
             }
 
             if ($wallet->balance < $amount) {
-                return response()->json(['message' => 'Insufficient disbursement balance for ' . $operator . '. Available: ' . number_format($wallet->balance, 2) . ' ' . $wallet->currency], 422);
+                return response()->json(['message' => 'Insufficient collection balance for ' . $operator . '. Available: ' . number_format($wallet->balance, 2) . ' ' . $wallet->currency], 422);
             }
 
             $balanceBefore = $wallet->balance;
@@ -530,7 +530,7 @@ class WalletController extends Controller
             ]);
 
             return response()->json([
-                'message' => 'Disbursement wallet debited for settlement.',
+                'message' => 'Collection wallet debited for settlement.',
                 'balance_after' => number_format($balanceAfter, 2, '.', ''),
             ]);
         });
