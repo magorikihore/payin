@@ -45,7 +45,9 @@ class Operator extends Model
 
     /**
      * Detect the operator by phone number prefix.
-     * Phone can be in format: 0XXXXXXXXX, 255XXXXXXXXX, or +255XXXXXXXXX
+     * Phone can be in format: XXXXXXXXX (9 digits), 0XXXXXXXXX (10 digits),
+     * 255XXXXXXXXX (12 digits), or +255XXXXXXXXX.
+     * Prefixes stored as 3-digit local format: 075, 065, 068, 062, etc.
      * Returns the matching active Operator or null.
      */
     public static function detectByPhone(string $phone): ?self
@@ -54,18 +56,22 @@ class Operator extends Model
         $phone = preg_replace('/[\s\-\.]/', '', $phone);
         $phone = ltrim($phone, '+');
 
-        // Convert 0xx to 255xx
-        if (str_starts_with($phone, '0')) {
-            $phone = '255' . substr($phone, 1);
+        // Convert to local 10-digit format (0XXXXXXXXX)
+        if (str_starts_with($phone, '255') && strlen($phone) >= 12) {
+            // 255XXXXXXXXX -> 0XXXXXXXXX
+            $phone = '0' . substr($phone, 3);
+        } elseif (!str_starts_with($phone, '0') && strlen($phone) === 9) {
+            // 9-digit subscriber number -> 0XXXXXXXXX
+            $phone = '0' . $phone;
         }
 
-        // Must start with 255 and have at least 12 digits
-        if (!str_starts_with($phone, '255') || strlen($phone) < 12) {
+        // Must be at least 10 digits and start with 0
+        if (!str_starts_with($phone, '0') || strlen($phone) < 10) {
             return null;
         }
 
-        // Extract the 2-digit prefix after 255 (e.g., 255 74 xxx -> "74")
-        $prefix = substr($phone, 3, 2);
+        // Extract the 3-digit prefix (e.g., 0754xxx -> "075")
+        $prefix = substr($phone, 0, 3);
 
         $operators = self::where('status', 'active')
             ->whereNotNull('prefixes')

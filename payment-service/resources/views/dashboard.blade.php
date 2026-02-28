@@ -2572,14 +2572,20 @@ function dashboard() {
         },
 
         async detectOperator(phone) {
-            if (!phone || phone.replace(/[\s\-\.]/g, '').length < 10) {
+            if (!phone || phone.replace(/[\s\-\.]/g, '').length < 9) {
                 this.detectedOperator = { name: '', code: '' };
                 return;
             }
-            // Try local detection first using prefixes from payoutOperators
-            const normalized = phone.replace(/[\s\-\.+]/g, '').replace(/^0/, '255');
-            if (normalized.startsWith('255') && normalized.length >= 12) {
-                const prefix = normalized.substring(3, 5);
+            // Normalize to local 10-digit format (0XXXXXXXXX)
+            let cleaned = phone.replace(/[\s\-\.+]/g, '');
+            if (cleaned.startsWith('255') && cleaned.length >= 12) {
+                cleaned = '0' + cleaned.substring(3);
+            } else if (!cleaned.startsWith('0') && cleaned.length === 9) {
+                cleaned = '0' + cleaned;
+            }
+            // Extract 3-digit prefix (e.g., 075)
+            if (cleaned.startsWith('0') && cleaned.length >= 10) {
+                const prefix = cleaned.substring(0, 3);
                 for (const op of this.payoutOperators) {
                     if (op.prefixes && op.prefixes.includes(prefix)) {
                         this.detectedOperator = { name: op.name, code: op.code };
