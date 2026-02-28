@@ -735,7 +735,7 @@
             <!-- New Settlement Form -->
             <div x-show="hasPerm('create_settlement')" class="bg-white rounded-xl shadow-md border p-6 mb-8">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Request Settlement</h3>
-                <p class="text-sm text-gray-500 mb-4">Settlement debits from the selected operator's <span class="font-medium text-ggreen-600">Collection wallet</span>. Make sure you have enough balance.</p>
+                <p class="text-sm text-gray-500 mb-4">Settlement debits from the selected operator's <span class="font-medium text-ggreen-600">Disbursement wallet</span>. Make sure you have enough balance.</p>
                 <div x-show="settlementMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="settlementMsgType==='success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="settlementMsg"></div>
                 <form @submit.prevent="createSettlement()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -747,6 +747,10 @@
                             <option value="Airtel Money">Airtel Money</option>
                             <option value="Halopesa">Halopesa</option>
                         </select>
+                        <p x-show="stlForm.operator" x-cloak class="mt-1.5 text-xs font-medium" :class="(disbursementWallets.find(w => w.operator === stlForm.operator)?.balance || 0) > 0 ? 'text-green-600' : 'text-red-500'">
+                            <span class="text-gray-500">Available:</span>
+                            <span x-text="formatAmount(disbursementWallets.find(w => w.operator === stlForm.operator)?.balance || 0) + ' ' + walletCurrency"></span>
+                        </p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (min 1,000 ' + walletCurrency + ')'"></label>
