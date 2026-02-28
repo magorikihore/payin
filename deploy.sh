@@ -37,11 +37,13 @@ for SERVICE in "${SERVICES[@]}"; do
     echo ">> Running migrations..."
     php artisan migrate --force
 
-    # Clear and rebuild caches
-    echo ">> Optimizing..."
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
+    # Clear all caches — finance system needs real-time data
+    echo ">> Clearing all caches..."
+    php artisan config:clear
+    php artisan route:clear
+    php artisan view:clear
+    php artisan cache:clear
+    php artisan event:clear
 
     # Set permissions
     echo ">> Setting permissions..."
