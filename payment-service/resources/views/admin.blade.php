@@ -1063,89 +1063,313 @@
                 </div>
 
                 <div x-show="!kycLoading && kycAccount" x-cloak>
-                    <!-- KYC Completeness Bar -->
+                    <!-- KYC Completeness Bar + Edit Toggle -->
                     <div class="px-6 pt-5 pb-3">
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-sm font-medium text-gray-700">KYC Completeness</span>
-                            <span class="text-sm font-bold" :class="(kycAccount?.kyc_completeness || 0) >= 80 ? 'text-green-600' : (kycAccount?.kyc_completeness || 0) >= 50 ? 'text-yellow-600' : 'text-red-600'" x-text="(kycAccount?.kyc_completeness || 0) + '%'"></span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-bold" :class="(kycAccount?.kyc_completeness || 0) >= 80 ? 'text-green-600' : (kycAccount?.kyc_completeness || 0) >= 50 ? 'text-yellow-600' : 'text-red-600'" x-text="(kycAccount?.kyc_completeness || 0) + '%'"></span>
+                                <button @click="toggleKycEdit()" class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg transition"
+                                    :class="kycEditing ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-blue-600 text-white hover:bg-blue-700'">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    <span x-text="kycEditing ? 'Cancel Edit' : 'Edit KYC'"></span>
+                                </button>
+                            </div>
                         </div>
                         <div class="w-full bg-gray-200 rounded-full h-2.5">
                             <div class="h-2.5 rounded-full transition-all"
                                 :class="(kycAccount?.kyc_completeness || 0) >= 80 ? 'bg-green-500' : (kycAccount?.kyc_completeness || 0) >= 50 ? 'bg-yellow-500' : 'bg-red-500'"
                                 :style="`width: ${kycAccount?.kyc_completeness || 0}%`"></div>
                         </div>
+                        <!-- Edit save message -->
+                        <div x-show="kycEditMsg" x-cloak class="mt-3 p-2 rounded-lg text-sm" :class="kycEditMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="kycEditMsg"></div>
                     </div>
 
-                    <!-- Business Information -->
-                    <div class="px-6 py-4">
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Business Information</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Business Name</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.business_name || '—'"></p>
+                    <!-- ===== VIEW MODE ===== -->
+                    <div x-show="!kycEditing">
+                        <!-- Business Information -->
+                        <div class="px-6 py-4">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Business Information</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Business Name</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.business_name || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Business Type</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.business_type || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Registration Number</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.registration_number || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">TIN Number</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.tin_number || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Paybill Number</label>
+                                    <p class="text-sm font-medium text-indigo-700 font-mono" x-text="kycAccount?.paybill || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Email</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.email || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Phone</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.phone || '—'"></p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Business Type</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.business_type || '—'"></p>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="px-6 py-4 bg-gray-50">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Location</h4>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Address</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.address || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">City</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.city || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Country</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.country || '—'"></p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Registration Number</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.registration_number || '—'"></p>
+                        </div>
+
+                        <!-- Identity Verification -->
+                        <div class="px-6 py-4">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Identity Verification</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">ID Type</label>
+                                    <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycAccount?.id_type || '—').replace('_', ' ')"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">ID Number</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.id_number || '—'"></p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">TIN Number</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.tin_number || '—'"></p>
+                        </div>
+
+                        <!-- Documents -->
+                        <div class="px-6 py-4 bg-gray-50">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Documents</h4>
+                            <div class="flex flex-wrap gap-3">
+                                <div class="flex items-center space-x-2">
+                                    <template x-if="kycAccount?.id_document_url">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.id_document_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View ID Document &rarr;</a>
+                                        </div>
+                                    </template>
+                                    <template x-if="!kycAccount?.id_document_url">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">ID Document — Not uploaded</span>
+                                    </template>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <template x-if="kycAccount?.business_license_url">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.business_license_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Business License &rarr;</a>
+                                        </div>
+                                    </template>
+                                    <template x-if="!kycAccount?.business_license_url">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 font-medium">Business License — Not uploaded</span>
+                                    </template>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Paybill Number</label>
-                                <p class="text-sm font-medium text-indigo-700 font-mono" x-text="kycAccount?.paybill || '—'"></p>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Email</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.email || '—'"></p>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Phone</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.phone || '—'"></p>
+                        </div>
+
+                        <!-- Bank Details -->
+                        <div class="px-6 py-4" x-show="kycAccount?.bank_name || kycAccount?.bank_account_number">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Settlement</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Bank</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.bank_name || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Account Name</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.bank_account_name || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Account Number</label>
+                                    <p class="text-sm font-medium text-gray-800 font-mono" x-text="kycAccount?.bank_account_number || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">SWIFT / Branch</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="[kycAccount?.bank_swift, kycAccount?.bank_branch].filter(Boolean).join(' / ') || '—'"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Location -->
-                    <div class="px-6 py-4 bg-gray-50">
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Location</h4>
-                        <div class="grid grid-cols-3 gap-4">
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Address</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.address || '—'"></p>
+                    <!-- ===== EDIT MODE ===== -->
+                    <div x-show="kycEditing" x-cloak>
+                        <div class="px-6 py-4">
+                            <h4 class="text-sm font-semibold text-blue-700 uppercase tracking-wide mb-3 border-b border-blue-200 pb-2">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                Edit Business Information
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Business Name</label>
+                                    <input type="text" x-model="kycEditForm.business_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Business Type</label>
+                                    <select x-model="kycEditForm.business_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="">Select type...</option>
+                                        <option value="sole_proprietorship">Sole Proprietorship</option>
+                                        <option value="partnership">Partnership</option>
+                                        <option value="limited_company">Limited Company</option>
+                                        <option value="corporation">Corporation</option>
+                                        <option value="ngo">NGO</option>
+                                        <option value="government">Government</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Registration Number</label>
+                                    <input type="text" x-model="kycEditForm.registration_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">TIN Number</label>
+                                    <input type="text" x-model="kycEditForm.tin_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Email</label>
+                                    <input type="email" x-model="kycEditForm.email" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Phone</label>
+                                    <input type="text" x-model="kycEditForm.phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">City</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.city || '—'"></p>
+                        </div>
+
+                        <!-- Location Edit -->
+                        <div class="px-6 py-4 bg-gray-50">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Location</h4>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Address</label>
+                                    <input type="text" x-model="kycEditForm.address" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">City</label>
+                                    <input type="text" x-model="kycEditForm.city" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Country</label>
+                                    <select x-model="kycEditForm.country" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="">Select...</option>
+                                        <option value="Tanzania">Tanzania</option>
+                                        <option value="Kenya">Kenya</option>
+                                        <option value="Uganda">Uganda</option>
+                                        <option value="Rwanda">Rwanda</option>
+                                        <option value="Burundi">Burundi</option>
+                                        <option value="DRC">DR Congo</option>
+                                        <option value="Mozambique">Mozambique</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">Country</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.country || '—'"></p>
+                        </div>
+
+                        <!-- Identity Edit -->
+                        <div class="px-6 py-4">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Identity Verification</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">ID Type</label>
+                                    <select x-model="kycEditForm.id_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                        <option value="">Select...</option>
+                                        <option value="national_id">National ID</option>
+                                        <option value="passport">Passport</option>
+                                        <option value="drivers_license">Driver's License</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">ID Number</label>
+                                    <input type="text" x-model="kycEditForm.id_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Bank Edit -->
+                        <div class="px-6 py-4 bg-gray-50">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Bank Settlement</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Bank Name</label>
+                                    <input type="text" x-model="kycEditForm.bank_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Account Name</label>
+                                    <input type="text" x-model="kycEditForm.bank_account_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Account Number</label>
+                                    <input type="text" x-model="kycEditForm.bank_account_number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">SWIFT Code</label>
+                                    <input type="text" x-model="kycEditForm.bank_swift" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase mb-1 block">Branch</label>
+                                    <input type="text" x-model="kycEditForm.bank_branch" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Document Upload -->
+                        <div class="px-6 py-4">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Upload Documents</h4>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs text-gray-500 uppercase mb-2">ID Document (JPG, PNG, PDF — max 5MB)</label>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycIdDocFile = $event.target.files[0]"
+                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <template x-if="kycAccount?.id_document_url">
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs text-green-600">Current:</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.id_document_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-500 uppercase mb-2">Business License (JPG, PNG, PDF — max 5MB)</label>
+                                    <input type="file" accept=".jpg,.jpeg,.png,.pdf" @change="kycBizLicFile = $event.target.files[0]"
+                                        class="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <template x-if="kycAccount?.business_license_url">
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs text-green-600">Current:</span>
+                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.business_license_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <div class="px-6 py-4 bg-blue-50 border-t border-blue-100 flex items-center justify-between">
+                            <p class="text-xs text-blue-600">Changes will update the business KYC record directly.</p>
+                            <button @click="saveKycEdit()" :disabled="kycEditSaving"
+                                class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+                                <svg x-show="kycEditSaving" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <span x-text="kycEditSaving ? 'Saving...' : 'Save KYC Changes'"></span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Identity Verification -->
-                    <div class="px-6 py-4">
-                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Identity Verification</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">ID Type</label>
-                                <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycAccount?.id_type || '—').replace('_', ' ')"></p>
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500 uppercase">ID Number</label>
-                                <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.id_number || '—'"></p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Account Owner -->
+                    <!-- Account Owner (always visible) -->
                     <div class="px-6 py-4 bg-gray-50">
                         <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Account Owner</h4>
                         <div class="grid grid-cols-2 gap-4">
@@ -2172,6 +2396,15 @@ function adminPanel() {
         kycPaybill: '', kycPaybillSaving: false, kycPaybillMsg: '',
         kycRateLimit: 60, kycRateLimitSaving: false, kycRateLimitMsg: '', kycRateLimitMsgType: 'success',
         kycActionLoading: false,
+        // KYC Edit
+        kycEditing: false, kycEditSaving: false, kycEditMsg: '', kycEditMsgType: 'success',
+        kycIdDocFile: null, kycBizLicFile: null,
+        kycEditForm: {
+            business_name: '', business_type: '', registration_number: '', tin_number: '',
+            email: '', phone: '', address: '', city: '', country: '',
+            id_type: '', id_number: '',
+            bank_name: '', bank_account_name: '', bank_account_number: '', bank_swift: '', bank_branch: ''
+        },
 
         // Account name lookup
         accountMap: {},
@@ -2500,6 +2733,8 @@ function adminPanel() {
             this.kycNoteMsg = '';
             this.kycPaybillMsg = '';
             this.kycRateLimitMsg = '';
+            this.kycEditing = false;
+            this.kycEditMsg = '';
             try {
                 const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${accountId}`, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
@@ -2512,6 +2747,69 @@ function adminPanel() {
                 }
             } catch (e) { console.error(e); }
             this.kycLoading = false;
+        },
+
+        toggleKycEdit() {
+            if (this.kycEditing) {
+                this.kycEditing = false;
+                this.kycEditMsg = '';
+                this.kycIdDocFile = null;
+                this.kycBizLicFile = null;
+                return;
+            }
+            if (!this.kycAccount) return;
+            const a = this.kycAccount;
+            this.kycEditForm = {
+                business_name: a.business_name || '', business_type: a.business_type || '',
+                registration_number: a.registration_number || '', tin_number: a.tin_number || '',
+                email: a.email || '', phone: a.phone || '',
+                address: a.address || '', city: a.city || '', country: a.country || '',
+                id_type: a.id_type || '', id_number: a.id_number || '',
+                bank_name: a.bank_name || '', bank_account_name: a.bank_account_name || '',
+                bank_account_number: a.bank_account_number || '', bank_swift: a.bank_swift || '', bank_branch: a.bank_branch || ''
+            };
+            this.kycIdDocFile = null;
+            this.kycBizLicFile = null;
+            this.kycEditMsg = '';
+            this.kycEditing = true;
+        },
+
+        async saveKycEdit() {
+            if (!this.kycAccount) return;
+            this.kycEditSaving = true;
+            this.kycEditMsg = '';
+            try {
+                const fd = new FormData();
+                Object.entries(this.kycEditForm).forEach(([k, v]) => { if (v) fd.append(k, v); });
+                if (this.kycIdDocFile) fd.append('id_document', this.kycIdDocFile);
+                if (this.kycBizLicFile) fd.append('business_license', this.kycBizLicFile);
+                const token = document.cookie.split('; ').find(c => c.startsWith('admin_token='))?.split('=')[1];
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc`, {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
+                    body: fd
+                });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.kycAccount = { ...this.kycAccount, ...data.account };
+                    this.kycEditMsg = 'KYC updated successfully!';
+                    this.kycEditMsgType = 'success';
+                    this.kycEditing = false;
+                    this.kycIdDocFile = null;
+                    this.kycBizLicFile = null;
+                    setTimeout(() => { this.kycEditMsg = ''; }, 5000);
+                } else {
+                    const err = await res.json();
+                    this.kycEditMsg = err.message || 'Failed to update KYC.';
+                    this.kycEditMsgType = 'error';
+                }
+            } catch (e) {
+                console.error(e);
+                this.kycEditMsg = 'Network error. Please try again.';
+                this.kycEditMsgType = 'error';
+            }
+            this.kycEditSaving = false;
         },
 
         async saveKycNotes() {

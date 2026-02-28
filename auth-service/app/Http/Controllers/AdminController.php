@@ -189,6 +189,67 @@ class AdminController extends Controller
     }
 
     /**
+     * Admin update KYC details for an account (edit fields + upload documents).
+     */
+    public function updateAccountKyc(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
+
+        $account = Account::find($id);
+        if (!$account) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        $request->validate([
+            'business_name'        => 'sometimes|string|max:191',
+            'business_type'        => 'nullable|string|max:191',
+            'registration_number'  => 'nullable|string|max:191',
+            'tin_number'           => 'nullable|string|max:191',
+            'email'                => 'nullable|email|max:191',
+            'phone'                => 'nullable|string|max:20',
+            'address'              => 'nullable|string|max:500',
+            'city'                 => 'nullable|string|max:191',
+            'country'              => 'nullable|string|max:191',
+            'id_type'              => 'nullable|in:national_id,passport,drivers_license',
+            'id_number'            => 'nullable|string|max:191',
+            'bank_name'            => 'nullable|string|max:191',
+            'bank_account_name'    => 'nullable|string|max:191',
+            'bank_account_number'  => 'nullable|string|max:191',
+            'bank_swift'           => 'nullable|string|max:191',
+            'bank_branch'          => 'nullable|string|max:191',
+            'id_document'          => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'business_license'     => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $data = $request->only([
+            'business_name', 'business_type', 'registration_number', 'tin_number',
+            'email', 'phone', 'address', 'city', 'country',
+            'id_type', 'id_number',
+            'bank_name', 'bank_account_name', 'bank_account_number', 'bank_swift', 'bank_branch',
+        ]);
+
+        // Handle ID document upload
+        if ($request->hasFile('id_document')) {
+            $path = $request->file('id_document')->store('kyc/id-documents', 'public');
+            $data['id_document_url'] = '/storage/' . $path;
+        }
+
+        // Handle business license upload
+        if ($request->hasFile('business_license')) {
+            $path = $request->file('business_license')->store('kyc/business-licenses', 'public');
+            $data['business_license_url'] = '/storage/' . $path;
+        }
+
+        $account->update($data);
+        $account->refresh();
+
+        return response()->json([
+            'message' => 'KYC details updated successfully.',
+            'account' => $account,
+        ]);
+    }
+
+    /**
      * List all users across all accounts.
      */
     public function users(Request $request): JsonResponse
