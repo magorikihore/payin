@@ -1620,6 +1620,7 @@
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Service Fee</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -1632,6 +1633,7 @@
                                             <td class="px-4 py-2 text-sm text-gray-500" x-text="idx + 1"></td>
                                             <td class="px-4 py-2 text-sm font-mono" x-text="item.phone"></td>
                                             <td class="px-4 py-2 text-sm font-semibold" x-text="formatAmount(item.amount) + ' ' + walletCurrency"></td>
+                                            <td class="px-4 py-2 text-sm text-amber-700" x-text="item._charge !== undefined ? formatAmount(item._charge) + ' ' + walletCurrency : '—'"></td>
                                             <td class="px-4 py-2 text-sm text-gray-600" x-text="item.reference || '—'"></td>
                                             <td class="px-4 py-2 text-sm text-gray-600" x-text="item.description || '—'"></td>
                                             <td class="px-4 py-2">
@@ -1640,7 +1642,7 @@
                                                     x-text="item._status || 'ready'"></span>
                                             </td>
                                             <td class="px-4 py-2 text-center">
-                                                <button @click="batchItems.splice(idx, 1)" class="text-red-500 hover:text-red-700 text-sm" title="Remove">&times;</button>
+                                                <button @click="batchItems.splice(idx, 1); batchCharges = null;" class="text-red-500 hover:text-red-700 text-sm" title="Remove">&times;</button>
                                             </td>
                                         </tr>
                                     </template>
@@ -1649,6 +1651,39 @@
                         </div>
                         <div class="flex items-center justify-between mt-3">
                             <p class="text-sm text-gray-600">Total: <strong x-text="formatAmount(batchItems.reduce((s, i) => s + Number(i.amount), 0)) + ' ' + walletCurrency"></strong> to <strong x-text="batchItems.length"></strong> recipient(s)</p>
+                            <button @click="calculateBatchCharges()" :disabled="batchChargesLoading" class="px-4 py-2 bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 text-sm font-medium disabled:opacity-50">
+                                <span x-show="!batchChargesLoading">Calculate Charges</span>
+                                <span x-show="batchChargesLoading">Calculating...</span>
+                            </button>
+                        </div>
+
+                        <!-- Batch Charge Summary -->
+                        <div x-show="batchCharges" x-cloak class="mt-3 p-4 rounded-lg border"
+                            :class="batchCharges && batchCharges.totalFees > 0 ? 'bg-amber-50 border-amber-200' : 'bg-green-50 border-green-200'">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                Batch Charges &amp; Fees Summary
+                            </h4>
+                            <div x-show="batchChargesLoading" class="text-xs text-gray-400">Calculating charges for all recipients...</div>
+                            <div x-show="!batchChargesLoading && batchCharges" class="space-y-1.5 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Total Send Amount</span>
+                                    <span class="font-medium text-gray-800" x-text="formatAmount(batchCharges.totalAmount) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div class="flex justify-between" x-show="batchCharges.totalFees > 0">
+                                    <span class="text-gray-600">Total Service Fees (<span x-text="batchCharges.itemCount"></span> items)</span>
+                                    <span class="font-medium text-amber-700" x-text="formatAmount(batchCharges.totalFees) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div class="border-t border-gray-300 pt-1.5 flex justify-between font-semibold">
+                                    <span class="text-gray-700">Total Debit from Wallet</span>
+                                    <span class="text-gray-900" x-text="formatAmount(batchCharges.totalDebit) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div x-show="batchCharges.totalFees === 0" class="text-xs text-green-600 mt-1">No charges apply to this batch.</div>
+                                <div x-show="batchCharges.errors > 0" class="text-xs text-red-600 mt-1" x-text="batchCharges.errors + ' item(s) could not be calculated (operator not detected)'"></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-3">
                             <button @click="sendBatchPayout()" :disabled="batchLoading" class="px-6 py-2.5 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
                                 <span x-show="!batchLoading">Send Batch</span>
                                 <span x-show="batchLoading">Sending...</span>
@@ -2327,6 +2362,7 @@ function dashboard() {
         batchName: '', batchCsvText: '', batchItems: [], batchLoading: false,
         batchMsg: '', batchMsgType: 'success',
         batchResults: [], batchResultSummary: { sent: 0, failed: 0, total: 0 },
+        batchCharges: null, batchChargesLoading: false,
         manualRow: { phone: '', amount: '', reference: '', description: '' },
         manualAmountDisplay: '',
         recentDisbursements: [], recentDisbLoading: false,
@@ -3006,6 +3042,7 @@ function dashboard() {
         parseBatchCsv() {
             this.batchMsg = '';
             this.batchItems = [];
+            this.batchCharges = null;
             const lines = this.batchCsvText.trim().split('\n').map(l => l.trim()).filter(l => l);
             if (lines.length < 2) {
                 this.batchMsg = 'CSV must have a header row and at least one data row.';
@@ -3063,6 +3100,92 @@ function dashboard() {
             this.manualRow = { phone: '', amount: '', reference: '', description: '' };
             this.manualAmountDisplay = '';
             this.batchMsg = '';
+            this.batchCharges = null;
+        },
+
+        detectOperatorFromPhone(phone) {
+            if (!phone) return null;
+            let cleaned = phone.replace(/[\s\-\.+]/g, '');
+            if (cleaned.startsWith('255') && cleaned.length >= 12) {
+                cleaned = '0' + cleaned.substring(3);
+            } else if (!cleaned.startsWith('0') && cleaned.length === 9) {
+                cleaned = '0' + cleaned;
+            }
+            if (cleaned.startsWith('0') && cleaned.length >= 10) {
+                const prefix = cleaned.substring(0, 3);
+                for (const op of this.payoutOperators) {
+                    if (op.prefixes && op.prefixes.includes(prefix)) {
+                        return op.code;
+                    }
+                }
+            }
+            return null;
+        },
+
+        async calculateBatchCharges() {
+            if (this.batchItems.length === 0) return;
+            this.batchChargesLoading = true;
+            this.batchCharges = null;
+
+            let totalAmount = 0;
+            let totalFees = 0;
+            let errors = 0;
+
+            // Group items by operator+amount to minimize API calls
+            const chargeCache = {};
+
+            for (let i = 0; i < this.batchItems.length; i++) {
+                const item = this.batchItems[i];
+                const operatorCode = this.detectOperatorFromPhone(item.phone);
+                const amount = Number(item.amount);
+                totalAmount += amount;
+
+                if (!operatorCode || amount < 100) {
+                    item._charge = 0;
+                    errors++;
+                    continue;
+                }
+
+                const cacheKey = operatorCode + '_' + amount;
+                if (chargeCache[cacheKey] !== undefined) {
+                    item._charge = chargeCache[cacheKey];
+                    totalFees += chargeCache[cacheKey];
+                    continue;
+                }
+
+                try {
+                    const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges/calculate', {
+                        method: 'POST', headers: this.getHeaders(),
+                        body: JSON.stringify({
+                            amount: amount,
+                            operator: operatorCode,
+                            transaction_type: 'disbursement'
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const fee = data.platform_charge || 0;
+                        chargeCache[cacheKey] = fee;
+                        item._charge = fee;
+                        totalFees += fee;
+                    } else {
+                        chargeCache[cacheKey] = 0;
+                        item._charge = 0;
+                    }
+                } catch (e) {
+                    chargeCache[cacheKey] = 0;
+                    item._charge = 0;
+                }
+            }
+
+            this.batchCharges = {
+                totalAmount: totalAmount,
+                totalFees: totalFees,
+                totalDebit: totalAmount + totalFees,
+                itemCount: this.batchItems.length,
+                errors: errors
+            };
+            this.batchChargesLoading = false;
         },
 
         async sendBatchPayout() {
