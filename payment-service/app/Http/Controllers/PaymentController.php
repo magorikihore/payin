@@ -833,21 +833,23 @@ class PaymentController extends Controller
     {
         try {
             $txnServiceUrl = config('services.transaction_service.url');
+            $serviceKey = config('services.internal_service_key');
 
-            $response = Http::post("{$txnServiceUrl}/api/transactions", [
-                'account_id'       => $paymentRequest->account_id,
-                'transaction_ref'  => $paymentRequest->request_ref,
-                'amount'           => $paymentRequest->amount,
-                'type'             => $paymentRequest->type,
-                'operator'         => $paymentRequest->operator_name,
-                'status'           => 'completed',
-                'platform_charge'  => $paymentRequest->platform_charge,
-                'operator_charge'  => $paymentRequest->operator_charge,
-                'currency'         => $paymentRequest->currency,
-                'description'      => $paymentRequest->description ?? ($paymentRequest->type === 'collection' ? 'USSD Collection' : 'Disbursement'),
-                'payment_method'   => 'mobile_money',
-                'operator_receipt' => $paymentRequest->operator_ref,
-            ]);
+            $response = Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->post("{$txnServiceUrl}/api/internal/transactions", [
+                    'account_id'       => $paymentRequest->account_id,
+                    'transaction_ref'  => $paymentRequest->request_ref,
+                    'amount'           => $paymentRequest->amount,
+                    'type'             => $paymentRequest->type,
+                    'operator'         => $paymentRequest->operator_name,
+                    'status'           => 'completed',
+                    'platform_charge'  => $paymentRequest->platform_charge,
+                    'operator_charge'  => $paymentRequest->operator_charge,
+                    'currency'         => $paymentRequest->currency,
+                    'description'      => $paymentRequest->description ?? ($paymentRequest->type === 'collection' ? 'USSD Collection' : 'Disbursement'),
+                    'payment_method'   => 'mobile_money',
+                    'operator_receipt' => $paymentRequest->operator_ref,
+                ]);
 
             if ($response->successful()) {
                 $data = $response->json();

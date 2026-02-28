@@ -40,3 +40,8 @@ Route::middleware('auth.service')->group(function () {
     Route::get('/admin/logs', [LogController::class, 'index']);
     Route::delete('/admin/logs', [LogController::class, 'clear']);
 });
+
+// Internal service-to-service routes (protected by service key)
+Route::middleware('internal.service')->group(function () {
+    Route::post('/internal/transactions', [TransactionController::class, 'internalStore']);
+});

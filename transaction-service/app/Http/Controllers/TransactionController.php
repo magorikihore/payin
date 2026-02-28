@@ -55,6 +55,49 @@ class TransactionController extends Controller
     }
 
     /**
+     * Internal: Record a transaction from another service (no user auth, service-key auth).
+     */
+    public function internalStore(Request $request): JsonResponse
+    {
+        $request->validate([
+            'account_id' => 'required',
+            'transaction_ref' => 'required|string',
+            'amount' => 'required|numeric|min:0',
+            'type' => 'required|string|in:collection,disbursement,topup,settlement',
+            'operator' => 'required|string',
+            'status' => 'required|string|in:pending,completed,failed,cancelled,reversed',
+            'platform_charge' => 'nullable|numeric|min:0',
+            'operator_charge' => 'nullable|numeric|min:0',
+            'currency' => 'nullable|string',
+            'description' => 'nullable|string|max:255',
+            'payment_method' => 'nullable|string',
+            'operator_receipt' => 'nullable|string',
+            'user_id' => 'nullable|integer',
+        ]);
+
+        $transaction = Transaction::create([
+            'user_id' => $request->user_id ?? 0,
+            'account_id' => $request->account_id,
+            'transaction_ref' => $request->transaction_ref,
+            'amount' => $request->amount,
+            'platform_charge' => $request->platform_charge ?? 0,
+            'operator_charge' => $request->operator_charge ?? 0,
+            'currency' => $request->currency ?? 'TZS',
+            'type' => $request->type,
+            'status' => $request->status,
+            'description' => $request->description,
+            'payment_method' => $request->payment_method ?? 'mobile_money',
+            'operator' => $request->operator,
+            'operator_receipt' => $request->operator_receipt,
+        ]);
+
+        return response()->json([
+            'message' => 'Transaction recorded.',
+            'transaction' => $transaction,
+        ], 201);
+    }
+
+    /**
      * Admin: Get charge revenue summary.
      */
     public function chargeRevenue(Request $request): JsonResponse

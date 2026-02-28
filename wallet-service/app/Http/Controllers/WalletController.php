@@ -164,11 +164,13 @@ class WalletController extends Controller
 
         // Record transaction in transaction-service (fire-and-forget)
         try {
+            $serviceKey = config('services.internal_service_key');
             Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
+                'X-Service-Key' => $serviceKey,
                 'Accept' => 'application/json',
-            ])->post(config('services.transaction_service.url') . '/api/transactions', [
+            ])->post(config('services.transaction_service.url') . '/api/internal/transactions', [
                 'account_id' => $accountId,
+                'user_id' => $user->id,
                 'transaction_ref' => $txnRef,
                 'amount' => $grossAmount,
                 'type' => 'collection',
