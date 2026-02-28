@@ -16,7 +16,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                     </svg>
                     <span class="ml-2 text-lg font-bold text-white">Payin</span>
-                    <span x-show="user?.account" class="ml-3 text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-full font-medium hidden sm:inline" x-text="user?.account?.business_name"></span>
+                    <span x-show="user?.name" class="ml-3 text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded-full font-medium hidden sm:inline" x-text="(user?.name || '').split(' ')[0]"></span>
                 </div>
                 <div class="flex items-center space-x-3">
                     <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="user?.name || 'User'"></span></span>
@@ -172,7 +172,7 @@
                         </div>
                         <p class="text-xl font-bold text-gray-900" x-text="formatAmount(collectionTotal) + ' TZS'"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
-                            <button @click="activeTab = 'wallet'; fetchWallet()" class="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition">
+                            <button @click="activeTab = 'wallet'; fetchWallet()" class="inline-flex items-center px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                 Top Up
                             </button>
@@ -194,7 +194,7 @@
                         </div>
                         <p class="text-xl font-bold text-gray-900" x-text="formatAmount(disbursementTotal) + ' TZS'"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
-                            <button @click="activeTab = 'send-money'; fetchPayoutOperators()" class="inline-flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition">
+                            <button @click="activeTab = 'send-money'; fetchPayoutOperators()" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                                 Send Money
                             </button>
