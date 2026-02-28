@@ -832,6 +832,49 @@
                 </div>
             </div>
 
+            <!-- Settlement Receipt Modal -->
+            <div x-show="stlReceiptOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @keydown.escape.window="stlReceiptOpen = false">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md" @click.outside="stlReceiptOpen = false" id="stlReceiptContent">
+                    <div class="px-6 py-4 border-b bg-gradient-to-r from-gblue-600 to-gblue-700 rounded-t-2xl text-center">
+                        <div class="flex justify-center mb-2">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Settlement Receipt</h3>
+                        <p class="text-xs text-blue-100 mt-1">Your settlement request has been submitted</p>
+                    </div>
+                    <template x-if="stlReceipt">
+                        <div>
+                            <div class="px-6 py-5 space-y-3">
+                                <div class="text-center mb-3">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                                        :class="{'bg-yellow-50 text-yellow-700 border border-yellow-200': stlReceipt.status==='pending','bg-blue-50 text-blue-700 border border-blue-200': stlReceipt.status==='processing','bg-green-50 text-green-700 border border-green-200': stlReceipt.status==='completed','bg-red-50 text-red-700 border border-red-200': stlReceipt.status==='failed'}"
+                                        x-text="'Status: ' + stlReceipt.status"></span>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs text-gray-500 mb-1">Reference</div>
+                                    <div class="text-sm font-mono font-bold text-gray-800" x-text="stlReceipt.settlement_ref"></div>
+                                </div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Operator</span><span class="font-medium text-gray-800" x-text="stlReceipt.operator"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Amount</span><span class="font-medium text-gray-800" x-text="formatAmount(stlReceipt.amount) + ' ' + stlReceipt.currency"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Service Charge</span><span class="font-medium text-orange-600" x-text="formatAmount(stlReceipt.service_charge) + ' ' + stlReceipt.currency"></span></div>
+                                <div class="flex justify-between text-sm font-bold border-t border-b py-2"><span class="text-gray-700">Total Debited</span><span class="text-gblue-700" x-text="formatAmount(stlReceipt.total_debit) + ' ' + stlReceipt.currency"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Bank</span><span class="font-medium text-gray-800" x-text="stlReceipt.bank_name"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Account</span><span class="font-medium text-gray-800" x-text="stlReceipt.account_number + ' (' + stlReceipt.account_name + ')'"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Description</span><span class="font-medium text-gray-800" x-text="stlReceipt.description"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Date</span><span class="font-medium text-gray-800" x-text="formatDate(stlReceipt.created_at)"></span></div>
+                            </div>
+                            <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-between">
+                                <button @click="downloadSettlementPdf(stlReceipt)" class="px-4 py-2 text-sm font-medium text-gblue-700 bg-white border border-gblue-300 rounded-lg hover:bg-gblue-50 transition inline-flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Download PDF
+                                </button>
+                                <button @click="stlReceiptOpen = false" class="px-5 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition">Done</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
             <!-- Settlements Table -->
             <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                 <div class="px-6 py-4 border-b flex items-center justify-between">
@@ -860,6 +903,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
@@ -883,6 +927,13 @@
                                                 x-text="stl.status"></span>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500" x-text="formatDate(stl.created_at)"></td>
+                                        <td class="px-6 py-4">
+                                            <button @click="viewSettlementReceipt(stl)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg transition"
+                                                :class="stl.status === 'completed' ? 'text-green-700 bg-green-50 hover:bg-green-100 border border-green-200' : 'text-gblue-700 bg-gblue-50 hover:bg-gblue-100 border border-gblue-200'">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                <span x-text="stl.status === 'completed' ? 'Download' : 'View'"></span>
+                                            </button>
+                                        </td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -2436,6 +2487,7 @@ function dashboard() {
         settlementMsg: '', settlementMsgType: '',
         stlPreviewLoading: false, stlSummaryOpen: false,
         stlSummary: { operator: '', amount: 0, platform_charge: 0, operator_charge: 0, total_charge: 0, total_debit: 0, bank_name: '', account_number: '', account_name: '', description: '', available_balance: 0 },
+        stlReceiptOpen: false, stlReceipt: null,
         bankAccounts: [], bankAccountsLoading: false,
         bankForm: { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '', label: '' },
         bankFormLoading: false, bankMsg: '', bankMsgType: '', showBankForm: false,
@@ -3055,11 +3107,31 @@ function dashboard() {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(this.stlForm)
                 });
-                const data = await res.json();
+                let data;
+                const text = await res.text();
+                try { data = JSON.parse(text); } catch (pe) { data = { message: text || 'Unexpected response from server.' }; }
                 if (!res.ok) {
                     const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
                     this.settlementMsg = errors || 'Failed.'; this.settlementMsgType = 'error';
                 } else {
+                    // Build receipt
+                    const s = data.settlement || {};
+                    const c = data.charges || {};
+                    this.stlReceipt = {
+                        settlement_ref: s.settlement_ref || '',
+                        operator: s.operator || this.stlSummary.operator,
+                        amount: Number(s.amount || this.stlSummary.amount),
+                        service_charge: Number(c.total_charge || this.stlSummary.total_charge),
+                        total_debit: Number(c.total_debited || this.stlSummary.total_debit),
+                        currency: s.currency || this.walletCurrency,
+                        bank_name: s.bank_name || this.stlSummary.bank_name,
+                        account_number: s.account_number || this.stlSummary.account_number,
+                        account_name: s.account_name || this.stlSummary.account_name,
+                        description: s.description || this.stlSummary.description || '-',
+                        status: s.status || 'pending',
+                        created_at: s.created_at || new Date().toISOString(),
+                    };
+                    this.stlReceiptOpen = true;
                     this.settlementMsg = data.message; this.settlementMsgType = 'success';
                     this.stlForm = { operator: '', amount: '', bank_account_id: '', description: '' };
                     this.stlAmountDisplay = '';
@@ -3068,8 +3140,75 @@ function dashboard() {
                     this.fetchTransactions();
                     this.fetchWallets();
                 }
-            } catch (e) { this.settlementMsg = 'Service unavailable.'; this.settlementMsgType = 'error'; }
+            } catch (e) {
+                console.error('Settlement submit error:', e);
+                this.settlementMsg = e.message || 'Service unavailable. Please try again.';
+                this.settlementMsgType = 'error';
+            }
             finally { this.stlLoading = false; this.stlSummaryOpen = false; }
+        },
+
+        viewSettlementReceipt(stl) {
+            const meta = typeof stl.metadata === 'string' ? JSON.parse(stl.metadata || '{}') : (stl.metadata || {});
+            this.stlReceipt = {
+                settlement_ref: stl.settlement_ref,
+                operator: stl.operator,
+                amount: Number(stl.amount),
+                service_charge: Number(meta.total_charge || 0),
+                total_debit: Number(meta.total_debited || stl.amount),
+                currency: stl.currency || this.walletCurrency,
+                bank_name: stl.bank_name,
+                account_number: stl.account_number,
+                account_name: stl.account_name,
+                description: stl.description || '-',
+                status: stl.status,
+                created_at: stl.created_at,
+            };
+            this.stlReceiptOpen = true;
+        },
+
+        downloadSettlementPdf(receipt) {
+            const r = receipt || this.stlReceipt;
+            if (!r) return;
+            const statusColor = r.status === 'completed' ? '#059669' : r.status === 'pending' ? '#D97706' : r.status === 'failed' ? '#DC2626' : '#2563EB';
+            const statusBg = r.status === 'completed' ? '#ECFDF5' : r.status === 'pending' ? '#FFFBEB' : r.status === 'failed' ? '#FEF2F2' : '#EFF6FF';
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Settlement Receipt - ${r.settlement_ref}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f3f4f6;padding:20px}
+.receipt{max-width:500px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden}
+.header{background:linear-gradient(135deg,#1e40af,#2563eb);color:#fff;padding:28px 24px;text-align:center}
+.header h1{font-size:20px;font-weight:700;margin-bottom:4px}.header p{font-size:12px;opacity:.85}
+.logo{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.status{display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;background:${statusBg};color:${statusColor};margin-top:10px}
+.body{padding:24px}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.row:last-child{border-bottom:none}.label{color:#6b7280}.value{font-weight:600;color:#1f2937;text-align:right;max-width:60%}
+.total-row{background:#eff6ff;margin:12px -24px;padding:12px 24px;border-bottom:none}
+.total-row .label{font-weight:700;color:#1e40af;font-size:14px}.total-row .value{color:#1e40af;font-size:14px}
+.ref-box{background:#f9fafb;border-radius:8px;padding:12px;text-align:center;margin-bottom:16px}
+.ref-box .label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#9ca3af}.ref-box .value{font-size:14px;font-family:monospace;margin-top:4px}
+.footer{padding:16px 24px;border-top:1px solid #e5e7eb;text-align:center;font-size:10px;color:#9ca3af}
+@media print{body{padding:0;background:#fff}.receipt{box-shadow:none;border-radius:0}}
+</style></head><body>
+<div class="receipt">
+<div class="header"><div class="logo">Payin</div><h1>Settlement Receipt</h1><p>Payment Settlement Platform</p><div class="status">${r.status}</div></div>
+<div class="body">
+<div class="ref-box"><div class="label">Reference Number</div><div class="value">${r.settlement_ref}</div></div>
+<div class="row"><span class="label">Operator</span><span class="value">${r.operator}</span></div>
+<div class="row"><span class="label">Settlement Amount</span><span class="value">${this.formatAmount(r.amount)} ${r.currency}</span></div>
+<div class="row"><span class="label">Service Charge</span><span class="value">${this.formatAmount(r.service_charge)} ${r.currency}</span></div>
+<div class="row total-row"><span class="label">Total Debited</span><span class="value">${this.formatAmount(r.total_debit)} ${r.currency}</span></div>
+<div class="row"><span class="label">Bank</span><span class="value">${r.bank_name}</span></div>
+<div class="row"><span class="label">Account Number</span><span class="value">${r.account_number}</span></div>
+<div class="row"><span class="label">Account Name</span><span class="value">${r.account_name}</span></div>
+<div class="row"><span class="label">Description</span><span class="value">${r.description}</span></div>
+<div class="row"><span class="label">Date</span><span class="value">${this.formatDate(r.created_at)}</span></div>
+</div>
+<div class="footer">This is a system-generated receipt from Payin Settlement Platform.<br>For queries, contact support@payin.co.tz</div>
+</div></body></html>`;
+            const win = window.open('', '_blank', 'width=600,height=800');
+            win.document.write(html);
+            win.document.close();
+            setTimeout(() => { win.print(); }, 500);
         },
 
         // ---- Bank Accounts ----

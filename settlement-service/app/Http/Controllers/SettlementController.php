@@ -42,7 +42,7 @@ class SettlementController extends Controller
     }
 
     /**
-     * Create a settlement request - debits from disbursement wallet.
+     * Create a settlement request - debits from collection wallet.
      */
     public function store(Request $request): JsonResponse
     {
@@ -129,7 +129,7 @@ class SettlementController extends Controller
             ]);
 
             if ($walletResponse->failed()) {
-                $errorMsg = $walletResponse->json('message') ?? 'Failed to debit disbursement wallet.';
+                $errorMsg = $walletResponse->json('message') ?? 'Failed to debit collection wallet.';
                 return response()->json(['message' => $errorMsg], $walletResponse->status());
             }
         } catch (\Exception $e) {
@@ -220,7 +220,7 @@ class SettlementController extends Controller
         }
 
         return response()->json([
-            'message' => "Settlement request created. " . number_format($totalDebit, 2) . " {$currency} debited from {$operator} disbursement wallet (Amount: " . number_format($settlementAmount, 2) . " {$currency}{$chargeMsg}).",
+            'message' => "Settlement request created. " . number_format($totalDebit, 2) . " {$currency} debited from {$operator} collection wallet (Amount: " . number_format($settlementAmount, 2) . " {$currency}{$chargeMsg}).",
             'settlement' => $settlement,
             'charges' => [
                 'platform_charge' => number_format($platformCharge, 2, '.', ''),
