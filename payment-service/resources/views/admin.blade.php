@@ -2486,6 +2486,8 @@ function adminPanel() {
             settlement: '{{ config("services.settlement_service.url") }}/api/admin/logs',
         },
 
+        appReady: false,
+
         init() {
             const token = localStorage.getItem('auth_token');
             if (!token) { window.location.href = '/login'; return; }
@@ -2506,6 +2508,8 @@ function adminPanel() {
             if (this.hasPerm('admin_ip_whitelist')) this.fetchPendingIpCount();
             if (this.hasPerm('admin_transfers')) this.fetchPendingTransferCount();
             if (this.hasPerm('admin_reversals')) this.fetchPendingReversalCount();
+            this.appReady = true;
+            this.$nextTick(() => document.dispatchEvent(new Event('alpine:initialized')));
         },
 
         // Permission helper

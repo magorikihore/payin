@@ -353,6 +353,8 @@ function kycPage() {
         },
         errors: {},
 
+        appReady: false,
+
         init() {
             const token = localStorage.getItem('auth_token');
             if (!token) { window.location.href = '/login'; return; }
@@ -365,6 +367,8 @@ function kycPage() {
             }
             // Check if KYC is already submitted — redirect to dashboard
             this.checkKycStatus();
+            this.appReady = true;
+            this.$nextTick(() => document.dispatchEvent(new Event('alpine:initialized')));
         },
 
         async checkKycStatus() {

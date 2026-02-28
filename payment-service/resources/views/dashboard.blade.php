@@ -2073,6 +2073,8 @@ function dashboard() {
         apiKeyLabel: '', apiKeyMsg: '', apiKeyMsgType: '',
         newApiKey: '', newApiSecret: '',
 
+        appReady: false,
+
         init() {
             const token = localStorage.getItem('auth_token');
             if (!token) { window.location.href = '/login'; return; }
@@ -2091,6 +2093,8 @@ function dashboard() {
             this.fetchTransactions();
             this.fetchMyCharges();
             this.fetchStats();
+            this.appReady = true;
+            this.$nextTick(() => document.dispatchEvent(new Event('alpine:initialized')));
         },
 
         /**

@@ -26,9 +26,35 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
+        @keyframes payin-spin { to { transform: rotate(360deg); } }
+        .payin-loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); transition: opacity .4s ease; }
+        .payin-loader.fade-out { opacity: 0; pointer-events: none; }
+        .payin-loader .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.15); border-top-color: #3b82f6; border-radius: 50%; animation: payin-spin .8s linear infinite; }
+        .payin-loader .loader-text { margin-top: 20px; color: #94a3b8; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: .5px; }
+        .payin-loader .loader-brand { color: #fff; font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 24px; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
+    <!-- Global Loading Overlay -->
+    <div id="payin-global-loader" class="payin-loader">
+        <div class="loader-brand">Payin</div>
+        <div class="spinner"></div>
+        <div class="loader-text">Please wait...</div>
+    </div>
     @yield('content')
+    <script>
+        // Hide loader once Alpine has initialized the page
+        document.addEventListener('alpine:initialized', function() {
+            setTimeout(function() {
+                var loader = document.getElementById('payin-global-loader');
+                if (loader) { loader.classList.add('fade-out'); setTimeout(function() { loader.remove(); }, 500); }
+            }, 200);
+        });
+        // Fallback: hide after 6s max
+        setTimeout(function() {
+            var loader = document.getElementById('payin-global-loader');
+            if (loader) { loader.classList.add('fade-out'); setTimeout(function() { loader.remove(); }, 500); }
+        }, 6000);
+    </script>
 </body>
 </html>
