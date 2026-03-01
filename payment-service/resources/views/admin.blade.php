@@ -734,6 +734,34 @@
                         <option value="Halopesa">Halopesa</option>
                     </select>
                 </div>
+                <div class="flex flex-wrap items-center gap-3 mt-3 w-full">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">From:</label>
+                        <input type="date" x-model="txnDateFrom" @change="txnPage=1; fetchAdminTransactions()"
+                            :max="txnDateTo || undefined"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">To:</label>
+                        <input type="date" x-model="txnDateTo" @change="txnPage=1; fetchAdminTransactions()"
+                            :min="txnDateFrom || undefined"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <button x-show="txnDateFrom || txnDateTo" x-cloak @click="txnDateFrom=''; txnDateTo=''; txnPage=1; fetchAdminTransactions()"
+                        class="text-xs text-red-600 hover:text-red-800 font-medium underline">Clear Dates</button>
+                    <div class="ml-auto flex items-center gap-2">
+                        <button @click="downloadAdminTransactions('excel')" :disabled="txnExportLoading"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-300 rounded-lg hover:bg-green-100 disabled:opacity-50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span x-text="txnExportLoading === 'excel' ? 'Exporting...' : 'Excel'"></span>
+                        </button>
+                        <button @click="downloadAdminTransactions('pdf')" :disabled="txnExportLoading"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 disabled:opacity-50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span x-text="txnExportLoading === 'pdf' ? 'Exporting...' : 'PDF'"></span>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                 <div x-show="txnLoading" class="p-8 text-center text-gray-500">
@@ -3249,7 +3277,7 @@ function adminPanel() {
         adminUsers: [], usrLoading: false, usrSearch: '', usrRoleFilter: '', usrPage: 1, usrPagination: {},
 
         // Transactions (admin)
-        adminTransactions: [], txnLoading: false, txnSearch: '', txnStatusFilter: '', txnTypeFilter: '', txnOperatorFilter: '', txnPage: 1, txnPagination: {},
+        adminTransactions: [], txnLoading: false, txnSearch: '', txnStatusFilter: '', txnTypeFilter: '', txnOperatorFilter: '', txnDateFrom: '', txnDateTo: '', txnPage: 1, txnPagination: {}, txnExportLoading: false,
 
         // Wallets (admin)
         walletData: {}, wltLoading: false, wltSearch: '',
@@ -3656,6 +3684,36 @@ function adminPanel() {
             } catch (e) { console.error(e); alert('Error resetting password.'); }
         },
 
+        // ---- Admin Transaction Export ----
+        buildTxnExportParams() {
+            let params = [];
+            if (this.txnSearch) params.push(`search=${encodeURIComponent(this.txnSearch)}`);
+            if (this.txnStatusFilter) params.push(`status=${this.txnStatusFilter}`);
+            if (this.txnTypeFilter) params.push(`type=${this.txnTypeFilter}`);
+            if (this.txnOperatorFilter) params.push(`operator=${encodeURIComponent(this.txnOperatorFilter)}`);
+            if (this.txnDateFrom) params.push(`date_from=${this.txnDateFrom}`);
+            if (this.txnDateTo) params.push(`date_to=${this.txnDateTo}`);
+            return params.length ? '?' + params.join('&') : '';
+        },
+        async downloadAdminTransactions(format) {
+            this.txnExportLoading = format;
+            try {
+                const endpoint = format === 'excel' ? 'export/excel' : 'export/pdf';
+                const url = `{{ config("services.transaction_service.url") }}/api/admin/transactions/${endpoint}${this.buildTxnExportParams()}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (!res.ok) { alert('Export failed. Please try again.'); return; }
+                const blob = await res.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                const ext = format === 'excel' ? 'xlsx' : 'pdf';
+                link.download = `transactions_${new Date().toISOString().slice(0,10)}.${ext}`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch (e) { console.error(e); alert('Export failed. Please try again.'); }
+            this.txnExportLoading = false;
+        },
+
         // ---- Admin Transactions ----
         async fetchAdminTransactions() {
             this.txnLoading = true;
@@ -3665,6 +3723,8 @@ function adminPanel() {
                 if (this.txnStatusFilter) url += `&status=${this.txnStatusFilter}`;
                 if (this.txnTypeFilter) url += `&type=${this.txnTypeFilter}`;
                 if (this.txnOperatorFilter) url += `&operator=${encodeURIComponent(this.txnOperatorFilter)}`;
+                if (this.txnDateFrom) url += `&date_from=${this.txnDateFrom}`;
+                if (this.txnDateTo) url += `&date_to=${this.txnDateTo}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();

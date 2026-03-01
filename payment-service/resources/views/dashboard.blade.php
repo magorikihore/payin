@@ -446,7 +446,35 @@
                             <option value="settlement">Settlement (Withdrawal)</option>
                         </select>
                     </div>
-                    <button @click="searchQuery = ''; filterStatus = ''; filterType = ''; filterOperator = ''; currentPage = 1; fetchTransactions()" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">Clear All</button>
+                    <button @click="searchQuery = ''; filterStatus = ''; filterType = ''; filterOperator = ''; dateFrom = ''; dateTo = ''; currentPage = 1; fetchTransactions()" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">Clear All</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 mt-3 w-full">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">From:</label>
+                        <input type="date" x-model="dateFrom" @change="currentPage=1; fetchTransactions()"
+                            :max="dateTo || undefined"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">To:</label>
+                        <input type="date" x-model="dateTo" @change="currentPage=1; fetchTransactions()"
+                            :min="dateFrom || undefined"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                    </div>
+                    <button x-show="dateFrom || dateTo" x-cloak @click="dateFrom=''; dateTo=''; currentPage=1; fetchTransactions()"
+                        class="text-xs text-red-600 hover:text-red-800 font-medium underline">Clear Dates</button>
+                    <div class="ml-auto flex items-center gap-2">
+                        <button @click="downloadTransactions('excel')" :disabled="txnExportLoading"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-300 rounded-lg hover:bg-green-100 disabled:opacity-50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span x-text="txnExportLoading === 'excel' ? 'Exporting...' : 'Excel'"></span>
+                        </button>
+                        <button @click="downloadTransactions('pdf')" :disabled="txnExportLoading"
+                            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-300 rounded-lg hover:bg-red-100 disabled:opacity-50">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <span x-text="txnExportLoading === 'pdf' ? 'Exporting...' : 'PDF'"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -2680,7 +2708,7 @@ function dashboard() {
 
         // Transactions
         transactions: [], loadingTxns: true, txnError: '',
-        searchQuery: '', filterStatus: '', filterType: '', filterOperator: '', currentPage: 1,
+        searchQuery: '', filterStatus: '', filterType: '', filterOperator: '', dateFrom: '', dateTo: '', currentPage: 1, txnExportLoading: false,
         stats: { total: 0, completed: 0, pending: 0, failed: 0 },
         pagination: {},
 
@@ -3142,6 +3170,36 @@ function dashboard() {
             return false;
         },
 
+        // ---- Transaction Export ----
+        buildTxnExportParams() {
+            let params = [];
+            if (this.searchQuery) params.push(`search=${encodeURIComponent(this.searchQuery)}`);
+            if (this.filterStatus) params.push(`status=${this.filterStatus}`);
+            if (this.filterType) params.push(`type=${this.filterType}`);
+            if (this.filterOperator) params.push(`operator=${encodeURIComponent(this.filterOperator)}`);
+            if (this.dateFrom) params.push(`date_from=${this.dateFrom}`);
+            if (this.dateTo) params.push(`date_to=${this.dateTo}`);
+            return params.length ? '?' + params.join('&') : '';
+        },
+        async downloadTransactions(format) {
+            this.txnExportLoading = format;
+            try {
+                const endpoint = format === 'excel' ? 'export/excel' : 'export/pdf';
+                const url = `{{ config("services.transaction_service.url") }}/api/transactions/${endpoint}${this.buildTxnExportParams()}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (!res.ok) { alert('Export failed. Please try again.'); return; }
+                const blob = await res.blob();
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                const ext = format === 'excel' ? 'xlsx' : 'pdf';
+                link.download = `transactions_${new Date().toISOString().slice(0,10)}.${ext}`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch (e) { console.error(e); alert('Export failed. Please try again.'); }
+            this.txnExportLoading = false;
+        },
+
         // ---- Transactions ----
         async fetchTransactions() {
             this.loadingTxns = true; this.txnError = '';
@@ -3151,6 +3209,8 @@ function dashboard() {
                 if (this.filterStatus) url += `&status=${this.filterStatus}`;
                 if (this.filterType) url += `&type=${this.filterType}`;
                 if (this.filterOperator) url += `&operator=${encodeURIComponent(this.filterOperator)}`;
+                if (this.dateFrom) url += `&date_from=${this.dateFrom}`;
+                if (this.dateTo) url += `&date_to=${this.dateTo}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (!res.ok) throw new Error();
