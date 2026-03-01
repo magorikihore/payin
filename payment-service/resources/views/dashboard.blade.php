@@ -1916,6 +1916,9 @@
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="d in recentDisbursements" :key="d.id || d.request_ref">
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-3 text-sm font-mono text-gray-700" x-text="d.request_ref"></td>
                                         <td class="px-4 py-3 text-sm font-mono text-gray-600" x-text="d.receipt_number || '—'"></td>
