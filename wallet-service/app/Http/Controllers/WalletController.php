@@ -646,7 +646,7 @@ class WalletController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'operator' => 'required|string|in:' . implode(',', $this->operators),
-            'account_id' => 'required|string',
+            'account_id' => 'required',
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -707,7 +707,7 @@ class WalletController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'operator' => 'required|string|in:' . implode(',', $this->operators),
-            'account_id' => 'required|string',
+            'account_id' => 'required',
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -764,7 +764,7 @@ class WalletController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'operator' => 'required|string|in:' . implode(',', $this->operators),
-            'account_id' => 'required|string',
+            'account_id' => 'required',
             'type' => 'required|string|in:collection,disbursement',
             'reversal_ref' => 'required|string',
             'original_ref' => 'required|string',
@@ -928,7 +928,7 @@ class WalletController extends Controller
     public function internalCredit(Request $request): JsonResponse
     {
         $request->validate([
-            'account_id' => 'required|string',
+            'account_id' => 'required',
             'amount'     => 'required|numeric|min:0.01',
             'operator'   => 'required|string|in:' . implode(',', $this->operators),
             'wallet_type'=> 'nullable|string|in:collection,disbursement',
@@ -978,7 +978,7 @@ class WalletController extends Controller
     public function internalDebit(Request $request): JsonResponse
     {
         $request->validate([
-            'account_id' => 'required|string',
+            'account_id' => 'required',
             'amount'     => 'required|numeric|min:0.01',
             'operator'   => 'required|string|in:' . implode(',', $this->operators),
             'wallet_type'=> 'nullable|string|in:collection,disbursement',
