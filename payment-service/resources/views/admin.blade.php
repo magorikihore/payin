@@ -2876,7 +2876,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Greeting</label>
-                                <input type="text" x-model="bulkForm.greeting" placeholder="Hello {{name}}," class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <input type="text" x-model="bulkForm.greeting" placeholder="Hello @{{name}}," class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Body <span class="text-red-500">*</span> <span class="text-gray-400">(use blank lines for paragraphs)</span></label>
@@ -3611,7 +3611,7 @@ function adminPanel() {
         showSendModal: false, sendTplId: null, sendTplName: '', sendTo: 'emails', sendEmails: '', sendLoading: false, sendResult: '', sendResultType: 'success',
         // Bulk Email Composer
         bulkSource: 'custom', bulkTemplateId: '', bulkRecipient: 'all_users', bulkEmails: '',
-        bulkForm: { subject: '', greeting: 'Hello {{name}},', body: '', action_text: '', action_url: '', footer: '— Payin Team' },
+        bulkForm: { subject: '', greeting: 'Hello @{{name}},', body: '', action_text: '', action_url: '', footer: '— Payin Team' },
         bulkSending: false, bulkResult: '', bulkResultType: 'success', showBulkConfirm: false,
         logServiceUrls: {
             auth: '{{ config("services.auth_service.url") }}/api/admin/logs',
@@ -5238,7 +5238,7 @@ function adminPanel() {
         resetBulkForm() {
             this.bulkSource = 'custom';
             this.bulkTemplateId = '';
-            this.bulkForm = { subject: '', greeting: 'Hello {{name}},', body: '', action_text: '', action_url: '', footer: '\u2014 Payin Team' };
+            this.bulkForm = { subject: '', greeting: 'Hello @{{name}},', body: '', action_text: '', action_url: '', footer: '\u2014 Payin Team' };
             this.bulkRecipient = 'all_users';
             this.bulkEmails = '';
             this.bulkResult = '';
