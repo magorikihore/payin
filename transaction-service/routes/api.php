@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\TransactionExportController;
 use App\Http\Controllers\ChargeConfigController;
 use App\Http\Controllers\ReversalController;
 use App\Http\Controllers\PlatformWithdrawalController;
@@ -10,6 +11,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth.service')->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::get('/transactions/stats', [TransactionController::class, 'stats']);
+    Route::get('/transactions/export/excel', [TransactionExportController::class, 'exportExcel']);
+    Route::get('/transactions/export/pdf', [TransactionExportController::class, 'exportPdf']);
     Route::post('/transactions', [TransactionController::class, 'store']);
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
     Route::get('/my-charges', [TransactionController::class, 'myCharges']);
@@ -20,6 +23,8 @@ Route::middleware('auth.service')->group(function () {
 
     // Admin: all transactions across all accounts
     Route::get('/admin/transactions', [TransactionController::class, 'adminIndex']);
+    Route::get('/admin/transactions/export/excel', [TransactionExportController::class, 'adminExportExcel']);
+    Route::get('/admin/transactions/export/pdf', [TransactionExportController::class, 'adminExportPdf']);
     Route::get('/admin/charge-revenue', [TransactionController::class, 'chargeRevenue']);
 
     // Admin: reversals

@@ -238,6 +238,14 @@ class TransactionController extends Controller
             $query->where('operator', $request->operator);
         }
 
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
         $transactions = $query->orderBy('created_at', 'desc')->paginate(15);
 
         return response()->json($transactions);
@@ -312,6 +320,14 @@ class TransactionController extends Controller
         if ($request->filled('type')) { $query->where('type', $request->type); }
         if ($request->filled('operator')) { $query->where('operator', $request->operator); }
         if ($request->filled('account_id')) { $query->where('account_id', $request->account_id); }
+
+        // Date range filter
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
 
         $transactions = $query->orderBy('created_at', 'desc')->paginate(20);
 

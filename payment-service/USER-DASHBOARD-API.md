@@ -1068,6 +1068,8 @@ GET /api/transactions
 | `status`   | string | Filter: pending, completed, failed, cancelled, reversed |
 | `type`     | string | Filter: collection, disbursement, topup, settlement |
 | `operator` | string | Filter: M-Pesa, Tigo Pesa, Airtel Money, Halopesa |
+| `date_from`| string | Start date (YYYY-MM-DD) for date range filter     |
+| `date_to`  | string | End date (YYYY-MM-DD) for date range filter        |
 | `page`     | int    | Page number (15 items per page)                  |
 
 **Response:** `200 OK` (Paginated)
@@ -1123,6 +1125,52 @@ GET /api/transactions/stats
     "failed": 15
 }
 ```
+
+---
+
+### 33b. Export Transactions as Excel
+
+Download filtered transactions as an Excel (.xlsx) file.
+
+```
+GET /api/transactions/export/excel
+```
+
+**Query Parameters:**
+
+| Param      | Type   | Description                                      |
+|------------|--------|--------------------------------------------------|
+| `search`   | string | Search by reference, amount, operator             |
+| `status`   | string | Filter: pending, completed, failed, cancelled, reversed |
+| `type`     | string | Filter: collection, disbursement, topup, settlement |
+| `operator` | string | Filter by operator name                           |
+| `date_from`| string | Start date (YYYY-MM-DD)                           |
+| `date_to`  | string | End date (YYYY-MM-DD)                             |
+
+**Response:** `200 OK` — Binary file download (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`)
+
+---
+
+### 33c. Export Transactions as PDF
+
+Download filtered transactions as a PDF file.
+
+```
+GET /api/transactions/export/pdf
+```
+
+**Query Parameters:**
+
+| Param      | Type   | Description                                      |
+|------------|--------|--------------------------------------------------|
+| `search`   | string | Search by reference, amount, operator             |
+| `status`   | string | Filter: pending, completed, failed, cancelled, reversed |
+| `type`     | string | Filter: collection, disbursement, topup, settlement |
+| `operator` | string | Filter by operator name                           |
+| `date_from`| string | Start date (YYYY-MM-DD)                           |
+| `date_to`  | string | End date (YYYY-MM-DD)                             |
+
+**Response:** `200 OK` — Binary file download (`application/pdf`)
 
 ---
 
