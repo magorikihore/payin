@@ -923,4 +923,83 @@ class AdminController extends Controller
             'failed' => $failed,
         ]);
     }
+
+    /**
+     * Send a bulk email using inline-composed content.
+     * Supports: specific emails, all users, or all account owners.
+     */
+    public function sendBulkEmail(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $request->validate([
+            'send_to' => 'required|in:emails,all_users,all_owners',
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string',
+            'greeting' => 'nullable|string|max:255',
+            'action_text' => 'nullable|string|max:255',
+            'action_url' => 'nullable|string|max:500',
+            'footer' => 'nullable|string|max:255',
+            'emails' => 'required_if:send_to,emails|array',
+            'emails.*' => 'email',
+        ]);
+
+        $content = [
+            'subject' => $request->subject,
+            'greeting' => $request->greeting ?? '',
+            'body' => $request->body,
+            'action_text' => $request->action_text ?? '',
+            'action_url' => $request->action_url ?? '',
+            'footer' => $request->footer ?? '',
+        ];
+
+        $recipients = collect();
+
+        if ($request->send_to === 'emails') {
+            $recipients = User::whereIn('email', $request->emails)->get();
+            $foundEmails = $recipients->pluck('email')->toArray();
+            $extraEmails = array_diff($request->emails, $foundEmails);
+        } elseif ($request->send_to === 'all_users') {
+            $recipients = User::whereNotNull('account_id')->get();
+        } elseif ($request->send_to === 'all_owners') {
+            $recipients = User::where('role', 'owner')->get();
+        }
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($recipients as $user) {
+            try {
+                $user->notify(new \App\Notifications\BulkEmailNotification($content));
+                $sent++;
+            } catch (\Throwable $e) {
+                $failed++;
+                \Log::warning("Failed to send bulk email to {$user->email}: " . $e->getMessage());
+            }
+        }
+
+        // Send to extra emails not in users table
+        if (!empty($extraEmails)) {
+            foreach ($extraEmails as $email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::raw(
+                        $content['body'],
+                        function ($message) use ($email, $content) {
+                            $message->to($email)->subject($content['subject']);
+                        }
+                    );
+                    $sent++;
+                } catch (\Throwable $e) {
+                    $failed++;
+                    \Log::warning("Failed to send bulk email to {$email}: " . $e->getMessage());
+                }
+            }
+        }
+
+        return response()->json([
+            'message' => "Bulk email sent to {$sent} recipient(s)." . ($failed ? " {$failed} failed." : ''),
+            'sent' => $sent,
+            'failed' => $failed,
+        ]);
+    }
 }

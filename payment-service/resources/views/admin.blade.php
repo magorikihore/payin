@@ -2828,6 +2828,187 @@
                 </form>
             </div>
 
+            <!-- ===== BULK EMAIL COMPOSER ===== -->
+            <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
+                <div class="flex items-center justify-between mb-1">
+                    <h3 class="text-lg font-semibold text-gray-800">Bulk Email Composer</h3>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Broadcast</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-6">Compose and send emails to multiple users at once. Choose a saved template or write a custom message.</p>
+
+                <!-- Result Message -->
+                <div x-show="bulkResult" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="bulkResultType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="bulkResult"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left: Compose -->
+                    <div class="space-y-4">
+                        <!-- Source: Template or Custom -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Source</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" x-model="bulkSource" value="template" class="text-blue-600">
+                                    <span class="text-sm">Use saved template</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" x-model="bulkSource" value="custom" class="text-blue-600">
+                                    <span class="text-sm">Compose custom</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Template selector -->
+                        <div x-show="bulkSource === 'template'">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Select Template</label>
+                            <select x-model="bulkTemplateId" @change="onBulkTemplateSelect()" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">-- Choose a template --</option>
+                                <template x-for="tpl in emailTemplates" :key="tpl.id">
+                                    <option :value="tpl.id" x-text="tpl.name + ' (' + tpl.key + ')'"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- Custom compose fields -->
+                        <div x-show="bulkSource === 'custom' || (bulkSource === 'template' && bulkTemplateId)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Subject <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="bulkForm.subject" placeholder="e.g. Important Update from Payin" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Greeting</label>
+                                <input type="text" x-model="bulkForm.greeting" placeholder="Hello {{name}}," class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Body <span class="text-red-500">*</span> <span class="text-gray-400">(use blank lines for paragraphs)</span></label>
+                                <textarea x-model="bulkForm.body" rows="6" placeholder="Type your email message here..." class="w-full border rounded-lg px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Button Text <span class="text-gray-400">(optional)</span></label>
+                                    <input type="text" x-model="bulkForm.action_text" placeholder="e.g. Visit Dashboard" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-600 mb-1">Button URL</label>
+                                    <input type="text" x-model="bulkForm.action_url" placeholder="https://login.payin.co.tz" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">Footer</label>
+                                <input type="text" x-model="bulkForm.footer" placeholder="— Payin Team" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- Recipients -->
+                        <div class="border-t pt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Recipients</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" x-model="bulkRecipient" value="all_users" class="text-blue-600">
+                                    <span class="text-sm">All registered users</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" x-model="bulkRecipient" value="all_owners" class="text-blue-600">
+                                    <span class="text-sm">All account owners (merchants)</span>
+                                </label>
+                                <label class="flex items-center space-x-2 cursor-pointer">
+                                    <input type="radio" x-model="bulkRecipient" value="emails" class="text-blue-600">
+                                    <span class="text-sm">Specific email addresses</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Specific emails input -->
+                        <div x-show="bulkRecipient === 'emails'">
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Email Addresses <span class="text-gray-400">(comma-separated)</span></label>
+                            <textarea x-model="bulkEmails" rows="3" placeholder="user1@example.com, user2@example.com, ..." class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        </div>
+
+                        <!-- Broadcast warning -->
+                        <div x-show="bulkRecipient !== 'emails'" class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p class="text-sm text-yellow-800">&#9888; This will send the email to <strong x-text="bulkRecipient === 'all_users' ? 'ALL registered users' : 'ALL account owners'"></strong>. Make sure your message is correct before sending.</p>
+                        </div>
+                    </div>
+
+                    <!-- Right: Preview -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email Preview</label>
+                        <div class="border rounded-xl overflow-hidden bg-gray-50 h-full min-h-[400px] flex flex-col">
+                            <!-- Preview header -->
+                            <div class="bg-gray-200 px-4 py-2 text-xs font-medium text-gray-600 flex items-center justify-between">
+                                <span>Preview</span>
+                                <span class="text-gray-400" x-text="bulkSource === 'template' ? 'From template' : 'Custom compose'"></span>
+                            </div>
+                            <!-- Subject line -->
+                            <div class="bg-white border-b px-4 py-3">
+                                <div class="text-xs text-gray-400 mb-0.5">Subject</div>
+                                <div class="text-sm font-semibold text-gray-800" x-text="bulkForm.subject || '(No subject)'"></div>
+                            </div>
+                            <!-- Body -->
+                            <div class="bg-white flex-1 p-4 space-y-2">
+                                <div class="font-semibold text-gray-800 text-sm" x-text="(bulkForm.greeting || '').replace(/\{\{name\}\}/g, 'John Doe')"></div>
+                                <template x-for="line in (bulkForm.body || '').replace(/\{\{name\}\}/g, 'John Doe').split('\n')" :key="Math.random()">
+                                    <p class="text-gray-600 text-sm" x-show="line.trim()" x-html="line.trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')"></p>
+                                </template>
+                                <div x-show="bulkForm.action_text && bulkForm.action_url" class="pt-3">
+                                    <a :href="bulkForm.action_url" target="_blank" class="inline-block bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 no-underline" x-text="bulkForm.action_text"></a>
+                                </div>
+                                <div class="text-gray-500 text-xs pt-3" x-text="bulkForm.footer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Send button -->
+                <div class="flex items-center justify-between mt-6 pt-4 border-t">
+                    <div class="text-sm text-gray-500">
+                        <span x-show="bulkRecipient === 'all_users'">Sending to all registered users</span>
+                        <span x-show="bulkRecipient === 'all_owners'">Sending to all account owners</span>
+                        <span x-show="bulkRecipient === 'emails'" x-text="'Sending to ' + (bulkEmails ? bulkEmails.split(',').filter(e => e.trim()).length : 0) + ' email(s)'"></span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button @click="resetBulkForm()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">Clear</button>
+                        <button @click="confirmBulkSend()" :disabled="bulkSending || !bulkForm.subject || !bulkForm.body" class="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold disabled:opacity-50 flex items-center space-x-2">
+                            <span x-show="!bulkSending">&#9993; Send Bulk Email</span>
+                            <span x-show="bulkSending" class="flex items-center space-x-2">
+                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                <span>Sending...</span>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Send Confirmation Modal -->
+            <div x-show="showBulkConfirm" x-cloak class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" @click.self="showBulkConfirm = false">
+                <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Confirm Bulk Send</h3>
+                            <p class="text-sm text-gray-500">This action cannot be undone</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4 space-y-2 text-sm">
+                        <div class="flex justify-between"><span class="text-gray-500">Subject:</span><span class="font-medium text-gray-800" x-text="bulkForm.subject"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Recipients:</span><span class="font-medium text-gray-800" x-text="bulkRecipient === 'all_users' ? 'All users' : bulkRecipient === 'all_owners' ? 'All owners' : bulkEmails.split(',').filter(e=>e.trim()).length + ' email(s)'"></span></div>
+                        <div class="flex justify-between"><span class="text-gray-500">Source:</span><span class="font-medium text-gray-800" x-text="bulkSource === 'template' ? 'Template' : 'Custom'"></span></div>
+                    </div>
+
+                    <p class="text-sm text-gray-600 mb-4">Are you sure you want to send this email? Please double-check the preview before confirming.</p>
+
+                    <div class="flex items-center justify-end space-x-3">
+                        <button @click="showBulkConfirm = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">Cancel</button>
+                        <button @click="executeBulkSend()" :disabled="bulkSending" class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50">
+                            <span x-show="!bulkSending">Yes, Send Now</span>
+                            <span x-show="bulkSending">Sending...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Email Templates -->
             <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
                 <div class="flex items-center justify-between mb-4">
@@ -3428,6 +3609,10 @@ function adminPanel() {
         newTplForm: { key: '', name: '', subject: '', greeting: 'Hello @{{name}},', body: '', action_text: '', action_url: '', footer: '— Payin Team' },
         // Send modal
         showSendModal: false, sendTplId: null, sendTplName: '', sendTo: 'emails', sendEmails: '', sendLoading: false, sendResult: '', sendResultType: 'success',
+        // Bulk Email Composer
+        bulkSource: 'custom', bulkTemplateId: '', bulkRecipient: 'all_users', bulkEmails: '',
+        bulkForm: { subject: '', greeting: 'Hello {{name}},', body: '', action_text: '', action_url: '', footer: '— Payin Team' },
+        bulkSending: false, bulkResult: '', bulkResultType: 'success', showBulkConfirm: false,
         logServiceUrls: {
             auth: '{{ config("services.auth_service.url") }}/api/admin/logs',
             payment: '/api/admin/logs',
@@ -5035,6 +5220,83 @@ function adminPanel() {
                 }
             } catch (e) { this.sendResult = 'Network error.'; this.sendResultType = 'error'; }
             this.sendLoading = false;
+        },
+
+        // ==================== BULK EMAIL COMPOSER ====================
+        onBulkTemplateSelect() {
+            const tpl = this.emailTemplates.find(t => t.id == this.bulkTemplateId);
+            if (tpl) {
+                this.bulkForm.subject = tpl.subject || '';
+                this.bulkForm.greeting = tpl.greeting || '';
+                this.bulkForm.body = tpl.body || '';
+                this.bulkForm.action_text = tpl.action_text || '';
+                this.bulkForm.action_url = tpl.action_url || '';
+                this.bulkForm.footer = tpl.footer || '';
+            }
+        },
+
+        resetBulkForm() {
+            this.bulkSource = 'custom';
+            this.bulkTemplateId = '';
+            this.bulkForm = { subject: '', greeting: 'Hello {{name}},', body: '', action_text: '', action_url: '', footer: '\u2014 Payin Team' };
+            this.bulkRecipient = 'all_users';
+            this.bulkEmails = '';
+            this.bulkResult = '';
+            this.bulkResultType = 'success';
+        },
+
+        confirmBulkSend() {
+            if (!this.bulkForm.subject || !this.bulkForm.body) {
+                this.bulkResult = 'Please fill in the subject and body.';
+                this.bulkResultType = 'error';
+                return;
+            }
+            if (this.bulkRecipient === 'emails') {
+                const emails = this.bulkEmails.split(',').map(e => e.trim()).filter(e => e);
+                if (!emails.length) {
+                    this.bulkResult = 'Please enter at least one email address.';
+                    this.bulkResultType = 'error';
+                    return;
+                }
+            }
+            this.showBulkConfirm = true;
+        },
+
+        async executeBulkSend() {
+            this.bulkSending = true;
+            this.bulkResult = '';
+            this.showBulkConfirm = false;
+            try {
+                const payload = {
+                    send_to: this.bulkRecipient,
+                    subject: this.bulkForm.subject,
+                    greeting: this.bulkForm.greeting,
+                    body: this.bulkForm.body,
+                    action_text: this.bulkForm.action_text || '',
+                    action_url: this.bulkForm.action_url || '',
+                    footer: this.bulkForm.footer || '',
+                };
+                if (this.bulkSource === 'template' && this.bulkTemplateId) {
+                    payload.template_id = this.bulkTemplateId;
+                }
+                if (this.bulkRecipient === 'emails') {
+                    payload.emails = this.bulkEmails.split(',').map(e => e.trim()).filter(e => e);
+                }
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/bulk-email/send', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    this.bulkResult = `Successfully sent to ${data.sent || 0} recipient(s)` + (data.failed ? `, ${data.failed} failed.` : '.');
+                    this.bulkResultType = 'success';
+                } else {
+                    this.bulkResult = data.message || 'Failed to send bulk email.';
+                    this.bulkResultType = 'error';
+                }
+            } catch (e) { this.bulkResult = 'Network error.'; this.bulkResultType = 'error'; }
+            this.bulkSending = false;
         },
     }
 }

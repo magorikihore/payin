@@ -118,5 +118,6 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/email-templates/{id}/reset', [AdminController::class, 'resetEmailTemplate']);
         Route::delete('/email-templates/{id}', [AdminController::class, 'deleteEmailTemplate']);
         Route::post('/email-templates/send', [AdminController::class, 'sendTemplateEmail']);
+        Route::post('/bulk-email/send', [AdminController::class, 'sendBulkEmail']);
     });
 });
