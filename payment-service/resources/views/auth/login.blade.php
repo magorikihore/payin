@@ -213,7 +213,10 @@ function loginForm() {
                     window.location.href = '/dashboard';
                 }
             } catch (e) {
-                this.error = 'Unable to connect to authentication service.';
+                console.error('Login error:', e);
+                this.error = e.message && e.message !== 'Failed to fetch'
+                    ? e.message
+                    : 'Unable to connect to authentication service. Please check your internet connection and try again.';
             } finally {
                 this.loading = false;
             }
@@ -265,7 +268,10 @@ function loginForm() {
                 localStorage.setItem('kyc_required', 'true');
                 window.location.href = '/kyc';
             } catch (e) {
-                this.error = 'Unable to connect to authentication service.';
+                console.error('Registration error:', e);
+                this.error = e.message && e.message !== 'Failed to fetch'
+                    ? e.message
+                    : 'Unable to connect to authentication service. Please check your internet connection and try again.';
             } finally {
                 this.loading = false;
             }

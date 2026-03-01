@@ -545,7 +545,10 @@ function kycPage() {
                 localStorage.setItem('account_pending', 'true');
                 window.location.href = '/dashboard';
             } catch (e) {
-                this.msg = 'Unable to connect to authentication service.';
+                console.error('KYC submission error:', e);
+                this.msg = e.message && e.message !== 'Failed to fetch'
+                    ? e.message
+                    : 'Unable to connect to authentication service. Please check your internet connection and try again.';
                 this.msgType = 'error';
             } finally {
                 this.saving = false;
