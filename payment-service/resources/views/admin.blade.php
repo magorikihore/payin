@@ -2147,12 +2147,38 @@
             <!-- Filter -->
             <div class="bg-white rounded-xl shadow-sm p-4 border mb-6">
                 <div class="flex flex-wrap items-center gap-4">
-                    <select x-model="revStatusFilter" @change="fetchAdminReversals()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <div class="flex-1 min-w-[200px]">
+                        <input type="text" x-model="revSearch" @input.debounce.400ms="revPage=1; fetchAdminReversals()"
+                            placeholder="Search by ref, original ref, operator, reason, amount..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <select x-model="revStatusFilter" @change="revPage=1; fetchAdminReversals()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
                         <option value="">All Status</option>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
                     </select>
+                    <select x-model="revTypeFilter" @change="revPage=1; fetchAdminReversals()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">All Types</option>
+                        <option value="collection">Collection</option>
+                        <option value="disbursement">Disbursement</option>
+                    </select>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 mt-3 w-full">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">From:</label>
+                        <input type="date" x-model="revDateFrom" @change="revPage=1; fetchAdminReversals()"
+                            :max="revDateTo || undefined"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-600 font-medium whitespace-nowrap">To:</label>
+                        <input type="date" x-model="revDateTo" @change="revPage=1; fetchAdminReversals()"
+                            :min="revDateFrom || undefined"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <button x-show="revDateFrom || revDateTo" x-cloak @click="revDateFrom=''; revDateTo=''; revPage=1; fetchAdminReversals()"
+                        class="text-xs text-red-600 hover:text-red-800 font-medium underline">Clear Dates</button>
                 </div>
             </div>
 
@@ -3352,7 +3378,7 @@ function adminPanel() {
         trfActionLoading: false, trfMsg: '', trfMsgType: 'success', pendingTransferCount: 0,
 
         // Reversals (admin)
-        adminReversals: [], revLoading: false, revStatusFilter: '', revPage: 1, revPagination: {},
+        adminReversals: [], revLoading: false, revStatusFilter: '', revSearch: '', revTypeFilter: '', revDateFrom: '', revDateTo: '', revPage: 1, revPagination: {},
         revActionLoading: false, pendingReversalCount: 0,
 
         // Direct reversal
@@ -4418,6 +4444,10 @@ function adminPanel() {
             try {
                 let url = `{{ config("services.transaction_service.url") }}/api/admin/reversals?page=${this.revPage}`;
                 if (this.revStatusFilter) url += `&status=${this.revStatusFilter}`;
+                if (this.revSearch) url += `&search=${encodeURIComponent(this.revSearch)}`;
+                if (this.revTypeFilter) url += `&type=${this.revTypeFilter}`;
+                if (this.revDateFrom) url += `&date_from=${this.revDateFrom}`;
+                if (this.revDateTo) url += `&date_to=${this.revDateTo}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (!res.ok) throw new Error();

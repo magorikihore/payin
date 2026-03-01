@@ -97,6 +97,28 @@ class ReversalController extends Controller
             $query->where('status', $request->status);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('reversal_ref', 'like', "%{$search}%")
+                  ->orWhere('original_ref', 'like', "%{$search}%")
+                  ->orWhere('operator', 'like', "%{$search}%")
+                  ->orWhere('reason', 'like', "%{$search}%")
+                  ->orWhere('amount', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
         $reversals = $query->paginate(20);
 
         return response()->json($reversals);
