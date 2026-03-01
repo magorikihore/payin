@@ -1159,6 +1159,11 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 Documents
                             </button>
+                            <button @click="accountInfoTab = 'crypto'" :class="accountInfoTab === 'crypto' ? 'border-gblue-500 text-gblue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="flex-1 py-3 px-4 border-b-2 font-medium text-sm transition text-center flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Crypto
+                            </button>
                         </nav>
                     </div>
 
@@ -1317,14 +1322,13 @@
                             </div>
                         </div>
 
-                        <!-- TAB 4: Documents & Crypto -->
+                        <!-- TAB 4: Documents -->
                         <div x-show="accountInfoTab === 'documents'" x-cloak>
-                            <!-- Documents -->
                             <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
                                 <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                 Uploaded Documents
                             </h4>
-                            <div class="space-y-3 mb-6">
+                            <div class="space-y-3">
                                 <div x-show="kycData.id_document_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
@@ -1341,28 +1345,29 @@
                                 </div>
                                 <div x-show="!kycData.id_document_url && !kycData.business_license_url" class="text-sm text-gray-400">No documents uploaded yet.</div>
                             </div>
+                        </div>
 
-                            <!-- Crypto Wallet -->
-                            <div x-show="kycData.crypto_wallet_address">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                    Crypto Wallet
-                                </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Currency</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_currency || '—'"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Network</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_network || '—'"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3 md:col-span-3">
-                                        <p class="text-xs text-gray-500">Wallet Address</p>
-                                        <p class="text-sm font-medium text-gray-800 font-mono break-all" x-text="kycData.crypto_wallet_address"></p>
-                                    </div>
+                        <!-- TAB 5: Crypto Wallet -->
+                        <div x-show="accountInfoTab === 'crypto'" x-cloak>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                Crypto Wallet
+                            </h4>
+                            <div x-show="kycData.crypto_wallet_address" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">Currency</p>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_currency || '—'"></p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">Network</p>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_network || '—'"></p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg px-4 py-3 md:col-span-3">
+                                    <p class="text-xs text-gray-500">Wallet Address</p>
+                                    <p class="text-sm font-medium text-gray-800 font-mono break-all" x-text="kycData.crypto_wallet_address"></p>
                                 </div>
                             </div>
+                            <div x-show="!kycData.crypto_wallet_address" class="text-sm text-gray-400">No crypto wallet configured yet.</div>
                         </div>
                     </div>
 
