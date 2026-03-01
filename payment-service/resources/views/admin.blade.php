@@ -27,35 +27,35 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div class="bg-blue-600 rounded-t-lg">
             <nav class="flex space-x-8 flex-wrap items-center px-4">
-                <button x-show="hasPerm('admin_overview')" @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_overview')" @click="goToTab('overview')" :class="activeTab === 'overview' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Overview</button>
-                <button x-show="hasPerm('admin_accounts')" @click="activeTab = 'accounts'; fetchAccounts()" :class="activeTab === 'accounts' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_accounts')" @click="goToTab('accounts')" :class="activeTab === 'accounts' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
                     Accounts
                     <span x-show="stats.pending_accounts > 0" class="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-orange-500 rounded-full" x-text="stats.pending_accounts"></span>
                 </button>
-                <button x-show="hasPerm('admin_transactions')" @click="activeTab = 'transactions'; fetchAdminTransactions()" :class="activeTab === 'transactions' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_transactions')" @click="goToTab('transactions')" :class="activeTab === 'transactions' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Transactions</button>
-                <button x-show="hasPerm('admin_wallets')" @click="activeTab = 'wallets'; fetchAdminWallets()" :class="activeTab === 'wallets' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_wallets')" @click="goToTab('wallets')" :class="activeTab === 'wallets' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Wallets</button>
-                <button x-show="hasPerm('admin_settlements')" @click="activeTab = 'settlements'; fetchAdminSettlements()" :class="activeTab === 'settlements' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_settlements')" @click="goToTab('settlements')" :class="activeTab === 'settlements' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
                     Settlements
                     <span x-show="pendingSettlementsCount > 0" class="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-yellow-500 rounded-full" x-text="pendingSettlementsCount"></span>
                 </button>
-                <button x-show="hasPerm('admin_charges')" @click="activeTab = 'charges'; fetchCharges()" :class="activeTab === 'charges' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_charges')" @click="goToTab('charges')" :class="activeTab === 'charges' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Charges</button>
-                <button x-show="hasPerm('admin_ip_whitelist')" @click="activeTab = 'ipwhitelist'; fetchAdminIps()" :class="activeTab === 'ipwhitelist' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_ip_whitelist')" @click="goToTab('ipwhitelist')" :class="activeTab === 'ipwhitelist' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
                     IP Whitelist
                     <span x-show="pendingIpCount > 0" class="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-orange-500 rounded-full" x-text="pendingIpCount"></span>
                 </button>
-                <button x-show="hasPerm('admin_transfers')" @click="activeTab = 'transfers'; fetchAdminInternalTransfers()" :class="activeTab === 'transfers' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_transfers')" @click="goToTab('transfers')" :class="activeTab === 'transfers' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
                     Transfers
                     <span x-show="pendingTransferCount > 0" class="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-purple-500 rounded-full" x-text="pendingTransferCount"></span>
                 </button>
-                <button x-show="hasPerm('admin_reversals')" @click="activeTab = 'reversals'; fetchAdminReversals()" :class="activeTab === 'reversals' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                <button x-show="hasPerm('admin_reversals')" @click="goToTab('reversals')" :class="activeTab === 'reversals' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
                     Reversals
                     <span x-show="pendingReversalCount > 0" class="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-purple-500 rounded-full" x-text="pendingReversalCount"></span>
@@ -71,22 +71,22 @@
                         <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="moreOpen" x-transition class="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border z-50">
-                        <button x-show="hasPerm('admin_users')" @click="activeTab = 'users'; fetchUsers(); moreOpen = false"
+                        <button x-show="hasPerm('admin_users')" @click="goToTab('users'); moreOpen = false"
                             :class="activeTab === 'users' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Users</button>
-                        <button x-show="hasPerm('admin_operators')" @click="activeTab = 'operators'; fetchOperators(); moreOpen = false"
+                        <button x-show="hasPerm('admin_operators')" @click="goToTab('operators'); moreOpen = false"
                             :class="activeTab === 'operators' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Operators</button>
-                        <button x-show="hasPerm('admin_payments')" @click="activeTab = 'payments'; fetchPaymentRequests(); moreOpen = false"
+                        <button x-show="hasPerm('admin_payments')" @click="goToTab('payments'); moreOpen = false"
                             :class="activeTab === 'payments' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Payment Requests</button>
-                        <button x-show="user?.role === 'super_admin'" @click="activeTab = 'admin_users'; fetchAdminUsers(); moreOpen = false"
+                        <button x-show="user?.role === 'super_admin'" @click="goToTab('admin_users'); moreOpen = false"
                             :class="activeTab === 'admin_users' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Admin Users</button>
-                        <button x-show="user?.role === 'super_admin'" @click="activeTab = 'logs'; fetchLogs(); moreOpen = false"
+                        <button x-show="user?.role === 'super_admin'" @click="goToTab('logs'); moreOpen = false"
                             :class="activeTab === 'logs' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Error Logs</button>
-                        <button x-show="user?.role === 'super_admin'" @click="activeTab = 'mail_config'; fetchMailConfig(); moreOpen = false"
+                        <button x-show="user?.role === 'super_admin'" @click="goToTab('mail_config'); moreOpen = false"
                             :class="activeTab === 'mail_config' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Mail Config</button>
                     </div>
@@ -119,7 +119,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border cursor-pointer hover:ring-2 hover:ring-orange-300" @click="activeTab='accounts'; accStatusFilter='pending'; fetchAccounts()">
+                <div class="bg-white rounded-xl shadow-sm p-6 border cursor-pointer hover:ring-2 hover:ring-orange-300" @click="accStatusFilter='pending'; goToTab('accounts')">
                     <div class="flex items-center">
                         <div class="p-3 bg-orange-100 rounded-lg">
                             <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -152,7 +152,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl shadow-sm p-6 border cursor-pointer hover:ring-2 hover:ring-purple-300" @click="activeTab='transfers'; fetchAdminInternalTransfers()">
+                <div class="bg-white rounded-xl shadow-sm p-6 border cursor-pointer hover:ring-2 hover:ring-purple-300" @click="goToTab('transfers')">
                     <div class="flex items-center">
                         <div class="p-3 bg-purple-100 rounded-lg">
                             <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
@@ -3394,9 +3394,16 @@ function adminPanel() {
             }
             this.adminPerms = this.user.admin_permissions || [];
             // Set default tab to first permitted tab
-            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals'];
-            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals' };
-            this.activeTab = tabOrder.find(t => this.hasPerm(permMap[t])) || 'overview';
+            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals', 'admin_users', 'logs', 'mail_config'];
+            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals', admin_users: 'super_admin', logs: 'super_admin', mail_config: 'super_admin' };
+            const hash = window.location.hash.replace('#', '');
+            if (hash && tabOrder.includes(hash) && this.hasPerm(permMap[hash])) {
+                this.activeTab = hash;
+            } else {
+                this.activeTab = tabOrder.find(t => this.hasPerm(permMap[t])) || 'overview';
+            }
+            // Trigger initial data fetch for active tab
+            this.goToTab(this.activeTab, true);
             if (this.hasPerm('admin_overview')) this.fetchStats();
             this.fetchAccountMap();
             if (this.hasPerm('admin_settlements')) this.fetchPendingSettlementsCount();
@@ -3406,6 +3413,21 @@ function adminPanel() {
             if (this.hasPerm('admin_ip_whitelist')) this.fetchPendingIpCount();
             if (this.hasPerm('admin_transfers')) this.fetchPendingTransferCount();
             if (this.hasPerm('admin_reversals')) this.fetchPendingReversalCount();
+
+            // Sync hash on tab change
+            this.$watch('activeTab', (tab) => {
+                if (window.location.hash !== '#' + tab) {
+                    history.pushState(null, '', '#' + tab);
+                }
+            });
+            // Handle browser back/forward
+            window.addEventListener('popstate', () => {
+                const h = window.location.hash.replace('#', '');
+                if (h && tabOrder.includes(h) && this.activeTab !== h) {
+                    this.goToTab(h, true);
+                }
+            });
+
             this.appReady = true;
             this.$nextTick(() => document.dispatchEvent(new Event('alpine:initialized')));
         },
@@ -3413,6 +3435,32 @@ function adminPanel() {
         // Permission helper
         adminPerms: [],
         hasPerm(p) { return this.user?.role === 'super_admin' || this.adminPerms.includes(p); },
+
+        /**
+         * Navigate to a tab and trigger its data fetch.
+         */
+        goToTab(tab, skipHash) {
+            this.activeTab = tab;
+            if (!skipHash && window.location.hash !== '#' + tab) {
+                history.pushState(null, '', '#' + tab);
+            }
+            switch(tab) {
+                case 'accounts': this.fetchAccounts(); break;
+                case 'transactions': this.fetchAdminTransactions(); break;
+                case 'wallets': this.fetchAdminWallets(); break;
+                case 'settlements': this.fetchAdminSettlements(); break;
+                case 'charges': this.fetchCharges(); break;
+                case 'ipwhitelist': this.fetchAdminIps(); break;
+                case 'transfers': this.fetchAdminInternalTransfers(); break;
+                case 'reversals': this.fetchAdminReversals(); break;
+                case 'users': this.fetchUsers(); break;
+                case 'operators': this.fetchOperators(); break;
+                case 'payments': this.fetchPaymentRequests(); break;
+                case 'admin_users': this.fetchAdminUsers(); break;
+                case 'logs': this.fetchLogs(); break;
+                case 'mail_config': this.fetchMailConfig(); break;
+            }
+        },
 
         getHeaders() {
             return { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json', 'Content-Type': 'application/json' };

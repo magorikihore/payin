@@ -42,43 +42,43 @@
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Business</h3>
             </div>
             <nav class="flex-1 px-2 space-y-0.5">
-                <button @click="activeTab = 'dashboard'; sidebarOpen = false"
+                <button @click="goToTab('dashboard')"
                     :class="activeTab === 'dashboard' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'dashboard' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     Dashboard
                 </button>
-                <button x-show="hasPerm('view_transactions')" @click="activeTab = 'transactions'; sidebarOpen = false"
+                <button x-show="hasPerm('view_transactions')" @click="goToTab('transactions')"
                     :class="activeTab === 'transactions' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'transactions' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                     Transactions
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'wallet'; fetchWallet(); sidebarOpen = false"
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="goToTab('wallet')"
                     :class="activeTab === 'wallet' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'wallet' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     Wallet
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'send-money'; fetchPayoutOperators(); sidebarOpen = false"
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="goToTab('send-money')"
                     :class="activeTab === 'send-money' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'send-money' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     Send Money
                 </button>
-                <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="activeTab = 'settlements'; fetchSettlements(); sidebarOpen = false"
+                <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="goToTab('settlements')"
                     :class="activeTab === 'settlements' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'settlements' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     Settlements
                 </button>
-                <button x-show="hasPerm('view_account_info')" @click="activeTab = 'account'; fetchKyc(); sidebarOpen = false"
+                <button x-show="hasPerm('view_account_info')" @click="goToTab('account')"
                     :class="activeTab === 'account' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'account' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                     Account Info
                 </button>
-                <button x-show="hasPerm('view_users') || hasPerm('add_user')" @click="activeTab = 'users'; fetchAccountUsers(); sidebarOpen = false"
+                <button x-show="hasPerm('view_users') || hasPerm('add_user')" @click="goToTab('users')"
                     :class="activeTab === 'users' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'users' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -94,13 +94,13 @@
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Developer Tools</h3>
             </div>
             <nav class="px-2 space-y-0.5">
-                <button @click="activeTab = 'api-docs'; sidebarOpen = false"
+                <button @click="goToTab('api-docs')"
                     :class="activeTab === 'api-docs' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'api-docs' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     API Documentation
                 </button>
-                <button x-show="hasPerm('view_settings')" @click="activeTab = 'settings'; fetchCallback(); sidebarOpen = false"
+                <button x-show="hasPerm('view_settings')" @click="goToTab('settings')"
                     :class="activeTab === 'settings' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'settings' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.11 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
@@ -171,7 +171,7 @@
                         </div>
                         <p class="text-xl font-bold text-gray-900" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
-                            <button @click="activeTab = 'wallet'; fetchWallet()" class="inline-flex items-center px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-medium transition">
+                            <button @click="goToTab('wallet')" class="inline-flex items-center px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                                 Top Up
                             </button>
@@ -193,7 +193,7 @@
                         </div>
                         <p class="text-xl font-bold text-gray-900" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></p>
                         <div class="mt-3 pt-3 border-t border-gray-100">
-                            <button @click="activeTab = 'send-money'; fetchPayoutOperators()" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition">
+                            <button @click="goToTab('send-money')" class="inline-flex items-center px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                                 Send Money
                             </button>
@@ -229,7 +229,7 @@
                     <div class="bg-white rounded-xl shadow-md border overflow-hidden h-full flex flex-col">
                         <div class="px-5 py-4 border-b flex items-center justify-between">
                             <h3 class="text-sm font-semibold text-gray-800">Recent Transactions</h3>
-                            <button @click="activeTab = 'transactions'" class="text-xs text-gray-500 hover:text-gray-700 font-medium">View All &rarr;</button>
+                            <button @click="goToTab('transactions')" class="text-xs text-gray-500 hover:text-gray-700 font-medium">View All &rarr;</button>
                         </div>
                         <div x-show="loadingTxns" class="p-8 text-center text-gray-500 flex-1 flex items-center justify-center">
                             <div>
@@ -326,7 +326,7 @@
                 <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                     <div class="px-5 py-4 border-b flex items-center justify-between">
                         <h3 class="text-sm font-semibold text-gray-800">Settlement Overview</h3>
-                        <button @click="activeTab = 'settlements'; fetchSettlements()" class="text-xs text-gray-500 hover:text-gray-700 font-medium">View All &rarr;</button>
+                        <button @click="goToTab('settlements')" class="text-xs text-gray-500 hover:text-gray-700 font-medium">View All &rarr;</button>
                     </div>
                     <div x-show="stlLoadingList" class="p-6 text-center text-gray-400">
                         <svg class="animate-spin h-6 w-6 mx-auto text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
@@ -384,25 +384,25 @@
 
             <!-- ===== Quick Actions Row ===== -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button x-show="hasPerm('view_transactions')" @click="activeTab = 'transactions'" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                <button x-show="hasPerm('view_transactions')" @click="goToTab('transactions')" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
                     <div class="p-2 bg-gray-100 rounded-lg inline-flex group-hover:bg-gray-200 transition mb-2">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                     </div>
                     <p class="text-xs font-semibold text-gray-700">Transactions</p>
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'send-money'; fetchPayoutOperators()" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="goToTab('send-money')" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
                     <div class="p-2 bg-gray-100 rounded-lg inline-flex group-hover:bg-gray-200 transition mb-2">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     </div>
                     <p class="text-xs font-semibold text-gray-700">Send Money</p>
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="activeTab = 'wallet'; fetchWallet()" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="goToTab('wallet')" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
                     <div class="p-2 bg-gray-100 rounded-lg inline-flex group-hover:bg-gray-200 transition mb-2">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     </div>
                     <p class="text-xs font-semibold text-gray-700">Wallets</p>
                 </button>
-                <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="activeTab = 'settlements'; fetchSettlements()" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="goToTab('settlements')" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
                     <div class="p-2 bg-gray-100 rounded-lg inline-flex group-hover:bg-gray-200 transition mb-2">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     </div>
@@ -788,7 +788,7 @@
                                 <option :value="ba.id" x-text="ba.bank_name + ' — ' + ba.account_number + ' (' + ba.account_name + ')' + (ba.is_default ? ' ★' : '')"></option>
                             </template>
                         </select>
-                        <p x-show="bankAccounts.length === 0 && !bankAccountsLoading" class="text-xs text-red-500 mt-1">No bank accounts saved. <a href="#" @click.prevent="activeTab = 'account'; fetchKyc();" class="underline text-gblue-500">Add one in Account tab</a>.</p>
+                        <p x-show="bankAccounts.length === 0 && !bankAccountsLoading" class="text-xs text-red-500 mt-1">No bank accounts saved. <a href="#" @click.prevent="goToTab('account')" class="underline text-gblue-500">Add one in Account tab</a>.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
@@ -2543,7 +2543,7 @@ console.log(data.request_ref);</pre>
 function dashboard() {
     return {
         user: null,
-        activeTab: 'dashboard',
+        activeTab: (window.location.hash.replace('#','') || 'dashboard'),
         sidebarOpen: false,
 
         // Transactions
@@ -2660,6 +2660,29 @@ function dashboard() {
             this.fetchWallet();
             this.fetchSettlements();
             this.fetchBankAccounts();
+
+            // Restore tab from URL hash
+            const hash = window.location.hash.replace('#', '');
+            const validTabs = ['dashboard','transactions','wallet','send-money','settlements','account','users','api-docs','settings'];
+            if (hash && validTabs.includes(hash)) {
+                this.goToTab(hash, true);
+            }
+
+            // Sync hash on tab change
+            this.$watch('activeTab', (tab) => {
+                if (window.location.hash !== '#' + tab) {
+                    history.pushState(null, '', '#' + tab);
+                }
+            });
+
+            // Handle browser back/forward
+            window.addEventListener('popstate', () => {
+                const h = window.location.hash.replace('#', '');
+                if (h && validTabs.includes(h) && this.activeTab !== h) {
+                    this.goToTab(h, true);
+                }
+            });
+
             this.appReady = true;
             this.$nextTick(() => document.dispatchEvent(new Event('alpine:initialized')));
         },
@@ -2668,6 +2691,26 @@ function dashboard() {
          * Check if current user has a permission.
          * Owner always has all permissions.
          */
+        /**
+         * Navigate to a tab and trigger its data fetch.
+         */
+        goToTab(tab, skipHash) {
+            this.activeTab = tab;
+            this.sidebarOpen = false;
+            if (!skipHash && window.location.hash !== '#' + tab) {
+                history.pushState(null, '', '#' + tab);
+            }
+            // Trigger data fetches for the target tab
+            switch(tab) {
+                case 'wallet': this.fetchWallet(); break;
+                case 'send-money': this.fetchPayoutOperators(); break;
+                case 'settlements': this.fetchSettlements(); break;
+                case 'account': this.fetchKyc(); break;
+                case 'users': this.fetchAccountUsers(); break;
+                case 'settings': this.fetchCallback(); break;
+            }
+        },
+
         hasPerm(perm) {
             if (!this.user) return false;
             if (this.user.role === 'owner') return true;
