@@ -1116,22 +1116,55 @@
 
         <!-- ==================== ACCOUNT INFO TAB ==================== -->
         <div x-show="activeTab === 'account'" x-cloak class="mt-6">
-            <div class="max-w-2xl">
-                <div class="bg-white rounded-xl shadow-md border p-6">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between mb-6">
+            <div class="max-w-3xl">
+                <!-- Header Card -->
+                <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                    <div class="bg-gradient-to-r from-gblue-500 to-indigo-600 px-6 py-5 flex items-center justify-between">
                         <div class="flex items-center">
-                            <svg class="w-6 h-6 text-gblue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            <h3 class="text-lg font-semibold text-gray-800">Account Information</h3>
+                            <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center mr-3">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white" x-text="kycData.business_name || 'Account Information'"></h3>
+                                <p class="text-sm text-white/70" x-text="kycData.business_type ? (kycData.business_type.replace('_',' ')) : 'Complete your KYC to get started'"></p>
+                            </div>
                         </div>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
-                            :class="{'bg-gyellow-50 text-gyellow-700': kycData.status==='pending', 'bg-ggreen-50 text-ggreen-700': kycData.status==='active', 'bg-gred-50 text-gred-700': kycData.status==='suspended', 'bg-gray-100 text-gray-800': !kycData.status}"
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                            :class="{'bg-yellow-400/20 text-yellow-100 border border-yellow-400/30': kycData.status==='pending', 'bg-green-400/20 text-green-100 border border-green-400/30': kycData.status==='active', 'bg-red-400/20 text-red-100 border border-red-400/30': kycData.status==='suspended', 'bg-white/20 text-white/80 border border-white/30': !kycData.status}"
                             x-text="kycData.status || 'Not submitted'"></span>
                     </div>
 
-                    <!-- Stepper Progress -->
+                    <!-- Tab Navigation -->
+                    <div class="border-b border-gray-200 bg-gray-50">
+                        <nav class="flex">
+                            <button @click="accountInfoTab = 'business'" :class="accountInfoTab === 'business' ? 'border-gblue-500 text-gblue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="flex-1 py-3 px-4 border-b-2 font-medium text-sm transition text-center flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                Business
+                            </button>
+                            <button @click="accountInfoTab = 'identity'" :class="accountInfoTab === 'identity' ? 'border-gblue-500 text-gblue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="flex-1 py-3 px-4 border-b-2 font-medium text-sm transition text-center flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"></path></svg>
+                                Identity
+                            </button>
+                            <button @click="accountInfoTab = 'bank'" :class="accountInfoTab === 'bank' ? 'border-gblue-500 text-gblue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="flex-1 py-3 px-4 border-b-2 font-medium text-sm transition text-center flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                Bank Accounts
+                            </button>
+                            <button @click="accountInfoTab = 'documents'" :class="accountInfoTab === 'documents' ? 'border-gblue-500 text-gblue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                                class="flex-1 py-3 px-4 border-b-2 font-medium text-sm transition text-center flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Documents
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div class="p-6">
+
+                    <!-- Stepper Progress (only when not approved or update allowed) -->
                     <div x-show="kycData.status !== 'active' || kycData.kyc_update_allowed" class="flex items-center mb-8">
                         <template x-for="(step, idx) in [{n:1, label:'Business Info'}, {n:2, label:'ID Verification'}, {n:3, label:'Documents'}, {n:4, label:'Crypto Wallet'}]" :key="step.n">
                             <div class="flex items-center" :class="idx < 3 ? 'flex-1' : ''">
@@ -1148,7 +1181,7 @@
                         </template>
                     </div>
 
-                    <!-- ===== APPROVED: Read-only KYC Summary ===== -->
+                    <!-- ===== APPROVED: Read-only KYC Summary with Tabs ===== -->
                     <div x-show="kycData.status === 'active' && !kycData.kyc_update_allowed && !kycFormLoading" x-cloak>
                         <div class="mb-6 p-4 bg-ggreen-50 border border-ggreen-200 rounded-xl flex items-center">
                             <svg class="w-6 h-6 text-ggreen-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -1158,131 +1191,160 @@
                             </div>
                         </div>
 
-                        <div class="space-y-6">
-                            <!-- Business Information -->
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                    Business Information
-                                </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Business Name</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.business_name || '—'"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Business Type</p>
-                                        <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycData.business_type || '—').replace('_', ' ')"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Registration Number</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.registration_number || '—'"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">TIN Number</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.tin_number || '—'"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">Address</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="[kycData.address, kycData.city, kycData.country].filter(Boolean).join(', ') || '—'"></p>
-                                    </div>
+                        <!-- TAB 1: Business Information -->
+                        <div x-show="accountInfoTab === 'business'">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                Business Information
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">Business Name</p>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.business_name || '—'"></p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">Business Type</p>
+                                    <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycData.business_type || '—').replace('_', ' ')"></p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">Registration Number</p>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.registration_number || '—'"></p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">TIN Number</p>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.tin_number || '—'"></p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg px-4 py-3 md:col-span-2">
+                                    <p class="text-xs text-gray-500">Address</p>
+                                    <p class="text-sm font-medium text-gray-800" x-text="[kycData.address, kycData.city, kycData.country].filter(Boolean).join(', ') || '—'"></p>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- ID Verification -->
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"></path></svg>
-                                    ID Verification
-                                </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">ID Type</p>
-                                        <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycData.id_type || '—').replace('_', ' ')"></p>
-                                    </div>
-                                    <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                        <p class="text-xs text-gray-500">ID Number</p>
-                                        <p class="text-sm font-medium text-gray-800" x-text="kycData.id_number || '—'"></p>
-                                    </div>
+                        <!-- TAB 2: Identity Verification -->
+                        <div x-show="accountInfoTab === 'identity'" x-cloak>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0"></path></svg>
+                                ID Verification
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">ID Type</p>
+                                    <p class="text-sm font-medium text-gray-800 capitalize" x-text="(kycData.id_type || '—').replace('_', ' ')"></p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg px-4 py-3">
+                                    <p class="text-xs text-gray-500">ID Number</p>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.id_number || '—'"></p>
                                 </div>
                             </div>
+                            <!-- ID Document preview -->
+                            <div x-show="kycData.id_document_url" class="mt-4 bg-gray-50 rounded-lg px-4 py-3 flex items-center space-x-2">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
+                                <a :href="'{{ config('services.auth_service.url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View ID Document &rarr;</a>
+                            </div>
+                        </div>
 
-                            <!-- Bank Accounts -->
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center justify-between">
-                                    <span class="flex items-center">
-                                        <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                                        Bank Accounts
-                                    </span>
-                                    <span class="text-xs text-gray-400" x-text="bankAccounts.length + ' account(s)'"></span>
+                        <!-- TAB 3: Bank Accounts -->
+                        <div x-show="accountInfoTab === 'bank'" x-cloak>
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-sm font-semibold text-gray-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                    Bank Accounts
                                 </h4>
+                                <span class="text-xs text-gray-400" x-text="bankAccounts.length + ' account(s)'"></span>
+                            </div>
 
-                                <!-- Existing bank accounts list -->
-                                <div x-show="bankAccounts.length > 0" class="space-y-2 mb-3">
-                                    <template x-for="ba in bankAccounts" :key="ba.id">
-                                        <div class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
-                                            <div class="flex-1">
-                                                <div class="flex items-center gap-2">
-                                                    <p class="text-sm font-medium text-gray-800" x-text="ba.bank_name"></p>
-                                                    <span x-show="ba.is_default" class="text-xs bg-gblue-100 text-gblue-700 px-1.5 py-0.5 rounded">Default</span>
-                                                    <span x-show="ba.label" class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded" x-text="ba.label"></span>
-                                                </div>
-                                                <p class="text-xs text-gray-500 mt-0.5" x-text="ba.account_number + ' — ' + ba.account_name"></p>
+                            <!-- Existing bank accounts list -->
+                            <div x-show="bankAccounts.length > 0" class="space-y-2 mb-4">
+                                <template x-for="ba in bankAccounts" :key="ba.id">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2">
+                                                <p class="text-sm font-medium text-gray-800" x-text="ba.bank_name"></p>
+                                                <span x-show="ba.is_default" class="text-xs bg-gblue-100 text-gblue-700 px-1.5 py-0.5 rounded">Default</span>
+                                                <span x-show="ba.label" class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded" x-text="ba.label"></span>
                                             </div>
-                                            <div class="flex items-center gap-1 ml-3">
-                                                <button x-show="!ba.is_default" @click="setDefaultBank(ba.id)" class="text-xs text-gblue-500 hover:text-gblue-700 px-2 py-1" title="Set as default">★</button>
-                                                <button @click="deleteBankAccount(ba.id)" class="text-xs text-red-500 hover:text-red-700 px-2 py-1" title="Remove">✕</button>
-                                            </div>
+                                            <p class="text-xs text-gray-500 mt-0.5" x-text="ba.account_number + ' — ' + ba.account_name"></p>
                                         </div>
-                                    </template>
-                                </div>
-                                <p x-show="bankAccounts.length === 0 && !bankAccountsLoading" class="text-sm text-gray-400 mb-3">No bank accounts added yet.</p>
-
-                                <!-- Add bank account form -->
-                                <button x-show="!showBankForm" @click="showBankForm = true" class="text-sm text-gblue-500 hover:text-gblue-700 flex items-center">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                    Add Bank Account
-                                </button>
-                                <div x-show="showBankForm" x-cloak class="border border-gray-200 rounded-lg p-4 mt-2">
-                                    <div x-show="bankMsg" class="mb-3 p-2 rounded text-sm" :class="bankMsgType==='success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="bankMsg"></div>
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-600 mb-1">Bank Name *</label>
-                                            <input type="text" x-model="bankForm.bank_name" required placeholder="e.g. CRDB Bank" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-600 mb-1">Account Name *</label>
-                                            <input type="text" x-model="bankForm.account_name" required placeholder="Account holder name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-600 mb-1">Account Number *</label>
-                                            <input type="text" x-model="bankForm.account_number" required placeholder="Bank account number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
-                                            <input type="text" x-model="bankForm.label" placeholder="e.g. Main, Payroll" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-600 mb-1">SWIFT Code</label>
-                                            <input type="text" x-model="bankForm.swift_code" placeholder="e.g. COLOTZTZ" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-600 mb-1">Branch</label>
-                                            <input type="text" x-model="bankForm.branch" placeholder="Branch name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        <div class="flex items-center gap-1 ml-3">
+                                            <button x-show="!ba.is_default" @click="setDefaultBank(ba.id)" class="text-xs text-gblue-500 hover:text-gblue-700 px-2 py-1" title="Set as default">★</button>
+                                            <button @click="deleteBankAccount(ba.id)" class="text-xs text-red-500 hover:text-red-700 px-2 py-1" title="Remove">✕</button>
                                         </div>
                                     </div>
-                                    <div class="flex gap-2 mt-3">
-                                        <button @click="addBankAccount()" :disabled="bankFormLoading || !bankForm.bank_name || !bankForm.account_name || !bankForm.account_number" class="bg-gblue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gblue-600 disabled:opacity-50">
-                                            <span x-show="!bankFormLoading">Save</span><span x-show="bankFormLoading">Saving...</span>
-                                        </button>
-                                        <button @click="showBankForm = false; bankMsg = ''" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300">Cancel</button>
+                                </template>
+                            </div>
+                            <p x-show="bankAccounts.length === 0 && !bankAccountsLoading" class="text-sm text-gray-400 mb-4">No bank accounts added yet.</p>
+
+                            <!-- Add bank account form -->
+                            <button x-show="!showBankForm" @click="showBankForm = true" class="text-sm text-gblue-500 hover:text-gblue-700 flex items-center font-medium">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                Add Bank Account
+                            </button>
+                            <div x-show="showBankForm" x-cloak class="border border-gray-200 rounded-lg p-4 mt-2">
+                                <div x-show="bankMsg" class="mb-3 p-2 rounded text-sm" :class="bankMsgType==='success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="bankMsg"></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Bank Name *</label>
+                                        <input type="text" x-model="bankForm.bank_name" required placeholder="e.g. CRDB Bank" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Account Name *</label>
+                                        <input type="text" x-model="bankForm.account_name" required placeholder="Account holder name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Account Number *</label>
+                                        <input type="text" x-model="bankForm.account_number" required placeholder="Bank account number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                                        <input type="text" x-model="bankForm.label" placeholder="e.g. Main, Payroll" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">SWIFT Code</label>
+                                        <input type="text" x-model="bankForm.swift_code" placeholder="e.g. COLOTZTZ" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Branch</label>
+                                        <input type="text" x-model="bankForm.branch" placeholder="Branch name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                                     </div>
                                 </div>
+                                <div class="flex gap-2 mt-3">
+                                    <button @click="addBankAccount()" :disabled="bankFormLoading || !bankForm.bank_name || !bankForm.account_name || !bankForm.account_number" class="bg-gblue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gblue-600 disabled:opacity-50">
+                                        <span x-show="!bankFormLoading">Save</span><span x-show="bankFormLoading">Saving...</span>
+                                    </button>
+                                    <button @click="showBankForm = false; bankMsg = ''" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 4: Documents & Crypto -->
+                        <div x-show="accountInfoTab === 'documents'" x-cloak>
+                            <!-- Documents -->
+                            <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Uploaded Documents
+                            </h4>
+                            <div class="space-y-3 mb-6">
+                                <div x-show="kycData.id_document_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
+                                        <span class="text-sm text-gray-700">ID Document</span>
+                                    </div>
+                                    <a :href="'{{ config('services.auth_service.url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View &rarr;</a>
+                                </div>
+                                <div x-show="kycData.business_license_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
+                                    <div class="flex items-center space-x-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
+                                        <span class="text-sm text-gray-700">Business License</span>
+                                    </div>
+                                    <a :href="'{{ config('services.auth_service.url') }}' + kycData.business_license_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View &rarr;</a>
+                                </div>
+                                <div x-show="!kycData.id_document_url && !kycData.business_license_url" class="text-sm text-gray-400">No documents uploaded yet.</div>
                             </div>
 
                             <!-- Crypto Wallet -->
                             <div x-show="kycData.crypto_wallet_address">
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
                                     <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                     Crypto Wallet
                                 </h4>
@@ -1298,24 +1360,6 @@
                                     <div class="bg-gray-50 rounded-lg px-4 py-3 md:col-span-3">
                                         <p class="text-xs text-gray-500">Wallet Address</p>
                                         <p class="text-sm font-medium text-gray-800 font-mono break-all" x-text="kycData.crypto_wallet_address"></p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Documents -->
-                            <div>
-                                <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    Documents
-                                </h4>
-                                <div class="flex flex-wrap gap-3">
-                                    <div x-show="kycData.id_document_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center space-x-2">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
-                                        <a :href="'{{ config('services.auth_service.url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View ID Document &rarr;</a>
-                                    </div>
-                                    <div x-show="kycData.business_license_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center space-x-2">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
-                                        <a :href="'{{ config('services.auth_service.url') }}' + kycData.business_license_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View Business License &rarr;</a>
                                     </div>
                                 </div>
                             </div>
@@ -1585,9 +1629,10 @@
                         </div>
                     </form>
                     </div><!-- end not-approved wrapper -->
-                </div>
-            </div>
-        </div>
+                    </div><!-- end p-6 content wrapper -->
+                </div><!-- end bg-white card -->
+            </div><!-- end max-w-3xl -->
+        </div><!-- end account tab -->
 
         <!-- ==================== SEND MONEY TAB ==================== -->
         <div x-show="activeTab === 'send-money'" x-cloak>
@@ -2630,7 +2675,7 @@ function dashboard() {
         accountPending: false,
 
         // KYC form
-        kycStep: 1,
+        kycStep: 1, accountInfoTab: 'business',
         kycData: {}, kycFormLoading: false, kycSaving: false,
         kycMsg: '', kycMsgType: '',
         kycForm: { business_name: '', business_type: '', registration_number: '', tin_number: '', address: '', city: '', country: 'Tanzania', bank_name: '', bank_account_name: '', bank_account_number: '', bank_swift: '', bank_branch: '', id_type: '', id_number: '', crypto_wallet_address: '', crypto_network: '', crypto_currency: '' },
