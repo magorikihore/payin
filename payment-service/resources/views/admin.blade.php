@@ -341,6 +341,203 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ========== PLATFORM PROFIT WITHDRAWAL ========== -->
+            <div class="mt-8" x-show="user?.role === 'super_admin'">
+                <!-- Section Header with Balance Cards -->
+                <div class="bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl p-6 text-white shadow-lg mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold flex items-center gap-2">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                Platform Profit Withdrawal
+                            </h2>
+                            <p class="text-green-100 text-sm mt-1">Withdraw your platform profit charges to bank</p>
+                        </div>
+                        <button @click="showProfitWdForm = !showProfitWdForm"
+                            class="px-5 py-2.5 bg-white text-green-700 rounded-xl font-semibold text-sm hover:bg-green-50 transition shadow">
+                            <span x-show="!showProfitWdForm">+ New Withdrawal</span>
+                            <span x-show="showProfitWdForm">✕ Cancel</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div class="bg-white/15 rounded-xl p-4 backdrop-blur-sm">
+                            <p class="text-green-100 text-xs font-medium uppercase">Total Earned</p>
+                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(profitSummary.total_earned || 0) + ' TZS'"></p>
+                        </div>
+                        <div class="bg-white/15 rounded-xl p-4 backdrop-blur-sm">
+                            <p class="text-green-100 text-xs font-medium uppercase">Withdrawn</p>
+                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(profitSummary.total_withdrawn || 0) + ' TZS'"></p>
+                        </div>
+                        <div class="bg-white/15 rounded-xl p-4 backdrop-blur-sm">
+                            <p class="text-green-100 text-xs font-medium uppercase">Pending</p>
+                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(profitSummary.total_pending || 0) + ' TZS'"></p>
+                        </div>
+                        <div class="bg-white/20 rounded-xl p-4 backdrop-blur-sm border border-white/30">
+                            <p class="text-green-100 text-xs font-medium uppercase">Available Balance</p>
+                            <p class="text-2xl font-bold mt-1" x-text="formatAmount(profitSummary.available_balance || 0) + ' TZS'"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Message -->
+                <div x-show="profitWdMsg" x-cloak class="mb-4 p-4 rounded-xl text-sm font-medium"
+                    :class="profitWdMsgType === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'">
+                    <div class="flex items-center justify-between">
+                        <span x-text="profitWdMsg"></span>
+                        <button @click="profitWdMsg=''" class="text-gray-400 hover:text-gray-600">&times;</button>
+                    </div>
+                </div>
+
+                <!-- Withdrawal Form -->
+                <div x-show="showProfitWdForm" x-cloak x-transition class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Request Profit Withdrawal</h3>
+                    <form @submit.prevent="submitProfitWithdrawal()">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Amount (TZS) *</label>
+                                <input type="number" x-model="profitWdForm.amount" min="1000" step="1" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                    placeholder="e.g. 500000">
+                                <p class="text-xs text-gray-400 mt-1">Available: <span class="font-semibold text-green-600" x-text="formatAmount(profitSummary.available_balance || 0) + ' TZS'"></span></p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name *</label>
+                                <input type="text" x-model="profitWdForm.bank_name" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                    placeholder="e.g. CRDB Bank">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Account Number *</label>
+                                <input type="text" x-model="profitWdForm.account_number" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                    placeholder="e.g. 0152XXXXXXXX">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Account Name *</label>
+                                <input type="text" x-model="profitWdForm.account_name" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                    placeholder="e.g. Payin Technologies Ltd">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+                                <input type="text" x-model="profitWdForm.branch"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                    placeholder="e.g. Main Branch">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">SWIFT Code</label>
+                                <input type="text" x-model="profitWdForm.swift_code"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                    placeholder="e.g. CORUTZTZ">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Description / Notes</label>
+                                <input type="text" x-model="profitWdForm.description"
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                                    placeholder="e.g. Monthly profit withdrawal - June 2026">
+                            </div>
+                        </div>
+                        <div class="mt-5 flex justify-end">
+                            <button type="submit" :disabled="profitWdSubmitting"
+                                class="px-6 py-2.5 bg-green-600 text-white rounded-lg font-semibold text-sm hover:bg-green-700 transition disabled:opacity-50 flex items-center gap-2">
+                                <svg x-show="profitWdSubmitting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                Submit Withdrawal Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Withdrawal History -->
+                <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                    <div class="px-6 py-4 border-b flex flex-wrap items-center justify-between gap-3">
+                        <h3 class="text-lg font-semibold text-gray-800">Withdrawal History</h3>
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                <input type="text" x-model="profitWdSearch" @input.debounce.400ms="profitWdPage=1; fetchProfitWithdrawals()"
+                                    placeholder="Search..." class="pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm w-48 focus:ring-2 focus:ring-green-500 outline-none">
+                            </div>
+                            <select x-model="profitWdStatusFilter" @change="profitWdPage=1; fetchProfitWithdrawals()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div x-show="profitWdLoading" class="p-8 text-center text-gray-500">
+                        <svg class="animate-spin h-8 w-8 mx-auto text-green-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </div>
+                    <div x-show="!profitWdLoading && profitWithdrawals.length === 0" x-cloak class="p-8 text-center text-gray-500">No withdrawals yet.</div>
+                    <div x-show="!profitWdLoading && profitWithdrawals.length > 0" x-cloak>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                        <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bank</th>
+                                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
+                                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                        <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <template x-for="wd in profitWithdrawals" :key="wd.id">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-5 py-3 text-sm font-mono text-gray-700" x-text="wd.reference"></td>
+                                            <td class="px-5 py-3 text-sm text-right font-bold text-gray-800" x-text="formatAmount(wd.amount) + ' TZS'"></td>
+                                            <td class="px-5 py-3 text-sm text-gray-700">
+                                                <span x-text="wd.bank_name"></span>
+                                                <span x-show="wd.branch" class="text-xs text-gray-400" x-text="' (' + wd.branch + ')'"></span>
+                                            </td>
+                                            <td class="px-5 py-3 text-sm text-gray-600">
+                                                <div x-text="wd.account_name" class="font-medium"></div>
+                                                <div x-text="wd.account_number" class="text-xs text-gray-400 font-mono"></div>
+                                            </td>
+                                            <td class="px-5 py-3">
+                                                <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
+                                                    :class="{
+                                                        'bg-yellow-100 text-yellow-800': wd.status === 'pending',
+                                                        'bg-green-100 text-green-800': wd.status === 'completed',
+                                                        'bg-red-100 text-red-800': wd.status === 'cancelled'
+                                                    }" x-text="wd.status.charAt(0).toUpperCase() + wd.status.slice(1)"></span>
+                                            </td>
+                                            <td class="px-5 py-3 text-sm text-gray-500" x-text="formatDate(wd.created_at)"></td>
+                                            <td class="px-5 py-3 text-sm">
+                                                <div x-show="wd.status === 'pending'" class="flex gap-2">
+                                                    <button @click="completeProfitWithdrawal(wd.id)"
+                                                        class="px-3 py-1 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition">
+                                                        ✓ Complete
+                                                    </button>
+                                                    <button @click="cancelProfitWithdrawal(wd.id)"
+                                                        class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs font-medium hover:bg-red-200 transition">
+                                                        ✕ Cancel
+                                                    </button>
+                                                </div>
+                                                <span x-show="wd.status === 'completed'" class="text-xs text-gray-400" x-text="'Completed ' + formatDate(wd.completed_at)"></span>
+                                                <span x-show="wd.status === 'cancelled'" class="text-xs text-gray-400">Cancelled</span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- Pagination -->
+                        <div x-show="profitWdPagination.last_page > 1" class="px-6 py-3 border-t flex items-center justify-between">
+                            <span class="text-sm text-gray-500" x-text="'Page ' + profitWdPagination.current_page + ' of ' + profitWdPagination.last_page + ' (' + profitWdPagination.total + ' total)'"></span>
+                            <div class="flex gap-2">
+                                <button @click="profitWdPage--; fetchProfitWithdrawals()" :disabled="!profitWdPagination.prev_page_url"
+                                    class="px-3 py-1 border rounded text-sm disabled:opacity-40">← Prev</button>
+                                <button @click="profitWdPage++; fetchProfitWithdrawals()" :disabled="!profitWdPagination.next_page_url"
+                                    class="px-3 py-1 border rounded text-sm disabled:opacity-40">Next →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- ==================== ACCOUNTS TAB ==================== -->
@@ -3068,6 +3265,15 @@ function adminPanel() {
         // Charge Revenue
         chargeRevenue: {},
 
+        // Platform Profit Withdrawals
+        profitSummary: { total_earned: 0, total_withdrawn: 0, total_pending: 0, available_balance: 0 },
+        profitWithdrawals: [], profitWdPagination: {}, profitWdPage: 1,
+        profitWdLoading: false, profitWdSearch: '', profitWdStatusFilter: '',
+        profitWdMsg: '', profitWdMsgType: 'success',
+        showProfitWdForm: false,
+        profitWdForm: { amount: '', bank_name: '', account_number: '', account_name: '', branch: '', swift_code: '', description: '' },
+        profitWdSubmitting: false,
+
         // IP Whitelist (admin)
         adminIpList: [], ipListLoading: false, ipSearch: '', ipStatusFilter: '', pendingIpCount: 0,
 
@@ -3153,6 +3359,8 @@ function adminPanel() {
             this.fetchAccountMap();
             if (this.hasPerm('admin_settlements')) this.fetchPendingSettlementsCount();
             if (this.hasPerm('admin_overview')) this.fetchChargeRevenue();
+            if (this.hasPerm('admin_overview')) this.fetchProfitSummary();
+            if (this.hasPerm('admin_overview')) this.fetchProfitWithdrawals();
             if (this.hasPerm('admin_ip_whitelist')) this.fetchPendingIpCount();
             if (this.hasPerm('admin_transfers')) this.fetchPendingTransferCount();
             if (this.hasPerm('admin_reversals')) this.fetchPendingReversalCount();
@@ -3204,6 +3412,82 @@ function adminPanel() {
                 const res = await fetch('{{ config("services.transaction_service.url") }}/api/admin/charge-revenue', { headers: this.getHeaders() });
                 if (res.ok) this.chargeRevenue = await res.json();
             } catch (e) { console.error(e); }
+        },
+
+        // Platform Profit Withdrawal methods
+        async fetchProfitSummary() {
+            try {
+                const res = await fetch('{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals/summary', { headers: this.getHeaders() });
+                if (res.ok) this.profitSummary = await res.json();
+            } catch (e) { console.error(e); }
+        },
+
+        async fetchProfitWithdrawals() {
+            this.profitWdLoading = true;
+            try {
+                let url = `{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals?page=${this.profitWdPage}`;
+                if (this.profitWdSearch) url += `&search=${encodeURIComponent(this.profitWdSearch)}`;
+                if (this.profitWdStatusFilter) url += `&status=${this.profitWdStatusFilter}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.profitWithdrawals = data.data || [];
+                    this.profitWdPagination = { current_page: data.current_page, last_page: data.last_page, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
+                }
+            } catch (e) { console.error(e); }
+            this.profitWdLoading = false;
+        },
+
+        async submitProfitWithdrawal() {
+            this.profitWdSubmitting = true;
+            this.profitWdMsg = '';
+            try {
+                const res = await fetch('{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals', {
+                    method: 'POST', headers: this.getHeaders(), body: JSON.stringify(this.profitWdForm)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.profitWdMsg = data.message || 'Withdrawal request created.';
+                    this.profitWdMsgType = 'success';
+                    this.showProfitWdForm = false;
+                    this.profitWdForm = { amount: '', bank_name: '', account_number: '', account_name: '', branch: '', swift_code: '', description: '' };
+                    this.fetchProfitSummary();
+                    this.fetchProfitWithdrawals();
+                } else {
+                    this.profitWdMsg = data.message || 'Failed to create withdrawal.';
+                    this.profitWdMsgType = 'error';
+                }
+            } catch (e) {
+                this.profitWdMsg = 'Network error.';
+                this.profitWdMsgType = 'error';
+            }
+            this.profitWdSubmitting = false;
+        },
+
+        async completeProfitWithdrawal(id) {
+            if (!confirm('Confirm this withdrawal has been sent to the bank?')) return;
+            try {
+                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals/${id}/complete`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                const data = await res.json();
+                this.profitWdMsg = data.message || 'Marked as completed.';
+                this.profitWdMsgType = res.ok ? 'success' : 'error';
+                if (res.ok) { this.fetchProfitSummary(); this.fetchProfitWithdrawals(); }
+            } catch (e) { this.profitWdMsg = 'Network error.'; this.profitWdMsgType = 'error'; }
+        },
+
+        async cancelProfitWithdrawal(id) {
+            if (!confirm('Cancel this withdrawal? Funds will be returned to available balance.')) return;
+            try {
+                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals/${id}/cancel`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                const data = await res.json();
+                this.profitWdMsg = data.message || 'Withdrawal cancelled.';
+                this.profitWdMsgType = res.ok ? 'success' : 'error';
+                if (res.ok) { this.fetchProfitSummary(); this.fetchProfitWithdrawals(); }
+            } catch (e) { this.profitWdMsg = 'Network error.'; this.profitWdMsgType = 'error'; }
         },
 
         async fetchAccounts() {

@@ -3,6 +3,7 @@
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ChargeConfigController;
 use App\Http\Controllers\ReversalController;
+use App\Http\Controllers\PlatformWithdrawalController;
 use App\Http\Controllers\LogController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,13 @@ Route::middleware('auth.service')->group(function () {
     // Logs (super_admin only)
     Route::get('/admin/logs', [LogController::class, 'index']);
     Route::delete('/admin/logs', [LogController::class, 'clear']);
+
+    // Platform Profit Withdrawals (super_admin only)
+    Route::get('/admin/platform-withdrawals/summary', [PlatformWithdrawalController::class, 'summary']);
+    Route::get('/admin/platform-withdrawals', [PlatformWithdrawalController::class, 'index']);
+    Route::post('/admin/platform-withdrawals', [PlatformWithdrawalController::class, 'store']);
+    Route::put('/admin/platform-withdrawals/{id}/complete', [PlatformWithdrawalController::class, 'complete']);
+    Route::put('/admin/platform-withdrawals/{id}/cancel', [PlatformWithdrawalController::class, 'cancel']);
 });
 
 // Internal service-to-service routes (protected by service key)
