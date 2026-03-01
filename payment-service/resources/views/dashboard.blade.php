@@ -1116,7 +1116,7 @@
 
         <!-- ==================== ACCOUNT INFO TAB ==================== -->
         <div x-show="activeTab === 'account'" x-cloak class="mt-6">
-            <div class="max-w-3xl">
+            <div class="max-w-4xl">
                 <!-- Header Card -->
                 <div class="bg-white rounded-xl shadow-md border overflow-hidden">
                     <div class="bg-gradient-to-r from-gblue-500 to-indigo-600 px-6 py-5 flex items-center justify-between">
