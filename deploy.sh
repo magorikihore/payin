@@ -50,6 +50,12 @@ for SERVICE in "${SERVICES[@]}"; do
     chown -R www-data:www-data storage bootstrap/cache
     chmod -R 775 storage bootstrap/cache
 
+    # Protect OAuth keys (auth-service only)
+    if [ -f storage/oauth-private.key ]; then
+        chmod 600 storage/oauth-private.key storage/oauth-public.key
+        echo ">> OAuth key permissions set to 600."
+    fi
+
     echo ">> $SERVICE deployed successfully."
 done
 
