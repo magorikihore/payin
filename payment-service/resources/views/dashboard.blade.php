@@ -688,13 +688,13 @@
                 <div class="px-6 py-4 border-b flex flex-wrap items-center justify-between gap-2">
                     <h3 class="text-lg font-semibold text-gray-800">Wallet Transactions</h3>
                     <div class="flex space-x-2">
-                        <select x-model="walletTxnOperatorFilter" @change="fetchWalletTransactions()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                        <select x-model="walletTxnOperatorFilter" @change="wtPage = 1; fetchWalletTransactions()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
                             <option value="">All Operators</option>
                             <template x-for="op in operators" :key="op">
                                 <option :value="op" x-text="op"></option>
                             </template>
                         </select>
-                        <select x-model="walletTxnTypeFilter" @change="fetchWalletTransactions()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                        <select x-model="walletTxnTypeFilter" @change="wtPage = 1; fetchWalletTransactions()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
                             <option value="">All Wallets</option>
                             <option value="collection">Collection</option>
                             <option value="disbursement">Disbursement</option>
@@ -749,6 +749,13 @@
                                 </template>
                             </tbody>
                         </table>
+                    </div>
+                    <div x-show="wtPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
+                        <p class="text-sm text-gray-500">Showing <span x-text="wtPagination.from||0"></span> to <span x-text="wtPagination.to||0"></span> of <span x-text="wtPagination.total||0"></span></p>
+                        <div class="flex space-x-2">
+                            <button @click="goToWtPage(wtPagination.current_page-1)" :disabled="!wtPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button @click="goToWtPage(wtPagination.current_page+1)" :disabled="!wtPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -882,9 +889,9 @@
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <div class="relative flex-1 sm:flex-initial">
                             <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <input type="text" x-model="stlSearch" @input.debounce.400ms="fetchSettlements()" placeholder="Search ref, bank, amount..." class="w-full sm:w-52 pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <input type="text" x-model="stlSearch" @input.debounce.400ms="stlPage = 1; fetchSettlements()" placeholder="Search ref, bank, amount..." class="w-full sm:w-52 pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                         </div>
-                        <select x-model="stlFilterStatus" @change="fetchSettlements()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                        <select x-model="stlFilterStatus" @change="stlPage = 1; fetchSettlements()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
                             <option value="">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="processing">Processing</option>
@@ -944,6 +951,13 @@
                                 </template>
                             </tbody>
                         </table>
+                    </div>
+                    <div x-show="stlPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
+                        <p class="text-sm text-gray-500">Showing <span x-text="stlPagination.from||0"></span> to <span x-text="stlPagination.to||0"></span> of <span x-text="stlPagination.total||0"></span></p>
+                        <div class="flex space-x-2">
+                            <button @click="goToStlPage(stlPagination.current_page-1)" :disabled="!stlPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button @click="goToStlPage(stlPagination.current_page+1)" :disabled="!stlPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1946,6 +1960,13 @@
                             </tbody>
                         </table>
                     </div>
+                    <div x-show="disbPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
+                        <p class="text-sm text-gray-500">Showing <span x-text="disbPagination.from||0"></span> to <span x-text="disbPagination.to||0"></span> of <span x-text="disbPagination.total||0"></span></p>
+                        <div class="flex space-x-2">
+                            <button @click="goToDisbPage(disbPagination.current_page-1)" :disabled="!disbPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button @click="goToDisbPage(disbPagination.current_page+1)" :disabled="!disbPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2560,7 +2581,7 @@ function dashboard() {
         walletCurrency: 'TZS',
         collectionWallets: [], disbursementWallets: [], operators: [],
         overallBalance: 0, collectionTotal: 0, disbursementTotal: 0,
-        walletTransactions: [], walletTxnOperatorFilter: '', walletTxnTypeFilter: '',
+        walletTransactions: [], walletTxnOperatorFilter: '', walletTxnTypeFilter: '', wtPage: 1, wtPagination: {},
         creditAmounts: {}, creditDescs: {}, transferAmounts: {}, transferAmountDisplays: {},
         walletCreditLoading: {}, walletTransferLoading: {},
         trfSummaryOpen: false, trfSummary: { operator: '', amount: 0, available: 0 },
@@ -2568,7 +2589,7 @@ function dashboard() {
         walletLoading: { txns: false },
 
         // Settlements
-        settlements:[], stlFilterStatus: '', stlSearch: '', stlLoading: false, stlLoadingList: false,
+        settlements:[], stlFilterStatus: '', stlSearch: '', stlLoading: false, stlLoadingList: false, stlPage: 1, stlPagination: {},
         stlForm: { operator: '', amount: '', bank_account_id: '', description: '' },
         stlAmountDisplay: '',
         settlementMsg: '', settlementMsgType: '',
@@ -2596,7 +2617,7 @@ function dashboard() {
         batchCharges: null, batchChargesLoading: false,
         manualRow: { phone: '', amount: '', reference: '', description: '' },
         manualAmountDisplay: '',
-        recentDisbursements: [], recentDisbLoading: false,
+        recentDisbursements: [], recentDisbLoading: false, disbPage: 1, disbPagination: {},
 
         // Password
         showPasswordModal: false, currentPassword: '', newPassword: '', confirmPassword: '',
@@ -3026,6 +3047,9 @@ function dashboard() {
             finally { this.loadingTxns = false; }
         },
         goToPage(p) { if (p < 1 || p > this.pagination.last_page) return; this.currentPage = p; this.fetchTransactions(); },
+        goToDisbPage(p) { if (p < 1 || p > this.disbPagination.last_page) return; this.disbPage = p; this.fetchRecentDisbursements(); },
+        goToStlPage(p) { if (p < 1 || p > this.stlPagination.last_page) return; this.stlPage = p; this.fetchSettlements(); },
+        goToWtPage(p) { if (p < 1 || p > this.wtPagination.last_page) return; this.wtPage = p; this.fetchWalletTransactions(); },
 
         // ---- My Charges ----
         async fetchMyCharges() {
@@ -3072,15 +3096,14 @@ function dashboard() {
         async fetchWalletTransactions() {
             this.walletLoading.txns = true;
             try {
-                let url = '{{ config("services.wallet_service.url") }}/api/wallet/transactions';
-                const params = [];
-                if (this.walletTxnOperatorFilter) params.push(`operator=${encodeURIComponent(this.walletTxnOperatorFilter)}`);
-                if (this.walletTxnTypeFilter) params.push(`wallet_type=${this.walletTxnTypeFilter}`);
-                if (params.length) url += '?' + params.join('&');
+                let url = `{{ config("services.wallet_service.url") }}/api/wallet/transactions?page=${this.wtPage}`;
+                if (this.walletTxnOperatorFilter) url += `&operator=${encodeURIComponent(this.walletTxnOperatorFilter)}`;
+                if (this.walletTxnTypeFilter) url += `&wallet_type=${this.walletTxnTypeFilter}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 this.walletTransactions = data.data || [];
+                this.wtPagination = { current_page: data.current_page, last_page: data.last_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
             } catch (e) {}
             finally { this.walletLoading.txns = false; }
         },
@@ -3176,16 +3199,15 @@ function dashboard() {
         async fetchSettlements() {
             this.stlLoadingList = true;
             try {
-                let url = '{{ config("services.settlement_service.url") }}/api/settlements';
-                const params = [];
-                if (this.stlFilterStatus) params.push(`status=${this.stlFilterStatus}`);
-                if (this.stlSearch.trim()) params.push(`search=${encodeURIComponent(this.stlSearch.trim())}`);
-                if (params.length) url += '?' + params.join('&');
+                let url = `{{ config("services.settlement_service.url") }}/api/settlements?page=${this.stlPage}`;
+                if (this.stlFilterStatus) url += `&status=${this.stlFilterStatus}`;
+                if (this.stlSearch.trim()) url += `&search=${encodeURIComponent(this.stlSearch.trim())}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 this.settlements = data.data || [];
+                this.stlPagination = { current_page: data.current_page, last_page: data.last_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
             } catch (e) {}
             finally { this.stlLoadingList = false; }
         },
@@ -3634,6 +3656,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     this.payoutAmountDisplay = '';
                     this.detectedOperator = { name: '', code: '' };
                     this.payoutCharges = null;
+                    this.disbPage = 1;
                     this.fetchRecentDisbursements();
                 }
             } catch (e) { this.payoutMsg = 'Network error.'; this.payoutMsgType = 'error'; }
@@ -3875,6 +3898,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 this.batchName = '';
                 this.batchCsvText = '';
                 this.batchCharges = null;
+                this.disbPage = 1;
                 this.fetchRecentDisbursements();
             } catch (e) { this.batchMsg = 'Network error.'; this.batchMsgType = 'error'; }
             this.batchLoading = false;
@@ -3883,10 +3907,11 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async fetchRecentDisbursements() {
             this.recentDisbLoading = true;
             try {
-                const res = await fetch('/api/payment-requests?type=disbursement&per_page=20', { headers: this.getHeaders() });
+                const res = await fetch(`/api/payment-requests?type=disbursement&page=${this.disbPage}`, { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.recentDisbursements = data.data || [];
+                    this.disbPagination = { current_page: data.current_page, last_page: data.last_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
                 }
             } catch (e) { console.error(e); }
             this.recentDisbLoading = false;
