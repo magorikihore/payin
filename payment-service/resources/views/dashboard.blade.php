@@ -1686,6 +1686,13 @@
                             <span class="text-gray-500">Status:</span>
                             <span class="capitalize font-medium" :class="lastPayoutResult.status === 'processing' ? 'text-gblue-600' : 'text-gred-600'" x-text="lastPayoutResult.status"></span>
                         </div>
+                        <div class="flex gap-2 mt-3">
+                            <button @click="payoutReceiptOpen = true" class="px-3 py-1.5 text-xs font-medium text-gblue-700 bg-gblue-50 border border-gblue-200 rounded-lg hover:bg-gblue-100 transition">View Receipt</button>
+                            <button @click="downloadPayoutPdf(payoutReceipt)" class="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition inline-flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Download PDF
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1824,7 +1831,13 @@
 
                     <!-- Batch Results -->
                     <div x-show="batchResults.length > 0" x-cloak class="mt-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Batch Results</h4>
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="text-sm font-semibold text-gray-700">Batch Results</h4>
+                            <button @click="downloadBatchPdf()" class="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition inline-flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Download Batch Receipt
+                            </button>
+                        </div>
                         <div class="p-3 rounded-lg text-sm mb-3" :class="batchResultSummary.failed === 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'">
                             <span x-text="batchResultSummary.sent + ' sent, ' + batchResultSummary.failed + ' failed out of ' + batchResultSummary.total + ' total'"></span>
                         </div>
@@ -1901,10 +1914,8 @@
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                 </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <template x-for="d in recentDisbursements" :key="d.id">
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-3 text-sm font-mono text-gray-700" x-text="d.request_ref"></td>
                                         <td class="px-4 py-3 text-sm font-mono text-gray-600" x-text="d.receipt_number || '—'"></td>
@@ -1922,11 +1933,78 @@
                                                 x-text="d.status"></span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-500" x-text="formatDate(d.created_at)"></td>
-                                    </tr>
+                                        <td class="px-4 py-3">
+                                            <button @click="viewDisbursementReceipt(d)" class="px-2.5 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition inline-flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                PDF
+                                            </button>
+                                        </td>
                                 </template>
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payout Receipt Modal -->
+        <div x-show="payoutReceiptOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="payoutReceiptOpen = false">
+            <div class="fixed inset-0 bg-black/50" @click="payoutReceiptOpen = false"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" @click.stop>
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-5 rounded-t-2xl text-center">
+                    <p class="text-2xl font-extrabold tracking-tight">Payin</p>
+                    <h3 class="text-lg font-bold mt-1">Payout Receipt</h3>
+                    <p class="text-blue-100 text-xs mt-1">Disbursement Transaction</p>
+                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold"
+                        :class="payoutReceipt?.status === 'processing' ? 'bg-blue-200 text-blue-800' : payoutReceipt?.status === 'completed' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'"
+                        x-text="(payoutReceipt?.status || '').toUpperCase()"></span>
+                </div>
+                <div class="p-6" x-show="payoutReceipt">
+                    <div class="bg-gray-50 rounded-lg p-3 text-center mb-4">
+                        <p class="text-xs text-gray-400 uppercase tracking-wider">Reference Number</p>
+                        <p class="text-sm font-mono font-bold text-gray-800 mt-1" x-text="payoutReceipt?.request_ref"></p>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-500">Recipient Phone</span>
+                            <span class="font-semibold text-gray-800" x-text="payoutReceipt?.phone"></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-500">Operator</span>
+                            <span class="font-semibold text-gray-800" x-text="payoutReceipt?.operator"></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100">
+                            <span class="text-gray-500">Send Amount</span>
+                            <span class="font-semibold text-gray-800" x-text="formatAmount(payoutReceipt?.amount) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100" x-show="payoutReceipt?.platform_charge > 0">
+                            <span class="text-gray-500">Service Charge</span>
+                            <span class="font-semibold text-amber-700" x-text="formatAmount(payoutReceipt?.platform_charge) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
+                        </div>
+                        <div class="flex justify-between py-2 bg-blue-50 -mx-6 px-6 rounded">
+                            <span class="font-bold text-blue-800">Total Debited</span>
+                            <span class="font-bold text-blue-800" x-text="formatAmount(payoutReceipt?.total_debit) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100" x-show="payoutReceipt?.reference">
+                            <span class="text-gray-500">Reference</span>
+                            <span class="font-medium text-gray-700" x-text="payoutReceipt?.reference"></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100" x-show="payoutReceipt?.description">
+                            <span class="text-gray-500">Description</span>
+                            <span class="font-medium text-gray-700" x-text="payoutReceipt?.description"></span>
+                        </div>
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-500">Date</span>
+                            <span class="font-medium text-gray-700" x-text="formatDate(payoutReceipt?.date)"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex items-center justify-between">
+                    <button @click="downloadPayoutPdf(payoutReceipt)" class="px-4 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition inline-flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Download PDF
+                    </button>
+                    <button @click="payoutReceiptOpen = false" class="px-5 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium">Close</button>
                 </div>
             </div>
         </div>
@@ -2507,6 +2585,7 @@ function dashboard() {
         payoutLoading: false, payoutMsg: '', payoutMsgType: 'success',
         payoutCharges: null, payoutChargesLoading: false,
         lastPayoutResult: null,
+        payoutReceiptOpen: false, payoutReceipt: null,
         // Batch
         batchName: '', batchCsvText: '', batchItems: [], batchLoading: false,
         batchMsg: '', batchMsgType: 'success',
@@ -3220,6 +3299,118 @@ function dashboard() {
             setTimeout(() => { win.print(); }, 500);
         },
 
+        viewDisbursementReceipt(d) {
+            this.payoutReceipt = {
+                request_ref: d.request_ref,
+                phone: d.phone,
+                amount: d.amount,
+                operator: d.operator_name,
+                status: d.status,
+                platform_charge: d.platform_charge || 0,
+                total_debit: Number(d.amount) + Number(d.platform_charge || 0),
+                currency: d.currency || this.walletCurrency || 'TZS',
+                reference: d.external_ref || '',
+                description: d.description || '',
+                date: d.created_at,
+            };
+            this.downloadPayoutPdf(this.payoutReceipt);
+        },
+
+        downloadPayoutPdf(receipt) {
+            const r = receipt || this.payoutReceipt;
+            if (!r) return;
+            const statusColor = r.status === 'completed' || r.status === 'successful' ? '#059669' : r.status === 'processing' ? '#2563EB' : '#DC2626';
+            const statusBg = r.status === 'completed' || r.status === 'successful' ? '#ECFDF5' : r.status === 'processing' ? '#EFF6FF' : '#FEF2F2';
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payout Receipt - ${r.request_ref}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f3f4f6;padding:20px}
+.receipt{max-width:500px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden}
+.header{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;padding:28px 24px;text-align:center}
+.header h1{font-size:20px;font-weight:700;margin-bottom:4px}.header p{font-size:12px;opacity:.85}
+.logo{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.status{display:inline-block;padding:4px 14px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;background:${statusBg};color:${statusColor};margin-top:10px}
+.body{padding:24px}.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.row:last-child{border-bottom:none}.label{color:#6b7280}.value{font-weight:600;color:#1f2937;text-align:right;max-width:60%}
+.total-row{background:#eff6ff;margin:12px -24px;padding:12px 24px;border-bottom:none}
+.total-row .label{font-weight:700;color:#2563eb;font-size:14px}.total-row .value{color:#2563eb;font-size:14px}
+.ref-box{background:#f9fafb;border-radius:8px;padding:12px;text-align:center;margin-bottom:16px}
+.ref-box .label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#9ca3af}.ref-box .value{font-size:14px;font-family:monospace;margin-top:4px}
+.footer{padding:16px 24px;border-top:1px solid #e5e7eb;text-align:center;font-size:10px;color:#9ca3af}
+@media print{body{padding:0;background:#fff}.receipt{box-shadow:none;border-radius:0}}
+</style></head><body>
+<div class="receipt">
+<div class="header"><div class="logo">Payin</div><h1>Payout Receipt</h1><p>Disbursement Transaction</p><div class="status">${r.status}</div></div>
+<div class="body">
+<div class="ref-box"><div class="label">Reference Number</div><div class="value">${r.request_ref}</div></div>
+<div class="row"><span class="label">Recipient Phone</span><span class="value">${r.phone}</span></div>
+<div class="row"><span class="label">Operator</span><span class="value">${r.operator}</span></div>
+<div class="row"><span class="label">Send Amount</span><span class="value">${this.formatAmount(r.amount)} ${r.currency || 'TZS'}</span></div>
+${r.platform_charge > 0 ? `<div class="row"><span class="label">Service Charge</span><span class="value">${this.formatAmount(r.platform_charge)} ${r.currency || 'TZS'}</span></div>` : ''}
+<div class="row total-row"><span class="label">Total Debited</span><span class="value">${this.formatAmount(r.total_debit)} ${r.currency || 'TZS'}</span></div>
+${r.reference ? `<div class="row"><span class="label">Reference</span><span class="value">${r.reference}</span></div>` : ''}
+${r.description ? `<div class="row"><span class="label">Description</span><span class="value">${r.description}</span></div>` : ''}
+<div class="row"><span class="label">Date</span><span class="value">${this.formatDate(r.date)}</span></div>
+</div>
+<div class="footer">This is a system-generated receipt from Payin Payment Platform.<br>For queries, contact support@payin.co.tz</div>
+</div></body></html>`;
+            const win = window.open('', '_blank', 'width=600,height=800');
+            win.document.write(html);
+            win.document.close();
+            setTimeout(() => { win.print(); }, 500);
+        },
+
+        downloadBatchPdf() {
+            if (!this.batchResults || this.batchResults.length === 0) return;
+            const s = this.batchResultSummary;
+            const bName = this.batchName || 'Unnamed Batch';
+            const totalAmount = this.batchResults.reduce((sum, r) => sum + Number(r.amount || 0), 0);
+            const successAmount = this.batchResults.filter(r => r.success).reduce((sum, r) => sum + Number(r.amount || 0), 0);
+            const rows = this.batchResults.map((r, i) => `<tr>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:12px;color:#6b7280">${i + 1}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:12px;font-family:monospace">${r.phone}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:12px;font-weight:600">${this.formatAmount(r.amount)} TZS</td>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:12px"><span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${r.success ? '#ECFDF5' : '#FEF2F2'};color:${r.success ? '#059669' : '#DC2626'}">${r.success ? 'Sent' : 'Failed'}</span></td>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;font-family:monospace;color:#6b7280">${r.request_ref || '—'}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:11px;color:#DC2626">${r.error || '—'}</td>
+</tr>`).join('');
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Batch Payout Receipt - ${bName}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f3f4f6;padding:20px}
+.receipt{max-width:800px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);overflow:hidden}
+.header{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;padding:28px 24px;text-align:center}
+.header h1{font-size:20px;font-weight:700;margin-bottom:4px}.header p{font-size:12px;opacity:.85}
+.logo{font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+.summary{display:flex;gap:16px;padding:16px 24px;background:#f9fafb;border-bottom:1px solid #e5e7eb}
+.summary-card{flex:1;text-align:center;padding:12px;border-radius:8px}
+.summary-card .num{font-size:20px;font-weight:700;margin-top:4px}
+.summary-card .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#6b7280}
+.body{padding:24px}
+table{width:100%;border-collapse:collapse}
+th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;background:#f9fafb;border-bottom:2px solid #e5e7eb}
+.footer{padding:16px 24px;border-top:1px solid #e5e7eb;text-align:center;font-size:10px;color:#9ca3af}
+@media print{body{padding:0;background:#fff}.receipt{box-shadow:none;border-radius:0}}
+</style></head><body>
+<div class="receipt">
+<div class="header"><div class="logo">Payin</div><h1>Batch Payout Receipt</h1><p>${bName}</p></div>
+<div class="summary">
+<div class="summary-card" style="background:#ECFDF5"><div class="lbl">Sent</div><div class="num" style="color:#059669">${s.sent}</div></div>
+<div class="summary-card" style="background:#FEF2F2"><div class="lbl">Failed</div><div class="num" style="color:#DC2626">${s.failed}</div></div>
+<div class="summary-card" style="background:#EFF6FF"><div class="lbl">Total</div><div class="num" style="color:#2563EB">${s.total}</div></div>
+<div class="summary-card" style="background:#F5F3FF"><div class="lbl">Total Amount</div><div class="num" style="color:#7C3AED">${this.formatAmount(successAmount)} TZS</div></div>
+</div>
+<div class="body">
+<table><thead><tr><th>#</th><th>Phone</th><th>Amount</th><th>Status</th><th>Reference</th><th>Error</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+</div>
+<div class="footer">Batch generated on ${this.formatDate(new Date().toISOString())}<br>This is a system-generated receipt from Payin Payment Platform. Contact support@payin.co.tz</div>
+</div></body></html>`;
+            const win = window.open('', '_blank', 'width=900,height=800');
+            win.document.write(html);
+            win.document.close();
+            setTimeout(() => { win.print(); }, 500);
+        },
+
         // ---- Bank Accounts ----
         async fetchBankAccounts() {
             this.bankAccountsLoading = true;
@@ -3378,6 +3569,21 @@ function dashboard() {
                     this.payoutMsg = data.message || 'Payout sent successfully!';
                     this.payoutMsgType = 'success';
                     this.lastPayoutResult = data;
+                    // Show receipt modal
+                    this.payoutReceipt = {
+                        request_ref: data.request_ref,
+                        phone: data.phone || this.payoutForm.phone,
+                        amount: data.amount || this.payoutForm.amount,
+                        operator: data.operator || this.detectedOperator.name,
+                        status: data.status || 'processing',
+                        platform_charge: this.payoutCharges?.platform_charge || 0,
+                        total_debit: Number(data.amount || this.payoutForm.amount) + Number(this.payoutCharges?.platform_charge || 0),
+                        currency: this.walletCurrency || 'TZS',
+                        reference: this.payoutForm.reference || '',
+                        description: this.payoutForm.description || '',
+                        date: new Date().toISOString(),
+                    };
+                    this.payoutReceiptOpen = true;
                     this.payoutForm = { phone: '', amount: '', reference: '', description: '' };
                     this.payoutAmountDisplay = '';
                     this.detectedOperator = { name: '', code: '' };
