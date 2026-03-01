@@ -4,31 +4,26 @@
 
 @section('content')
 <div x-data="kycPage()" x-init="init()" x-cloak>
-    <!-- Google-style color strip -->
-    <div class="flex h-1">
-        <div class="flex-1 bg-gblue-500"></div>
-        <div class="flex-1 bg-gred-500"></div>
-        <div class="flex-1 bg-gyellow-500"></div>
-        <div class="flex-1 bg-ggreen-500"></div>
-    </div>
-
-    <!-- Top Bar -->
-    <nav class="bg-white shadow-sm border-b">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+    <!-- Top Navbar (matches dashboard) -->
+    <nav class="bg-gray-900 shadow-lg border-b border-gray-800 fixed top-0 left-0 right-0 z-30">
+        <div class="px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-14">
                 <div class="flex items-center">
-                    <svg class="w-8 h-8 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                     </svg>
-                    <span class="ml-2 text-xl font-bold text-gray-800">Payin</span>
+                    <span class="ml-2 text-lg font-bold text-white">Payin</span>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Welcome, <span class="font-medium" x-text="user?.name || 'User'"></span></span>
-                    <button @click="logout()" class="text-sm text-gred-500 hover:text-gred-700 font-medium">Logout</button>
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="user?.name || 'User'"></span></span>
+                    <button @click="logout()" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</button>
                 </div>
             </div>
         </div>
     </nav>
+
+    <!-- Spacer for fixed navbar -->
+    <div class="h-14"></div>
 
     <!-- KYC Required Banner -->
     <div class="bg-gyellow-50 border-b border-gyellow-200">
