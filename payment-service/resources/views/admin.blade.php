@@ -824,6 +824,48 @@
                     </div>
                 </div>
 
+                <!-- Operator Breakdown -->
+                <div x-show="walletData.by_operator && walletData.by_operator.length > 0" class="mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                        <div class="px-6 py-4 border-b bg-gray-50">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                Balance by Operator
+                            </h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                            <template x-for="op in (walletData.by_operator || [])" :key="op.operator">
+                                <div class="p-5">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold"
+                                            :class="{
+                                                'bg-green-100 text-green-800': op.operator==='M-Pesa',
+                                                'bg-blue-100 text-blue-800': op.operator==='Tigo Pesa',
+                                                'bg-red-100 text-red-800': op.operator==='Airtel Money',
+                                                'bg-orange-100 text-orange-800': op.operator==='Halopesa'
+                                            }" x-text="op.operator"></span>
+                                        <span class="text-xs text-gray-400" x-text="op.wallet_count + ' wallets'"></span>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-500">Collection</span>
+                                            <span class="text-sm font-bold text-green-600" x-text="formatAmount(op.collection_total) + ' TZS'"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs text-gray-500">Disbursement</span>
+                                            <span class="text-sm font-bold text-blue-600" x-text="formatAmount(op.disbursement_total) + ' TZS'"></span>
+                                        </div>
+                                        <div class="border-t pt-2 flex items-center justify-between">
+                                            <span class="text-xs font-medium text-gray-700">Total</span>
+                                            <span class="text-sm font-extrabold text-gray-800" x-text="formatAmount(op.overall_total) + ' TZS'"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Fund Disbursement Wallet Form -->
                 <div class="bg-white rounded-xl shadow-sm p-6 border mb-6">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">Fund Disbursement Wallet</h3>

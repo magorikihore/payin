@@ -625,8 +625,22 @@ class WalletController extends Controller
         $totalCollection = $wallets->where('wallet_type', 'collection')->sum('balance');
         $totalDisbursement = $wallets->where('wallet_type', 'disbursement')->sum('balance');
 
+        // Per-operator totals
+        $byOperator = $wallets->groupBy('operator')->map(function ($opWallets, $operator) {
+            $collection = $opWallets->where('wallet_type', 'collection')->sum('balance');
+            $disbursement = $opWallets->where('wallet_type', 'disbursement')->sum('balance');
+            return [
+                'operator' => $operator,
+                'collection_total' => number_format($collection, 2, '.', ''),
+                'disbursement_total' => number_format($disbursement, 2, '.', ''),
+                'overall_total' => number_format($collection + $disbursement, 2, '.', ''),
+                'wallet_count' => $opWallets->count(),
+            ];
+        })->values();
+
         return response()->json([
             'accounts' => $grouped,
+            'by_operator' => $byOperator,
             'platform_collection_total' => number_format($totalCollection, 2, '.', ''),
             'platform_disbursement_total' => number_format($totalDisbursement, 2, '.', ''),
             'platform_overall_total' => number_format($totalCollection + $totalDisbursement, 2, '.', ''),
