@@ -471,6 +471,7 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Charge</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
@@ -481,6 +482,11 @@
                                     <tr class="hover:bg-gray-50 transition">
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(txn.created_at)"></td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600" x-text="txn.operator_receipt || '-'"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                :class="{'bg-ggreen-50 text-ggreen-700': txn.status==='completed','bg-gyellow-50 text-gyellow-700': txn.status==='pending','bg-gred-50 text-gred-700': txn.status==='failed','bg-gray-100 text-gray-800': txn.status==='cancelled','bg-purple-100 text-purple-800': txn.status==='reversed'}"
+                                                x-text="txn.status"></span>
+                                        </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
                                                 :class="{'bg-ggreen-50 text-ggreen-700': txn.type==='collection','bg-gred-50 text-gred-700': txn.type==='disbursement','bg-gblue-50 text-gblue-700': txn.type==='topup','bg-purple-100 text-purple-800': txn.type==='settlement'}"
