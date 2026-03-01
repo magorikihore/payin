@@ -231,6 +231,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'No account found.'], 404);
         }
 
+        // Require documents on first submission, nullable on updates
+        $isFirstSubmission = is_null($account->kyc_submitted_at);
+        $docRule = fn($field) => ($isFirstSubmission && !$account->$field ? 'required' : 'nullable') . '|file|mimes:jpg,jpeg,png,pdf|max:5120';
+
         $request->validate([
             'business_name' => 'required|string|max:191',
             'business_type' => 'nullable|string|max:191',
@@ -250,11 +254,11 @@ class AuthController extends Controller
             'crypto_currency' => 'nullable|string|max:191',
             'id_type' => 'required|in:national_id,passport,drivers_license',
             'id_number' => 'required|string|max:191',
-            'id_document' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'business_license' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'certificate_of_incorporation' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'id_document' => $docRule('id_document_url'),
+            'certificate_of_incorporation' => $docRule('certificate_of_incorporation_url'),
+            'business_license' => $docRule('business_license_url'),
+            'tin_certificate' => $docRule('tin_certificate_url'),
             'tax_clearance' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
-            'tin_certificate' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'company_memorandum' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'company_resolution' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);

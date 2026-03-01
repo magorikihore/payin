@@ -271,50 +271,143 @@
                 <!-- ===== STEP 3: Documents ===== -->
                 <div x-show="kycStep === 3">
                     <h4 class="text-md font-semibold text-gray-800 mb-1">Upload Documents</h4>
-                    <p class="text-sm text-gray-500 mb-5">Upload the required documents for verification.</p>
+                    <p class="text-sm text-gray-500 mb-5">Upload the required documents for verification. Accepted formats: JPG, PNG or PDF (max 5MB each).</p>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">ID Document — Passport, Driving License or NIDA (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
-                            <input type="file" @change="idFile = $event.target.files[0]; delete errors.id_document" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
-                            <p x-show="errors.id_document" x-text="errors.id_document" class="text-xs text-red-500 mt-1"></p>
+                    <!-- Required Documents -->
+                    <div class="mb-6">
+                        <div class="flex items-center mb-3">
+                            <svg class="w-5 h-5 text-gred-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <h5 class="text-sm font-semibold text-gray-700">Required Documents</h5>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Certificate of Incorporation (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
-                            <input type="file" @change="incorporationFile = $event.target.files[0]; delete errors.certificate_of_incorporation" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
-                            <p x-show="errors.certificate_of_incorporation" x-text="errors.certificate_of_incorporation" class="text-xs text-red-500 mt-1"></p>
+                        <div class="space-y-4">
+                            <!-- ID Document -->
+                            <div class="border rounded-lg p-4 transition" :class="idFile ? 'border-ggreen-300 bg-ggreen-50/30' : (errors.id_document ? 'border-red-300 bg-red-50/30' : 'border-gray-200')">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-0.5">ID Document <span class="text-red-500">*</span></label>
+                                        <p class="text-xs text-gray-400 mb-2">Passport, National ID (NIDA) or Driver's License</p>
+                                    </div>
+                                    <div x-show="idFile" class="flex items-center text-ggreen-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-xs ml-1" x-text="idFile?.name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" @change="idFile = $event.target.files[0]; delete errors.id_document" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100 file:cursor-pointer">
+                                <p x-show="errors.id_document" x-text="errors.id_document" class="text-xs text-red-500 mt-1"></p>
+                            </div>
+
+                            <!-- Certificate of Incorporation -->
+                            <div class="border rounded-lg p-4 transition" :class="incorporationFile ? 'border-ggreen-300 bg-ggreen-50/30' : (errors.certificate_of_incorporation ? 'border-red-300 bg-red-50/30' : 'border-gray-200')">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-0.5">Certificate of Incorporation / Company Registration <span class="text-red-500">*</span></label>
+                                        <p class="text-xs text-gray-400 mb-2">Official company registration certificate</p>
+                                    </div>
+                                    <div x-show="incorporationFile" class="flex items-center text-ggreen-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-xs ml-1" x-text="incorporationFile?.name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" @change="incorporationFile = $event.target.files[0]; delete errors.certificate_of_incorporation" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100 file:cursor-pointer">
+                                <p x-show="errors.certificate_of_incorporation" x-text="errors.certificate_of_incorporation" class="text-xs text-red-500 mt-1"></p>
+                            </div>
+
+                            <!-- Business License -->
+                            <div class="border rounded-lg p-4 transition" :class="licenseFile ? 'border-ggreen-300 bg-ggreen-50/30' : (errors.business_license ? 'border-red-300 bg-red-50/30' : 'border-gray-200')">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-0.5">Business License <span class="text-red-500">*</span></label>
+                                        <p class="text-xs text-gray-400 mb-2">Valid business license issued by relevant authority</p>
+                                    </div>
+                                    <div x-show="licenseFile" class="flex items-center text-ggreen-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-xs ml-1" x-text="licenseFile?.name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" @change="licenseFile = $event.target.files[0]; delete errors.business_license" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100 file:cursor-pointer">
+                                <p x-show="errors.business_license" x-text="errors.business_license" class="text-xs text-red-500 mt-1"></p>
+                            </div>
+
+                            <!-- TIN Certificate -->
+                            <div class="border rounded-lg p-4 transition" :class="tinCertificateFile ? 'border-ggreen-300 bg-ggreen-50/30' : (errors.tin_certificate ? 'border-red-300 bg-red-50/30' : 'border-gray-200')">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-0.5">TIN Certificate <span class="text-red-500">*</span></label>
+                                        <p class="text-xs text-gray-400 mb-2">Tax Identification Number (TIN) certificate from TRA</p>
+                                    </div>
+                                    <div x-show="tinCertificateFile" class="flex items-center text-ggreen-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-xs ml-1" x-text="tinCertificateFile?.name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" @change="tinCertificateFile = $event.target.files[0]; delete errors.tin_certificate" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100 file:cursor-pointer">
+                                <p x-show="errors.tin_certificate" x-text="errors.tin_certificate" class="text-xs text-red-500 mt-1"></p>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Business License (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
-                            <input type="file" @change="licenseFile = $event.target.files[0]; delete errors.business_license" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
-                            <p x-show="errors.business_license" x-text="errors.business_license" class="text-xs text-red-500 mt-1"></p>
+                    </div>
+
+                    <!-- Optional Documents -->
+                    <div>
+                        <div class="flex items-center mb-3">
+                            <svg class="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            <h5 class="text-sm font-semibold text-gray-700">Additional Documents</h5>
+                            <span class="ml-2 text-xs text-gray-400 font-normal">(Optional — submit if available)</span>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Tax Clearance Certificate (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
-                            <input type="file" @change="taxClearanceFile = $event.target.files[0]; delete errors.tax_clearance" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
-                            <p x-show="errors.tax_clearance" x-text="errors.tax_clearance" class="text-xs text-red-500 mt-1"></p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">TIN Number Certificate (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
-                            <input type="file" @change="tinCertificateFile = $event.target.files[0]; delete errors.tin_certificate" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
-                            <p x-show="errors.tin_certificate" x-text="errors.tin_certificate" class="text-xs text-red-500 mt-1"></p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Company Memorandum (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
-                            <input type="file" @change="memorandumFile = $event.target.files[0]; delete errors.company_memorandum" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
-                            <p x-show="errors.company_memorandum" x-text="errors.company_memorandum" class="text-xs text-red-500 mt-1"></p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Company Resolution (JPG, PNG or PDF, max 5MB) <span class="text-red-500">*</span></label>
-                            <input type="file" @change="resolutionFile = $event.target.files[0]; delete errors.company_resolution" accept=".jpg,.jpeg,.png,.pdf"
-                                class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gblue-50 file:text-gblue-700 hover:file:bg-gblue-100">
-                            <p x-show="errors.company_resolution" x-text="errors.company_resolution" class="text-xs text-red-500 mt-1"></p>
+                        <div class="space-y-4">
+                            <!-- Tax Clearance -->
+                            <div class="border border-dashed rounded-lg p-4 transition" :class="taxClearanceFile ? 'border-ggreen-300 bg-ggreen-50/30' : 'border-gray-200'">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-0.5">Tax Clearance Certificate</label>
+                                        <p class="text-xs text-gray-400 mb-2">Tax compliance certificate from TRA</p>
+                                    </div>
+                                    <div x-show="taxClearanceFile" class="flex items-center text-ggreen-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-xs ml-1" x-text="taxClearanceFile?.name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" @change="taxClearanceFile = $event.target.files[0]; delete errors.tax_clearance" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-600 hover:file:bg-gray-100 file:cursor-pointer">
+                                <p x-show="errors.tax_clearance" x-text="errors.tax_clearance" class="text-xs text-red-500 mt-1"></p>
+                            </div>
+
+                            <!-- Company Memorandum -->
+                            <div class="border border-dashed rounded-lg p-4 transition" :class="memorandumFile ? 'border-ggreen-300 bg-ggreen-50/30' : 'border-gray-200'">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-0.5">Memorandum of Association</label>
+                                        <p class="text-xs text-gray-400 mb-2">Company memorandum and articles of association</p>
+                                    </div>
+                                    <div x-show="memorandumFile" class="flex items-center text-ggreen-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-xs ml-1" x-text="memorandumFile?.name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" @change="memorandumFile = $event.target.files[0]; delete errors.company_memorandum" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-600 hover:file:bg-gray-100 file:cursor-pointer">
+                                <p x-show="errors.company_memorandum" x-text="errors.company_memorandum" class="text-xs text-red-500 mt-1"></p>
+                            </div>
+
+                            <!-- Company Resolution -->
+                            <div class="border border-dashed rounded-lg p-4 transition" :class="resolutionFile ? 'border-ggreen-300 bg-ggreen-50/30' : 'border-gray-200'">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700 mb-0.5">Board Resolution</label>
+                                        <p class="text-xs text-gray-400 mb-2">Resolution authorizing use of payment services</p>
+                                    </div>
+                                    <div x-show="resolutionFile" class="flex items-center text-ggreen-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        <span class="text-xs ml-1" x-text="resolutionFile?.name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" @change="resolutionFile = $event.target.files[0]; delete errors.company_resolution" accept=".jpg,.jpeg,.png,.pdf"
+                                    class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-gray-50 file:text-gray-600 hover:file:bg-gray-100 file:cursor-pointer">
+                                <p x-show="errors.company_resolution" x-text="errors.company_resolution" class="text-xs text-red-500 mt-1"></p>
+                            </div>
                         </div>
                     </div>
 
@@ -466,21 +559,20 @@ function kycPage() {
 
         validateStep3() {
             this.errors = {};
+            // Required documents
             if (!this.idFile) this.errors.id_document = 'Please upload your ID document.';
             if (!this.incorporationFile) this.errors.certificate_of_incorporation = 'Please upload your Certificate of Incorporation.';
             if (!this.licenseFile) this.errors.business_license = 'Please upload your business license.';
-            if (!this.taxClearanceFile) this.errors.tax_clearance = 'Please upload your Tax Clearance certificate.';
-            if (!this.tinCertificateFile) this.errors.tin_certificate = 'Please upload your TIN Number Certificate.';
-            if (!this.memorandumFile) this.errors.company_memorandum = 'Please upload your Company Memorandum.';
-            if (!this.resolutionFile) this.errors.company_resolution = 'Please upload your Company Resolution.';
+            if (!this.tinCertificateFile) this.errors.tin_certificate = 'Please upload your TIN Certificate.';
+            // File size checks (all uploads)
             if (this.idFile && this.idFile.size > 5 * 1024 * 1024) this.errors.id_document = 'ID document must be under 5MB.';
             if (this.incorporationFile && this.incorporationFile.size > 5 * 1024 * 1024) this.errors.certificate_of_incorporation = 'Certificate must be under 5MB.';
             if (this.licenseFile && this.licenseFile.size > 5 * 1024 * 1024) this.errors.business_license = 'Business license must be under 5MB.';
-            if (this.taxClearanceFile && this.taxClearanceFile.size > 5 * 1024 * 1024) this.errors.tax_clearance = 'Tax clearance must be under 5MB.';
             if (this.tinCertificateFile && this.tinCertificateFile.size > 5 * 1024 * 1024) this.errors.tin_certificate = 'TIN certificate must be under 5MB.';
-            if (this.memorandumFile && this.memorandumFile.size > 5 * 1024 * 1024) this.errors.company_memorandum = 'Company memorandum must be under 5MB.';
-            if (this.resolutionFile && this.resolutionFile.size > 5 * 1024 * 1024) this.errors.company_resolution = 'Company resolution must be under 5MB.';
-            if (Object.keys(this.errors).length) { this.msg = 'Please fix the errors below before continuing.'; this.msgType = 'error'; return false; }
+            if (this.taxClearanceFile && this.taxClearanceFile.size > 5 * 1024 * 1024) this.errors.tax_clearance = 'Tax clearance must be under 5MB.';
+            if (this.memorandumFile && this.memorandumFile.size > 5 * 1024 * 1024) this.errors.company_memorandum = 'Memorandum must be under 5MB.';
+            if (this.resolutionFile && this.resolutionFile.size > 5 * 1024 * 1024) this.errors.company_resolution = 'Resolution must be under 5MB.';
+            if (Object.keys(this.errors).length) { this.msg = 'Please upload all required documents before continuing.'; this.msgType = 'error'; return false; }
             this.msg = ''; return true;
         },
 
