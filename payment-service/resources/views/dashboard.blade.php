@@ -877,15 +877,21 @@
 
             <!-- Settlements Table -->
             <div class="bg-white rounded-xl shadow-md border overflow-hidden">
-                <div class="px-6 py-4 border-b flex items-center justify-between">
+                <div class="px-6 py-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <h3 class="text-lg font-semibold text-gray-800">Settlement History</h3>
-                    <select x-model="stlFilterStatus" @change="fetchSettlements()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
-                        <option value="">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="processing">Processing</option>
-                        <option value="completed">Completed</option>
-                        <option value="failed">Failed</option>
-                    </select>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:flex-initial">
+                            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" x-model="stlSearch" @input.debounce.400ms="fetchSettlements()" placeholder="Search ref, bank, amount..." class="w-full sm:w-52 pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <select x-model="stlFilterStatus" @change="fetchSettlements()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
                 </div>
                 <div x-show="stlLoadingList" class="p-8 text-center text-gray-500">
                     <svg class="animate-spin h-8 w-8 mx-auto text-gblue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
@@ -2481,7 +2487,7 @@ function dashboard() {
         walletLoading: { txns: false },
 
         // Settlements
-        settlements:[], stlFilterStatus: '', stlLoading: false, stlLoadingList: false,
+        settlements:[], stlFilterStatus: '', stlSearch: '', stlLoading: false, stlLoadingList: false,
         stlForm: { operator: '', amount: '', bank_account_id: '', description: '' },
         stlAmountDisplay: '',
         settlementMsg: '', settlementMsgType: '',
@@ -3046,7 +3052,10 @@ function dashboard() {
             this.stlLoadingList = true;
             try {
                 let url = '{{ config("services.settlement_service.url") }}/api/settlements';
-                if (this.stlFilterStatus) url += `?status=${this.stlFilterStatus}`;
+                const params = [];
+                if (this.stlFilterStatus) params.push(`status=${this.stlFilterStatus}`);
+                if (this.stlSearch.trim()) params.push(`search=${encodeURIComponent(this.stlSearch.trim())}`);
+                if (params.length) url += '?' + params.join('&');
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (!res.ok) throw new Error();
