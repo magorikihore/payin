@@ -70,4 +70,9 @@ class Account extends Model
     {
         return $this->hasMany(BankAccount::class);
     }
+
+    public function cryptoWallets()
+    {
+        return $this->hasMany(CryptoWallet::class);
+    }
 }

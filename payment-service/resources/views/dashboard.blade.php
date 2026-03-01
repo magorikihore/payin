@@ -1347,27 +1347,89 @@
                             </div>
                         </div>
 
-                        <!-- TAB 5: Crypto Wallet -->
+                        <!-- TAB 5: Crypto Wallets -->
                         <div x-show="accountInfoTab === 'crypto'" x-cloak>
-                            <h4 class="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                Crypto Wallet
-                            </h4>
-                            <div x-show="kycData.crypto_wallet_address" class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                    <p class="text-xs text-gray-500">Currency</p>
-                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_currency || '—'"></p>
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-sm font-semibold text-gray-700 flex items-center">
+                                    <svg class="w-4 h-4 mr-1.5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Crypto Wallets
+                                </h4>
+                                <span class="text-xs text-gray-400" x-text="cryptoWallets.length + ' wallet(s)'"></span>
+                            </div>
+
+                            <!-- Existing crypto wallets list -->
+                            <div x-show="cryptoWallets.length > 0" class="space-y-2 mb-4">
+                                <template x-for="cw in cryptoWallets" :key="cw.id">
+                                    <div class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2">
+                                                <p class="text-sm font-medium text-gray-800" x-text="cw.currency + ' (' + cw.network + ')'"></p>
+                                                <span x-show="cw.is_default" class="text-xs bg-gblue-100 text-gblue-700 px-1.5 py-0.5 rounded">Default</span>
+                                                <span x-show="cw.label" class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded" x-text="cw.label"></span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-0.5 font-mono break-all" x-text="cw.wallet_address"></p>
+                                        </div>
+                                        <div class="flex items-center gap-1 ml-3">
+                                            <button x-show="!cw.is_default" @click="setDefaultCrypto(cw.id)" class="text-xs text-gblue-500 hover:text-gblue-700 px-2 py-1" title="Set as default">★</button>
+                                            <button @click="deleteCryptoWallet(cw.id)" class="text-xs text-red-500 hover:text-red-700 px-2 py-1" title="Remove">✕</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            <p x-show="cryptoWallets.length === 0 && !cryptoWalletsLoading" class="text-sm text-gray-400 mb-4">No crypto wallets added yet.</p>
+
+                            <!-- Add crypto wallet form -->
+                            <button x-show="!showCryptoForm" @click="showCryptoForm = true" class="text-sm text-gblue-500 hover:text-gblue-700 flex items-center font-medium">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                                Add Crypto Wallet
+                            </button>
+                            <div x-show="showCryptoForm" x-cloak class="border border-gray-200 rounded-lg p-4 mt-2">
+                                <div x-show="cryptoMsg" class="mb-3 p-2 rounded text-sm" :class="cryptoMsgType==='success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'" x-text="cryptoMsg"></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Currency *</label>
+                                        <select x-model="cryptoForm.currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            <option value="">Select currency</option>
+                                            <option value="BTC">BTC - Bitcoin</option>
+                                            <option value="ETH">ETH - Ethereum</option>
+                                            <option value="USDT">USDT - Tether</option>
+                                            <option value="USDC">USDC - USD Coin</option>
+                                            <option value="BNB">BNB - Binance Coin</option>
+                                            <option value="SOL">SOL - Solana</option>
+                                            <option value="XRP">XRP - Ripple</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Network *</label>
+                                        <select x-model="cryptoForm.network" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            <option value="">Select network</option>
+                                            <option value="Bitcoin">Bitcoin</option>
+                                            <option value="Ethereum">Ethereum (ERC-20)</option>
+                                            <option value="BSC">BSC (BEP-20)</option>
+                                            <option value="Tron">Tron (TRC-20)</option>
+                                            <option value="Solana">Solana</option>
+                                            <option value="Polygon">Polygon</option>
+                                            <option value="Arbitrum">Arbitrum</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Wallet Address *</label>
+                                        <input type="text" x-model="cryptoForm.wallet_address" required placeholder="Enter wallet address" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none font-mono">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-600 mb-1">Label</label>
+                                        <input type="text" x-model="cryptoForm.label" placeholder="e.g. Main, Trading" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                    </div>
                                 </div>
-                                <div class="bg-gray-50 rounded-lg px-4 py-3">
-                                    <p class="text-xs text-gray-500">Network</p>
-                                    <p class="text-sm font-medium text-gray-800" x-text="kycData.crypto_network || '—'"></p>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg px-4 py-3 md:col-span-3">
-                                    <p class="text-xs text-gray-500">Wallet Address</p>
-                                    <p class="text-sm font-medium text-gray-800 font-mono break-all" x-text="kycData.crypto_wallet_address"></p>
+                                <div class="flex gap-2 mt-3">
+                                    <button @click="addCryptoWallet()" :disabled="cryptoFormLoading || !cryptoForm.currency || !cryptoForm.network || !cryptoForm.wallet_address" class="bg-gblue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gblue-600 disabled:opacity-50">
+                                        <span x-show="!cryptoFormLoading">Save</span><span x-show="cryptoFormLoading">Saving...</span>
+                                    </button>
+                                    <button @click="showCryptoForm = false; cryptoMsg = ''" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300">Cancel</button>
                                 </div>
                             </div>
-                            <div x-show="!kycData.crypto_wallet_address" class="text-sm text-gray-400">No crypto wallet configured yet.</div>
                         </div>
                     </div>
 
@@ -2646,6 +2708,11 @@ function dashboard() {
         bankForm: { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '', label: '' },
         bankFormLoading: false, bankMsg: '', bankMsgType: '', showBankForm: false,
 
+        // Crypto Wallets
+        cryptoWallets: [], cryptoWalletsLoading: false,
+        cryptoForm: { currency: '', network: '', wallet_address: '', label: '' },
+        cryptoFormLoading: false, cryptoMsg: '', cryptoMsgType: '', showCryptoForm: false,
+
         // Send Money (Payout)
         sendMoneySubTab: 'single',
         payoutOperators: [],
@@ -2730,6 +2797,7 @@ function dashboard() {
             this.fetchWallet();
             this.fetchSettlements();
             this.fetchBankAccounts();
+            this.fetchCryptoWallets();
 
             // Restore tab from URL hash
             const hash = window.location.hash.replace('#', '');
@@ -3576,6 +3644,55 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchBankAccounts();
+            } catch (e) { console.error(e); }
+        },
+
+        // ---- Crypto Wallets ----
+        async fetchCryptoWallets() {
+            this.cryptoWalletsLoading = true;
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/crypto-wallets', { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.cryptoWallets = data.crypto_wallets || [];
+                }
+            } catch (e) { console.error('Failed to fetch crypto wallets', e); }
+            finally { this.cryptoWalletsLoading = false; }
+        },
+        async addCryptoWallet() {
+            this.cryptoFormLoading = true; this.cryptoMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/crypto-wallets', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(this.cryptoForm)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+                    this.cryptoMsg = errors || 'Failed.'; this.cryptoMsgType = 'error'; return;
+                }
+                this.cryptoMsg = data.message; this.cryptoMsgType = 'success';
+                this.cryptoForm = { currency: '', network: '', wallet_address: '', label: '' };
+                this.showCryptoForm = false;
+                this.fetchCryptoWallets();
+            } catch (e) { this.cryptoMsg = 'Service unavailable.'; this.cryptoMsgType = 'error'; }
+            finally { this.cryptoFormLoading = false; }
+        },
+        async deleteCryptoWallet(id) {
+            if (!confirm('Remove this crypto wallet?')) return;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/crypto-wallets/${id}`, {
+                    method: 'DELETE', headers: this.getHeaders()
+                });
+                if (res.ok) this.fetchCryptoWallets();
+            } catch (e) { console.error(e); }
+        },
+        async setDefaultCrypto(id) {
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/crypto-wallets/${id}/default`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                if (res.ok) this.fetchCryptoWallets();
             } catch (e) { console.error(e); }
         },
 

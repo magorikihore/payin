@@ -5,6 +5,7 @@ use App\Http\Controllers\AccountUserController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApiKeyController;
 use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\CryptoWalletController;
 use App\Http\Controllers\InternalNotificationController;
 use App\Http\Controllers\IpWhitelistController;
 use App\Http\Controllers\LogController;
@@ -54,6 +55,12 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/account/bank-accounts', [BankAccountController::class, 'store']);
     Route::put('/account/bank-accounts/{id}/default', [BankAccountController::class, 'setDefault']);
     Route::delete('/account/bank-accounts/{id}', [BankAccountController::class, 'destroy']);
+
+    // Crypto Wallets (owner/admin)
+    Route::get('/account/crypto-wallets', [CryptoWalletController::class, 'index']);
+    Route::post('/account/crypto-wallets', [CryptoWalletController::class, 'store']);
+    Route::put('/account/crypto-wallets/{id}/default', [CryptoWalletController::class, 'setDefault']);
+    Route::delete('/account/crypto-wallets/{id}', [CryptoWalletController::class, 'destroy']);
 
     // IP Whitelist (user)
     Route::get('/account/ips', [IpWhitelistController::class, 'index']);
