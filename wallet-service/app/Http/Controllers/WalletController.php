@@ -24,54 +24,24 @@ class WalletController extends Controller
         $user = $request->user();
         $accountId = $user->account_id;
         $currency = $user->account['currency'] ?? 'TZS';
-        $multiCurrencyEnabled = !empty($user->account['multi_currency_enabled']);
-        $allowedCurrencies = $user->account['allowed_currencies'] ?? [];
 
-        // Build list of currencies to provision wallets for
-        $currencies = [$currency]; // always include base currency
-        if ($multiCurrencyEnabled && !empty($allowedCurrencies)) {
-            $currencies = array_unique(array_merge($currencies, $allowedCurrencies));
-        }
-
-        // Ensure wallets exist for all operators, types, and currencies
-        foreach ($currencies as $cur) {
-            foreach ($this->operators as $operator) {
-                foreach ($this->walletTypes as $type) {
-                    Wallet::firstOrCreate(
-                        ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => $type, 'currency' => $cur],
-                        ['user_id' => $user->id, 'balance' => 0, 'status' => 'active']
-                    );
-                }
+        // Ensure wallets exist for all operators and types
+        foreach ($this->operators as $operator) {
+            foreach ($this->walletTypes as $type) {
+                Wallet::firstOrCreate(
+                    ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => $type, 'currency' => $currency],
+                    ['user_id' => $user->id, 'balance' => 0, 'status' => 'active']
+                );
             }
         }
 
-        $wallets = Wallet::where('account_id', $accountId)->get();
-
-        // Filter base-currency wallets for backward compatibility
-        $baseWallets = $wallets->where('currency', $currency);
-        $collectionWallets = $baseWallets->where('wallet_type', 'collection')->values();
-        $disbursementWallets = $baseWallets->where('wallet_type', 'disbursement')->values();
+        $wallets = Wallet::where('account_id', $accountId)->where('currency', $currency)->get();
+        $collectionWallets = $wallets->where('wallet_type', 'collection')->values();
+        $disbursementWallets = $wallets->where('wallet_type', 'disbursement')->values();
 
         $collectionTotal = $collectionWallets->sum('balance');
         $disbursementTotal = $disbursementWallets->sum('balance');
         $overallBalance = $collectionTotal + $disbursementTotal;
-
-        // Group all wallets by currency for multi-currency view
-        $walletsByCurrency = [];
-        foreach ($currencies as $cur) {
-            $curWallets = $wallets->where('currency', $cur);
-            $curCollection = $curWallets->where('wallet_type', 'collection')->values();
-            $curDisbursement = $curWallets->where('wallet_type', 'disbursement')->values();
-            $walletsByCurrency[] = [
-                'currency' => $cur,
-                'is_base' => $cur === $currency,
-                'collection_wallets' => $curCollection,
-                'disbursement_wallets' => $curDisbursement,
-                'collection_total' => number_format((float) $curCollection->sum('balance'), 2, '.', ''),
-                'disbursement_total' => number_format((float) $curDisbursement->sum('balance'), 2, '.', ''),
-                'overall_balance' => number_format((float) $curWallets->sum('balance'), 2, '.', ''),
-            ];
-        }
 
         // Recent transactions across all wallets
         $walletIds = $wallets->pluck('id');
@@ -96,9 +66,6 @@ class WalletController extends Controller
             'currency' => $currency,
             'operators' => $this->operators,
             'recent_transactions' => $recentTransactions,
-            'multi_currency_enabled' => $multiCurrencyEnabled,
-            'wallets_by_currency' => $walletsByCurrency,
-            'all_currencies' => $currencies,
         ]);
     }
 
