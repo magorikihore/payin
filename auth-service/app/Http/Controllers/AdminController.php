@@ -620,6 +620,45 @@ class AdminController extends Controller
     }
 
     /**
+     * Toggle multi-currency for an account + set allowed currencies.
+     */
+    public function updateMultiCurrency(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
+
+        $request->validate([
+            'multi_currency_enabled' => 'required|boolean',
+            'allowed_currencies' => 'nullable|array',
+            'allowed_currencies.*' => 'string|size:3',
+        ]);
+
+        $account = Account::find($id);
+        if (!$account) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        $update = ['multi_currency_enabled' => $request->multi_currency_enabled];
+
+        if ($request->has('allowed_currencies')) {
+            $currencies = array_map('strtoupper', $request->allowed_currencies);
+            // Always include the account's base currency
+            if (!in_array($account->currency, $currencies)) {
+                array_unshift($currencies, $account->currency);
+            }
+            $update['allowed_currencies'] = $currencies;
+        }
+
+        $account->update($update);
+
+        $status = $request->multi_currency_enabled ? 'enabled' : 'disabled';
+
+        return response()->json([
+            'message' => "Multi-currency {$status} for {$account->business_name}.",
+            'account' => $account->fresh(),
+        ]);
+    }
+
+    /**
      * Reset a user's password (admin).
      */
     public function resetPassword(Request $request, $id): JsonResponse

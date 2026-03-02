@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\LogController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,12 @@ Route::middleware('auth.service')->group(function () {
     Route::get('/wallet/transactions', [WalletController::class, 'transactions']);
     Route::get('/wallet/transfers', [WalletController::class, 'myTransfers']);
 
+    // Currency exchange (user)
+    Route::get('/exchange/rates', [ExchangeRateController::class, 'availableRates']);
+    Route::post('/exchange/preview', [ExchangeRateController::class, 'preview']);
+    Route::post('/exchange/execute', [ExchangeRateController::class, 'exchange']);
+    Route::get('/exchange/history', [ExchangeRateController::class, 'myExchanges']);
+
     // Admin: all wallets across all accounts
     Route::get('/admin/wallets', [WalletController::class, 'adminWallets']);
     Route::post('/admin/wallet/refund', [WalletController::class, 'adminRefund']);
@@ -20,6 +27,13 @@ Route::middleware('auth.service')->group(function () {
     Route::get('/admin/internal-transfers', [WalletController::class, 'adminTransfers']);
     Route::put('/admin/internal-transfers/{id}/approve', [WalletController::class, 'approveTransfer']);
     Route::put('/admin/internal-transfers/{id}/reject', [WalletController::class, 'rejectTransfer']);
+
+    // Admin: exchange rate management
+    Route::get('/admin/exchange-rates', [ExchangeRateController::class, 'index']);
+    Route::post('/admin/exchange-rates', [ExchangeRateController::class, 'upsert']);
+    Route::put('/admin/exchange-rates/{id}/toggle', [ExchangeRateController::class, 'toggle']);
+    Route::delete('/admin/exchange-rates/{id}', [ExchangeRateController::class, 'destroy']);
+    Route::get('/admin/exchange-history', [ExchangeRateController::class, 'adminExchangeHistory']);
 
     // Logs (super_admin only)
     Route::get('/admin/logs', [LogController::class, 'index']);

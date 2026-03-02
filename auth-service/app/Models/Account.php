@@ -24,6 +24,8 @@ class Account extends Model
         'city',
         'country',
         'currency',
+        'multi_currency_enabled',
+        'allowed_currencies',
         'bank_name',
         'bank_account_name',
         'bank_account_number',
@@ -54,6 +56,8 @@ class Account extends Model
         'kyc_submitted_at' => 'datetime',
         'kyc_approved_at' => 'datetime',
         'kyc_update_allowed' => 'boolean',
+        'multi_currency_enabled' => 'boolean',
+        'allowed_currencies' => 'array',
     ];
 
     public function users(): HasMany

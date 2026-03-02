@@ -85,6 +85,12 @@
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'users' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     Users
                 </button>
+                <button x-show="user?.account?.multi_currency_enabled" @click="goToTab('exchange')"
+                    :class="activeTab === 'exchange' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'exchange' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                    Currency Exchange
+                </button>
             </nav>
 
             <!-- Divider -->
@@ -2528,6 +2534,244 @@
             </div>
         </div>
 
+        <!-- ==================== CURRENCY EXCHANGE TAB ==================== -->
+        <div x-show="activeTab === 'exchange'" x-cloak>
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Currency Exchange</h2>
+                <p class="text-sm text-gray-500 mt-1">Convert funds between currencies in your wallets.</p>
+            </div>
+
+            <!-- Message -->
+            <div x-show="fxMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="fxMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="fxMsg"></div>
+
+            <!-- Available Rates Overview -->
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-md font-semibold text-gray-700">Available Exchange Rates</h3>
+                    <button @click="fetchExchangeRates()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Refresh</button>
+                </div>
+                <div x-show="fxLoading" class="text-center py-4">
+                    <svg class="animate-spin h-6 w-6 mx-auto text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                </div>
+                <div x-show="!fxLoading && fxRates.length === 0" x-cloak class="text-center py-4 text-sm text-gray-500">No exchange rates available for your account currencies.</div>
+                <div x-show="!fxLoading && fxRates.length > 0" x-cloak class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <template x-for="r in fxRates" :key="r.id">
+                        <div class="border rounded-lg p-4 bg-gray-50">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-gray-800" x-text="r.from_currency + ' → ' + r.to_currency"></span>
+                                <span class="text-xs px-2 py-0.5 rounded-full" :class="r.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'" x-text="r.is_active ? 'Active' : 'Inactive'"></span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                <div>Buy: <span class="font-medium text-gray-800" x-text="parseFloat(r.buy_rate).toFixed(4)"></span></div>
+                                <div>Sell: <span class="font-medium text-gray-800" x-text="parseFloat(r.sell_rate).toFixed(4)"></span></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">Fee: <span class="font-medium" x-text="parseFloat(r.conversion_fee_percent).toFixed(2) + '%'"></span></div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Exchange Form -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Left: Form -->
+                <div class="bg-white rounded-xl shadow-md border p-6">
+                    <h3 class="text-md font-semibold text-gray-700 mb-4">Convert Currency</h3>
+
+                    <!-- Source -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">From Currency</label>
+                        <select x-model="fxForm.from_currency" @change="fxPreview = null; fxResult = null" class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select currency</option>
+                            <template x-for="c in fxAllowedCurrencies" :key="'from_'+c">
+                                <option :value="c" x-text="c + ' – ' + (fxCurrencyLabels[c] || c)"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Source Operator</label>
+                            <select x-model="fxForm.from_operator" @change="fxPreview = null" class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select</option>
+                                <template x-for="op in operators" :key="'fxfr_'+op">
+                                    <option :value="op" x-text="op"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Source Wallet</label>
+                            <select x-model="fxForm.from_wallet_type" @change="fxPreview = null" class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="collection">Collection</option>
+                                <option value="disbursement">Disbursement</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                        <input type="text" x-model="fxAmountDisplay" @input="formatAmountInput($event, 'fx')" class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Enter amount">
+                        <p x-show="fxForm.from_currency && fxForm.from_operator" class="text-xs text-gray-500 mt-1">
+                            Available: <span class="font-medium" x-text="getSourceWalletBalance()"></span>
+                        </p>
+                    </div>
+
+                    <!-- Swap Arrow -->
+                    <div class="flex justify-center my-3">
+                        <button @click="let tmp = fxForm.from_currency; fxForm.from_currency = fxForm.to_currency; fxForm.to_currency = tmp; fxPreview = null; fxResult = null" class="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition" title="Swap currencies">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Destination -->
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">To Currency</label>
+                        <select x-model="fxForm.to_currency" @change="fxPreview = null; fxResult = null" class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select currency</option>
+                            <template x-for="c in fxAllowedCurrencies.filter(c => c !== fxForm.from_currency)" :key="'to_'+c">
+                                <option :value="c" x-text="c + ' – ' + (fxCurrencyLabels[c] || c)"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Destination Operator</label>
+                            <select x-model="fxForm.to_operator" @change="fxPreview = null" class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Select</option>
+                                <template x-for="op in operators" :key="'fxto_'+op">
+                                    <option :value="op" x-text="op"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Destination Wallet</label>
+                            <select x-model="fxForm.to_wallet_type" @change="fxPreview = null" class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="collection">Collection</option>
+                                <option value="disbursement">Disbursement</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-3">
+                        <button @click="previewExchange()" :disabled="fxPreviewLoading || !fxForm.from_currency || !fxForm.to_currency || !fxForm.amount || !fxForm.from_operator || !fxForm.to_operator"
+                            class="flex-1 px-4 py-2.5 bg-gray-800 text-white text-sm font-medium rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center">
+                            <svg x-show="fxPreviewLoading" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            Preview
+                        </button>
+                        <button x-show="fxPreview" @click="executeExchange()" :disabled="fxExecuting"
+                            class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center">
+                            <svg x-show="fxExecuting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            Exchange Now
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Preview / Result -->
+                <div>
+                    <!-- Preview Card -->
+                    <div x-show="fxPreview" x-cloak class="bg-white rounded-xl shadow-md border p-6 mb-4">
+                        <h3 class="text-md font-semibold text-gray-700 mb-4">Exchange Preview</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center py-2 border-b">
+                                <span class="text-sm text-gray-500">You Send</span>
+                                <span class="text-lg font-bold text-gray-800" x-text="formatAmount(fxPreview?.from_amount) + ' ' + fxPreview?.from_currency"></span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b">
+                                <span class="text-sm text-gray-500">Exchange Rate</span>
+                                <span class="text-sm font-medium text-gray-700" x-text="'1 ' + fxPreview?.from_currency + ' = ' + parseFloat(fxPreview?.rate).toFixed(4) + ' ' + fxPreview?.to_currency"></span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b">
+                                <span class="text-sm text-gray-500">Conversion Fee (<span x-text="fxPreview?.fee_percent + '%'"></span>)</span>
+                                <span class="text-sm font-medium text-red-600" x-text="'-' + formatAmount(fxPreview?.fee_amount) + ' ' + fxPreview?.from_currency"></span>
+                            </div>
+                            <div class="flex justify-between items-center py-2 bg-blue-50 -mx-6 px-6 rounded-lg">
+                                <span class="text-sm font-medium text-blue-700">You Receive</span>
+                                <span class="text-xl font-bold text-blue-800" x-text="formatAmount(fxPreview?.to_amount) + ' ' + fxPreview?.to_currency"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Result Card -->
+                    <div x-show="fxResult" x-cloak class="bg-green-50 border border-green-200 rounded-xl p-6">
+                        <div class="flex items-center mb-3">
+                            <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <h3 class="text-md font-semibold text-green-800">Exchange Completed!</h3>
+                        </div>
+                        <p class="text-sm text-green-700 mb-3" x-text="fxResult?.message"></p>
+                        <div class="grid grid-cols-2 gap-3 text-xs text-green-700">
+                            <div>Reference: <span class="font-bold" x-text="fxResult?.exchange?.reference"></span></div>
+                            <div>Source Balance: <span class="font-bold" x-text="fxResult?.source_wallet_balance + ' ' + fxResult?.exchange?.from_currency"></span></div>
+                            <div>Dest Balance: <span class="font-bold" x-text="fxResult?.destination_wallet_balance + ' ' + fxResult?.exchange?.to_currency"></span></div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State when no preview -->
+                    <div x-show="!fxPreview && !fxResult" x-cloak class="bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 p-8 text-center">
+                        <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        <p class="text-sm text-gray-500">Fill in the form and click <strong>Preview</strong> to see the exchange details before confirming.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exchange History -->
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                <div class="px-6 py-4 border-b bg-gray-50 flex items-center justify-between">
+                    <h3 class="text-md font-semibold text-gray-700">Exchange History</h3>
+                    <button @click="fetchExchangeHistory()" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Refresh</button>
+                </div>
+                <div x-show="fxHistoryLoading" class="p-6 text-center">
+                    <svg class="animate-spin h-6 w-6 mx-auto text-blue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                </div>
+                <div x-show="!fxHistoryLoading && fxHistory.length === 0" x-cloak class="p-6 text-center text-sm text-gray-500">No exchange transactions yet.</div>
+                <div x-show="!fxHistoryLoading && fxHistory.length > 0" x-cloak>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">To</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rate</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fee</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <template x-for="ex in fxHistory" :key="ex.id">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 text-xs font-mono text-gray-700" x-text="ex.reference"></td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="font-medium" x-text="formatAmount(ex.from_amount)"></span>
+                                            <span class="text-xs text-gray-500 ml-1" x-text="ex.from_currency"></span>
+                                            <span class="block text-xs text-gray-400" x-text="ex.from_operator + ' / ' + ex.from_wallet_type"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="font-medium text-green-700" x-text="formatAmount(ex.to_amount)"></span>
+                                            <span class="text-xs text-gray-500 ml-1" x-text="ex.to_currency"></span>
+                                            <span class="block text-xs text-gray-400" x-text="ex.to_operator + ' / ' + ex.to_wallet_type"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-xs text-gray-600" x-text="parseFloat(ex.rate_applied).toFixed(4)"></td>
+                                        <td class="px-4 py-3 text-xs text-gray-600" x-text="formatAmount(ex.fee_amount) + ' (' + parseFloat(ex.fee_percent).toFixed(1) + '%)'"></td>
+                                        <td class="px-4 py-3"><span class="text-xs px-2 py-0.5 rounded-full" :class="ex.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="ex.status"></span></td>
+                                        <td class="px-4 py-3 text-xs text-gray-500" x-text="new Date(ex.created_at).toLocaleString()"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div x-show="fxHistoryPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
+                        <p class="text-sm text-gray-500">Showing <span x-text="fxHistoryPagination.from||0"></span> to <span x-text="fxHistoryPagination.to||0"></span> of <span x-text="fxHistoryPagination.total||0"></span></p>
+                        <div class="flex space-x-2">
+                            <button @click="fxHistoryPage--; fetchExchangeHistory()" :disabled="!fxHistoryPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button @click="fxHistoryPage++; fetchExchangeHistory()" :disabled="!fxHistoryPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     <!-- Change Password Modal -->
     <div x-show="showPasswordModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closePasswordModal()">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
@@ -2915,6 +3159,16 @@ function dashboard() {
         // My Charges
         myCharges: {},
 
+        // Currency Exchange
+        fxRates: [], fxAllowedCurrencies: [], fxBaseCurrency: '', fxCurrencyLabels: {},
+        fxLoading: false, fxExecuting: false,
+        fxForm: { from_currency: '', to_currency: '', amount: '', from_operator: '', from_wallet_type: 'collection', to_operator: '', to_wallet_type: 'collection' },
+        fxAmountDisplay: '',
+        fxPreview: null, fxPreviewLoading: false,
+        fxMsg: '', fxMsgType: '',
+        fxHistory: [], fxHistoryLoading: false, fxHistoryPage: 1, fxHistoryPagination: {},
+        fxResult: null,
+
         // Internal Transfers
         myTransfers: [], myTransfersLoading: false,
 
@@ -2959,7 +3213,7 @@ function dashboard() {
 
             // Restore tab from URL hash
             const hash = window.location.hash.replace('#', '');
-            const validTabs = ['dashboard','transactions','wallet','send-money','settlements','account','users','api-docs','settings'];
+            const validTabs = ['dashboard','transactions','wallet','send-money','settlements','account','users','exchange','api-docs','settings'];
             if (hash && validTabs.includes(hash)) {
                 this.goToTab(hash, true);
             }
@@ -3010,6 +3264,7 @@ function dashboard() {
                 case 'settlements': this.fetchSettlements(); break;
                 case 'account': this.fetchKyc(); break;
                 case 'users': this.fetchAccountUsers(); break;
+                case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
                 case 'settings': this.fetchCallback(); break;
             }
         },
@@ -4429,6 +4684,11 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             } else if (target === 'manual') {
                 this.manualRow.amount = num > 0 ? num : '';
                 this.manualAmountDisplay = formatted;
+            } else if (target === 'fx') {
+                this.fxForm.amount = num > 0 ? num : '';
+                this.fxAmountDisplay = formatted;
+                this.fxPreview = null;
+                this.fxResult = null;
             }
             event.target.value = formatted;
         },
@@ -4514,6 +4774,121 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     alert(data.message || 'Failed to update permissions.');
                 }
             } catch (e) { alert('Service unavailable.'); }
+        },
+
+        // ---- Currency Exchange ----
+        getSourceWalletBalance() {
+            if (!this.fxForm.from_operator || !this.fxForm.from_currency) return '—';
+            const wallets = this.fxForm.from_wallet_type === 'collection' ? this.collectionWallets : this.disbursementWallets;
+            const w = wallets.find(w => w.operator === this.fxForm.from_operator && (w.currency || this.walletCurrency) === this.fxForm.from_currency);
+            return w ? this.formatAmount(w.balance) + ' ' + this.fxForm.from_currency : '0.00 ' + this.fxForm.from_currency;
+        },
+
+        async fetchExchangeRates() {
+            this.fxLoading = true;
+            try {
+                const res = await fetch('{{ config("services.wallet_service.url") }}/api/exchange/rates', { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.fxRates = data.rates || [];
+                    this.fxAllowedCurrencies = data.allowed_currencies || [];
+                    this.fxBaseCurrency = data.base_currency || this.walletCurrency;
+                    this.fxCurrencyLabels = data.currencies || {};
+                    // Pre-select base currency as from
+                    if (!this.fxForm.from_currency && this.fxBaseCurrency) {
+                        this.fxForm.from_currency = this.fxBaseCurrency;
+                    }
+                }
+            } catch (e) { console.error('Failed to fetch exchange rates', e); }
+            this.fxLoading = false;
+        },
+
+        async previewExchange() {
+            this.fxPreviewLoading = true;
+            this.fxMsg = '';
+            this.fxPreview = null;
+            this.fxResult = null;
+            try {
+                const res = await fetch('{{ config("services.wallet_service.url") }}/api/exchange/preview', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({
+                        from_currency: this.fxForm.from_currency,
+                        to_currency: this.fxForm.to_currency,
+                        amount: this.fxForm.amount,
+                        from_operator: this.fxForm.from_operator,
+                        from_wallet_type: this.fxForm.from_wallet_type
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.fxPreview = data;
+                } else {
+                    this.fxMsg = data.message || 'Preview failed.';
+                    this.fxMsgType = 'error';
+                }
+            } catch (e) {
+                this.fxMsg = 'Service unavailable.';
+                this.fxMsgType = 'error';
+            }
+            this.fxPreviewLoading = false;
+        },
+
+        async executeExchange() {
+            if (!this.fxPreview) return;
+            if (!confirm(`Exchange ${this.formatAmount(this.fxForm.amount)} ${this.fxForm.from_currency} → ${this.fxForm.to_currency}?\n\nYou will receive approximately ${this.formatAmount(this.fxPreview.to_amount)} ${this.fxForm.to_currency} after ${this.fxPreview.fee_percent}% fee.`)) return;
+
+            this.fxExecuting = true;
+            this.fxMsg = '';
+            this.fxResult = null;
+            try {
+                const res = await fetch('{{ config("services.wallet_service.url") }}/api/exchange/execute', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({
+                        from_currency: this.fxForm.from_currency,
+                        to_currency: this.fxForm.to_currency,
+                        amount: this.fxForm.amount,
+                        from_operator: this.fxForm.from_operator,
+                        from_wallet_type: this.fxForm.from_wallet_type,
+                        to_operator: this.fxForm.to_operator,
+                        to_wallet_type: this.fxForm.to_wallet_type
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.fxResult = data;
+                    this.fxPreview = null;
+                    this.fxMsg = data.message || 'Exchange completed successfully!';
+                    this.fxMsgType = 'success';
+                    // Reset form
+                    this.fxForm.amount = '';
+                    this.fxAmountDisplay = '';
+                    // Refresh wallet balances and history
+                    this.fetchWallet();
+                    this.fetchExchangeHistory();
+                } else {
+                    this.fxMsg = data.message || 'Exchange failed.';
+                    this.fxMsgType = 'error';
+                }
+            } catch (e) {
+                this.fxMsg = 'Service unavailable.';
+                this.fxMsgType = 'error';
+            }
+            this.fxExecuting = false;
+        },
+
+        async fetchExchangeHistory() {
+            this.fxHistoryLoading = true;
+            try {
+                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/exchange/history?page=${this.fxHistoryPage}`, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.fxHistory = data.data || [];
+                    this.fxHistoryPagination = { current_page: data.current_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
+                }
+            } catch (e) { console.error('Failed to fetch exchange history', e); }
+            this.fxHistoryLoading = false;
         }
     }
 }

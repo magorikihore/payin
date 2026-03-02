@@ -65,9 +65,9 @@
                      x-show="hasPerm('admin_users') || hasPerm('admin_operators') || hasPerm('admin_payments') || user?.role === 'super_admin'"
                      >
                     <button @click="moreOpen = !moreOpen"
-                        :class="['users','operators','payments','admin_users','logs','mail_config'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                        :class="['users','operators','payments','admin_users','logs','mail_config','exchange_rates'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                         class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap inline-flex items-center">
-                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : 'More'"></span>
+                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : activeTab === 'exchange_rates' ? 'Exchange Rates' : 'More'"></span>
                         <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="moreOpen" x-transition class="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border z-50">
@@ -89,6 +89,9 @@
                         <button x-show="user?.role === 'super_admin'" @click="goToTab('mail_config'); moreOpen = false"
                             :class="activeTab === 'mail_config' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Mail Config</button>
+                        <button x-show="user?.role === 'super_admin'" @click="goToTab('exchange_rates'); moreOpen = false"
+                            :class="activeTab === 'exchange_rates' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
+                            class="block w-full text-left px-4 py-2 text-sm">Exchange Rates</button>
                     </div>
                 </div>
             </nav>
@@ -2157,6 +2160,40 @@
                         <div x-show="kycRateLimitMsg" x-cloak class="mt-2 text-sm" :class="kycRateLimitMsgType === 'success' ? 'text-green-600' : 'text-red-600'" x-text="kycRateLimitMsg"></div>
                     </div>
 
+                    <!-- Multi-Currency -->
+                    <div class="px-6 py-4 bg-indigo-50">
+                        <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Multi-Currency</h4>
+                        <p class="text-xs text-gray-500 mb-3">Enable this account to hold wallets in multiple currencies and perform currency exchanges.</p>
+                        <div class="flex items-center gap-4 mb-3">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="kycMultiCurrency" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                <span class="ml-3 text-sm font-medium" x-text="kycMultiCurrency ? 'Enabled' : 'Disabled'" :class="kycMultiCurrency ? 'text-indigo-700' : 'text-gray-500'"></span>
+                            </label>
+                        </div>
+                        <div x-show="kycMultiCurrency" x-cloak class="mt-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Allowed Currencies</label>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <template x-for="cur in allCurrencies" :key="cur">
+                                    <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium cursor-pointer transition"
+                                        :class="kycAllowedCurrencies.includes(cur) ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                        @click="if(cur === (kycAccount?.currency || 'TZS')) return; kycAllowedCurrencies.includes(cur) ? kycAllowedCurrencies = kycAllowedCurrencies.filter(c => c !== cur) : kycAllowedCurrencies.push(cur)">
+                                        <span x-text="cur"></span>
+                                        <span x-show="cur === (kycAccount?.currency || 'TZS')" class="text-[10px]">(base)</span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button @click="saveMultiCurrency()" :disabled="kycMultiSaving"
+                                class="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium">
+                                <span x-show="!kycMultiSaving">Save</span>
+                                <span x-show="kycMultiSaving">Saving...</span>
+                            </button>
+                        </div>
+                        <div x-show="kycMultiMsg" x-cloak class="mt-2 text-sm" :class="kycMultiMsgType === 'success' ? 'text-green-600' : 'text-red-600'" x-text="kycMultiMsg"></div>
+                    </div>
+
                     <!-- Admin Notes -->
                     <div class="px-6 py-4 bg-gray-50">
                         <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Admin Notes</h4>
@@ -3608,6 +3645,203 @@
         </div>
     </div>
 
+        <!-- ==================== EXCHANGE RATES TAB ==================== -->
+        <div x-show="activeTab === 'exchange_rates'" x-cloak class="mt-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Add/Edit Exchange Rate -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="fxEditId ? 'Edit Exchange Rate' : 'Add Exchange Rate'"></h3>
+                    <div x-show="fxMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm"
+                        :class="fxMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'"
+                        x-text="fxMsg"></div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">From Currency</label>
+                            <select x-model="fxForm.from_currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <template x-for="(name, code) in fxCurrencies" :key="code">
+                                    <option :value="code" x-text="code + ' - ' + name"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">To Currency</label>
+                            <select x-model="fxForm.to_currency" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <template x-for="(name, code) in fxCurrencies" :key="code">
+                                    <option :value="code" x-text="code + ' - ' + name"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Buy Rate</label>
+                            <input type="number" step="0.000001" x-model="fxForm.buy_rate" placeholder="e.g. 0.038"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                            <p class="text-[10px] text-gray-400 mt-1">1 <span x-text="fxForm.to_currency"></span> costs X <span x-text="fxForm.from_currency"></span></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Sell Rate</label>
+                            <input type="number" step="0.000001" x-model="fxForm.sell_rate" placeholder="e.g. 0.037"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                            <p class="text-[10px] text-gray-400 mt-1">1 <span x-text="fxForm.from_currency"></span> yields X <span x-text="fxForm.to_currency"></span></p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Fee %</label>
+                            <input type="number" step="0.01" x-model="fxForm.conversion_fee_percent" placeholder="2.00"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                            <p class="text-[10px] text-gray-400 mt-1">Platform profit per exchange</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <label class="inline-flex items-center gap-2 text-sm">
+                            <input type="checkbox" x-model="fxForm.is_active" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Active
+                        </label>
+                        <button @click="saveExchangeRate()" :disabled="fxSaving"
+                            class="px-5 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 font-medium">
+                            <span x-show="!fxSaving" x-text="fxEditId ? 'Update Rate' : 'Save Rate'"></span>
+                            <span x-show="fxSaving">Saving...</span>
+                        </button>
+                        <button x-show="fxEditId" @click="fxEditId = null; fxForm = { from_currency: 'TZS', to_currency: 'KES', buy_rate: '', sell_rate: '', conversion_fee_percent: '2.00', is_active: true }"
+                            class="px-3 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel Edit</button>
+                    </div>
+
+                    <!-- Quick Preview Calculator -->
+                    <div class="mt-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <h4 class="text-sm font-semibold text-indigo-800 mb-2">Quick Preview</h4>
+                        <p class="text-xs text-gray-600" x-show="fxForm.sell_rate && fxForm.conversion_fee_percent">
+                            If a user exchanges <strong>100,000 <span x-text="fxForm.from_currency"></span></strong>:
+                            <br>Fee: <strong x-text="(100000 * parseFloat(fxForm.conversion_fee_percent || 0) / 100).toLocaleString()"></strong> <span x-text="fxForm.from_currency"></span> (<span x-text="fxForm.conversion_fee_percent"></span>%)
+                            <br>Net amount converted: <strong x-text="(100000 - 100000 * parseFloat(fxForm.conversion_fee_percent || 0) / 100).toLocaleString()"></strong> <span x-text="fxForm.from_currency"></span>
+                            <br>User receives: <strong x-text="((100000 - 100000 * parseFloat(fxForm.conversion_fee_percent || 0) / 100) * parseFloat(fxForm.sell_rate || 0)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></strong> <span x-text="fxForm.to_currency"></span>
+                            <br><span class="text-indigo-700 font-semibold">Platform Revenue: <span x-text="(100000 * parseFloat(fxForm.conversion_fee_percent || 0) / 100).toLocaleString()"></span> <span x-text="fxForm.from_currency"></span></span>
+                        </p>
+                        <p class="text-xs text-gray-400" x-show="!fxForm.sell_rate || !fxForm.conversion_fee_percent">Enter sell rate and fee to see preview.</p>
+                    </div>
+                </div>
+
+                <!-- Current Exchange Rates List -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Active Exchange Rates</h3>
+                    <div x-show="fxLoading" class="p-8 text-center text-gray-500">Loading exchange rates...</div>
+                    <div x-show="!fxLoading && fxRates.length === 0" x-cloak class="p-8 text-center text-gray-500">No exchange rates configured yet.</div>
+                    <div x-show="!fxLoading && fxRates.length > 0" x-cloak class="space-y-3 max-h-[500px] overflow-y-auto">
+                        <template x-for="rate in fxRates" :key="rate.id">
+                            <div class="flex items-center justify-between p-3 rounded-lg border" :class="rate.is_active ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-60'">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-sm" x-text="rate.from_currency"></span>
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                        <span class="font-semibold text-sm" x-text="rate.to_currency"></span>
+                                        <span x-show="!rate.is_active" class="text-[10px] px-1.5 py-0.5 bg-gray-200 text-gray-500 rounded">INACTIVE</span>
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        Buy: <span class="font-mono" x-text="parseFloat(rate.buy_rate).toFixed(6)"></span> |
+                                        Sell: <span class="font-mono" x-text="parseFloat(rate.sell_rate).toFixed(6)"></span> |
+                                        Fee: <span class="font-mono" x-text="parseFloat(rate.conversion_fee_percent).toFixed(2)"></span>%
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <button @click="editFxRate(rate)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Edit">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button @click="toggleFxRate(rate.id)" class="p-1.5 rounded" :class="rate.is_active ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'" :title="rate.is_active ? 'Deactivate' : 'Activate'">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    </button>
+                                    <button @click="deleteFxRate(rate.id)" class="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Delete">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exchange History -->
+            <div class="mt-6 bg-white rounded-xl shadow-sm border">
+                <div class="p-6 border-b flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Exchange History</h3>
+                        <p class="text-sm text-gray-500">Total Platform Revenue: <span class="font-bold text-green-600" x-text="formatAmount(fxTotalRevenue)"></span></p>
+                    </div>
+                    <button @click="fxShowHistory = !fxShowHistory; if(fxShowHistory) fetchExchangeHistory()" class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                        <span x-text="fxShowHistory ? 'Hide History' : 'Show History'"></span>
+                    </button>
+                </div>
+                <div x-show="fxShowHistory" x-cloak>
+                    <div class="p-4 bg-gray-50 flex flex-wrap gap-3 items-end">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">From Currency</label>
+                            <select x-model="fxHistoryFrom" @change="fetchExchangeHistory()" class="px-3 py-1.5 border rounded text-sm">
+                                <option value="">All</option>
+                                <template x-for="(name, code) in fxCurrencies" :key="code">
+                                    <option :value="code" x-text="code"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">To Currency</label>
+                            <select x-model="fxHistoryTo" @change="fetchExchangeHistory()" class="px-3 py-1.5 border rounded text-sm">
+                                <option value="">All</option>
+                                <template x-for="(name, code) in fxCurrencies" :key="code">
+                                    <option :value="code" x-text="code"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">From Date</label>
+                            <input type="date" x-model="fxHistoryDateFrom" @change="fetchExchangeHistory()" class="px-3 py-1.5 border rounded text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">To Date</label>
+                            <input type="date" x-model="fxHistoryDateTo" @change="fetchExchangeHistory()" class="px-3 py-1.5 border rounded text-sm">
+                        </div>
+                    </div>
+                    <div x-show="fxHistoryLoading" class="p-8 text-center text-gray-500">Loading...</div>
+                    <div x-show="!fxHistoryLoading && fxHistory.length === 0" x-cloak class="p-8 text-center text-gray-400">No exchange transactions yet.</div>
+                    <div x-show="!fxHistoryLoading && fxHistory.length > 0" x-cloak class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">Ref</th>
+                                    <th class="px-4 py-3 text-left">Account</th>
+                                    <th class="px-4 py-3 text-left">From</th>
+                                    <th class="px-4 py-3 text-left">To</th>
+                                    <th class="px-4 py-3 text-right">Rate</th>
+                                    <th class="px-4 py-3 text-right">Fee</th>
+                                    <th class="px-4 py-3 text-right">Revenue</th>
+                                    <th class="px-4 py-3 text-left">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <template x-for="ex in fxHistory" :key="ex.id">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 font-mono text-xs" x-text="ex.reference"></td>
+                                        <td class="px-4 py-3 text-xs" x-text="accountMap[ex.account_id] || ex.account_id"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="font-mono" x-text="formatAmount(ex.from_amount)"></span>
+                                            <span class="text-xs text-gray-500" x-text="ex.from_currency"></span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="font-mono" x-text="formatAmount(ex.to_amount)"></span>
+                                            <span class="text-xs text-gray-500" x-text="ex.to_currency"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-right font-mono text-xs" x-text="parseFloat(ex.rate_applied).toFixed(6)"></td>
+                                        <td class="px-4 py-3 text-right text-xs" x-text="formatAmount(ex.fee_amount) + ' (' + parseFloat(ex.fee_percent).toFixed(1) + '%)'"></td>
+                                        <td class="px-4 py-3 text-right font-semibold text-green-600 text-xs" x-text="formatAmount(ex.platform_revenue) + ' ' + ex.from_currency"></td>
+                                        <td class="px-4 py-3 text-xs text-gray-500" x-text="formatDate(ex.created_at)"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 
 <script>
@@ -3736,6 +3970,20 @@ function adminPanel() {
             admin_payments: 'Payment Requests',
         },
 
+        // Exchange Rates (super_admin only)
+        fxRates: [], fxLoading: false, fxSaving: false, fxMsg: '', fxMsgType: 'success',
+        fxForm: { from_currency: 'TZS', to_currency: 'KES', buy_rate: '', sell_rate: '', conversion_fee_percent: '2.00', is_active: true },
+        fxEditId: null,
+        fxHistory: [], fxHistoryLoading: false, fxHistoryPage: 1, fxHistoryPagination: {},
+        fxHistoryFrom: '', fxHistoryTo: '', fxHistoryDateFrom: '', fxHistoryDateTo: '',
+        fxTotalRevenue: '0.00',
+        fxCurrencies: {},
+        fxShowHistory: false,
+
+        // Multi-currency (in KYC modal)
+        kycMultiCurrency: false, kycAllowedCurrencies: [], kycMultiSaving: false, kycMultiMsg: '', kycMultiMsgType: 'success',
+        allCurrencies: ['TZS','KES','UGX','RWF','BIF','CDF','MZN','MWK','ZMW','ZAR','NGN','GHS','USD'],
+
         // Error Logs (super_admin only)
         logEntries: [], logLoading: false, logService: 'auth', logLevel: '', logSearch: '', logLines: '200',
         logFileSize: '', logTotalEntries: 0, logError: '', logAutoRefresh: false, logAutoRefreshTimer: null,
@@ -3779,8 +4027,8 @@ function adminPanel() {
             }
             this.adminPerms = this.user.admin_permissions || [];
             // Set default tab to first permitted tab
-            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals', 'admin_users', 'logs', 'mail_config'];
-            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals', admin_users: 'super_admin', logs: 'super_admin', mail_config: 'super_admin' };
+            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals', 'admin_users', 'logs', 'mail_config', 'exchange_rates'];
+            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals', admin_users: 'super_admin', logs: 'super_admin', mail_config: 'super_admin', exchange_rates: 'super_admin' };
             const hash = window.location.hash.replace('#', '');
             if (hash && tabOrder.includes(hash) && this.hasPerm(permMap[hash])) {
                 this.activeTab = hash;
@@ -3844,6 +4092,7 @@ function adminPanel() {
                 case 'admin_users': this.fetchAdminUsers(); break;
                 case 'logs': this.fetchLogs(); break;
                 case 'mail_config': this.fetchMailConfig(); break;
+                case 'exchange_rates': this.fetchExchangeRates(); break;
             }
         },
 
@@ -4395,6 +4644,8 @@ function adminPanel() {
                     this.kycNotesText = this.kycAccount.kyc_notes || '';
                     this.kycPaybill = this.kycAccount.paybill || '';
                     this.kycRateLimit = this.kycAccount.rate_limit ?? 60;
+                    this.kycMultiCurrency = !!this.kycAccount.multi_currency_enabled;
+                    this.kycAllowedCurrencies = this.kycAccount.allowed_currencies || [];
                     // Fetch bank accounts for this account
                     this.fetchKycBankAccounts(accountId);
                 }
@@ -5581,6 +5832,127 @@ function adminPanel() {
                 }
             } catch (e) { this.bulkResult = 'Network error.'; this.bulkResultType = 'error'; }
             this.bulkSending = false;
+        },
+
+        // ==================== EXCHANGE RATE MANAGEMENT ====================
+
+        async fetchExchangeRates() {
+            this.fxLoading = true;
+            try {
+                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/exchange-rates', { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.fxRates = data.rates || [];
+                    this.fxCurrencies = data.currencies || {};
+                }
+            } catch (e) { console.error('fetchExchangeRates error:', e); }
+            this.fxLoading = false;
+        },
+
+        async saveExchangeRate() {
+            this.fxSaving = true;
+            this.fxMsg = '';
+            try {
+                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/exchange-rates', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(this.fxForm)
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.fxMsg = data.message || (res.ok ? 'Saved.' : 'Failed.');
+                this.fxMsgType = res.ok ? 'success' : 'error';
+                if (res.ok) {
+                    this.fxEditId = null;
+                    this.fxForm = { from_currency: 'TZS', to_currency: 'KES', buy_rate: '', sell_rate: '', conversion_fee_percent: '2.00', is_active: true };
+                    await this.fetchExchangeRates();
+                    setTimeout(() => this.fxMsg = '', 3000);
+                }
+            } catch (e) { this.fxMsg = 'Network error.'; this.fxMsgType = 'error'; }
+            this.fxSaving = false;
+        },
+
+        editFxRate(rate) {
+            this.fxEditId = rate.id;
+            this.fxForm = {
+                from_currency: rate.from_currency,
+                to_currency: rate.to_currency,
+                buy_rate: rate.buy_rate,
+                sell_rate: rate.sell_rate,
+                conversion_fee_percent: rate.conversion_fee_percent,
+                is_active: rate.is_active,
+            };
+        },
+
+        async toggleFxRate(id) {
+            try {
+                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/exchange-rates/${id}/toggle`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) await this.fetchExchangeRates();
+            } catch (e) { console.error(e); }
+        },
+
+        async deleteFxRate(id) {
+            if (!confirm('Delete this exchange rate?')) return;
+            try {
+                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/exchange-rates/${id}`, {
+                    method: 'DELETE', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) await this.fetchExchangeRates();
+            } catch (e) { console.error(e); }
+        },
+
+        async fetchExchangeHistory() {
+            this.fxHistoryLoading = true;
+            try {
+                let url = '{{ config("services.wallet_service.url") }}/api/admin/exchange-history?page=' + this.fxHistoryPage;
+                if (this.fxHistoryFrom) url += '&from_currency=' + this.fxHistoryFrom;
+                if (this.fxHistoryTo) url += '&to_currency=' + this.fxHistoryTo;
+                if (this.fxHistoryDateFrom) url += '&from_date=' + this.fxHistoryDateFrom;
+                if (this.fxHistoryDateTo) url += '&to_date=' + this.fxHistoryDateTo;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.fxHistory = data.exchanges?.data || [];
+                    this.fxHistoryPagination = data.exchanges || {};
+                    this.fxTotalRevenue = data.total_platform_revenue || '0.00';
+                }
+            } catch (e) { console.error(e); }
+            this.fxHistoryLoading = false;
+        },
+
+        // ==================== MULTI-CURRENCY TOGGLE (in KYC modal) ====================
+
+        async saveMultiCurrency() {
+            if (!this.kycAccount) return;
+            this.kycMultiSaving = true;
+            this.kycMultiMsg = '';
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/multi-currency`, {
+                    method: 'PUT', headers: this.getHeaders(),
+                    body: JSON.stringify({
+                        multi_currency_enabled: this.kycMultiCurrency,
+                        allowed_currencies: this.kycAllowedCurrencies
+                    })
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    this.kycAccount.multi_currency_enabled = this.kycMultiCurrency;
+                    this.kycAccount.allowed_currencies = this.kycAllowedCurrencies;
+                    this.kycMultiMsg = data.message || 'Saved.';
+                    this.kycMultiMsgType = 'success';
+                    setTimeout(() => this.kycMultiMsg = '', 3000);
+                } else {
+                    this.kycMultiMsg = data.message || 'Failed.';
+                    this.kycMultiMsgType = 'error';
+                }
+            } catch (e) { this.kycMultiMsg = 'Network error.'; this.kycMultiMsgType = 'error'; }
+            this.kycMultiSaving = false;
         },
     }
 }
