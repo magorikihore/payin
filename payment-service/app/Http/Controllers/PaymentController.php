@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Gateways\GatewayFactory;
 use App\Models\Operator;
 use App\Models\PaymentRequest;
 use Illuminate\Http\JsonResponse;
@@ -259,9 +260,7 @@ class PaymentController extends Controller
     /**
      * Operator Callback: Receives payment status updates from operator.
      * This endpoint is PUBLIC (no auth) — operators call it with their response.
-     * 
-     * Operator may send header/body format or flat JSON.
-     * We look for: gatewayId, reference, responseCode, responseStatus, receipt, status
+     * Uses the gateway adapter to parse and validate the callback payload.
      */
     public function callback(Request $request, $operator_code): JsonResponse
     {
@@ -273,147 +272,71 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Unknown operator.'], 404);
         }
 
-        // Validate operator spPassword if header is present
-        $headerData = $request->input('header');
-        if ($headerData && !empty($headerData['spPassword']) && !empty($headerData['timestamp'])) {
-            $expectedPassword = $operator->generateSpPassword($headerData['timestamp']);
-            if ($headerData['spPassword'] !== $expectedPassword) {
-                Log::warning("Callback spPassword mismatch for [{$operator_code}]", [
-                    'received_spId' => $headerData['spId'] ?? null,
-                ]);
-                return response()->json(['message' => 'Invalid credentials.'], 403);
+        $payload = $request->all();
+
+        // Resolve gateway adapter
+        try {
+            $gateway = GatewayFactory::make($operator->gateway_type ?? 'digivas');
+        } catch (\InvalidArgumentException $e) {
+            Log::error("Unsupported gateway type [{$operator->gateway_type}] for callback [{$operator_code}]");
+            return response()->json(['message' => 'Unsupported gateway type.'], 500);
+        }
+
+        // Validate the callback (spPassword, signature, etc.)
+        if (!$gateway->validateCallback($operator, $payload)) {
+            Log::warning("Callback validation failed for [{$operator_code}]");
+            return response()->json(['message' => 'Invalid credentials.'], 403);
+        }
+
+        // Parse the callback into a normalized format
+        $parsed = $gateway->parseCallback($operator, $payload);
+
+        // Find payment request by gateway_id, operator_ref, or reference
+        $paymentRequest = null;
+        $searchFields = [
+            'gateway_id'   => $parsed['gateway_id'] ?? null,
+            'operator_ref' => $parsed['operator_ref'] ?? null,
+            'request_ref'  => $parsed['reference'] ?? null,
+        ];
+
+        foreach ($searchFields as $field => $value) {
+            if ($value && !$paymentRequest) {
+                $paymentRequest = PaymentRequest::where($field, (string) $value)
+                    ->where('operator_code', $operator_code)->first();
             }
         }
 
-        // Parse operator callback — DIGIVAS EPG uses TWO callback formats:
-        //
-        // COLLECTION callback: body.request.{ command:"Collection", reference, gatewayId, receiptNumber, msisdn, amount, network }
-        //   → receiptNumber present with command "Collection" = successful collection
-        //
-        // DISBURSEMENT callback: body.result.{ resultCode, resultStatus, receiptNumber, amount, date, referenceNumber, transactionNumber, message }
-        //   → resultCode "0" / message "SUCCESS" = successful disbursement
-        //
-        // Also supports body.response (acknowledgment format) as fallback
-
-        $bodyRequest  = $request->input('body.request');  // Collection callback
-        $bodyResult   = $request->input('body.result');    // Disbursement callback
-        $bodyResponse = $request->input('body.response');  // Acknowledgment fallback
-
-        // Detect which callback format we received
-        $isCollectionCallback = $bodyRequest && strtolower($bodyRequest['command'] ?? '') === 'collection';
-
-        if ($isCollectionCallback) {
-            // ── COLLECTION CALLBACK (body.request) ──
-            $gatewayId      = $bodyRequest['gatewayId'] ?? null;
-            $reference      = $bodyRequest['reference'] ?? null;
-            $receiptNumber  = $bodyRequest['receiptNumber'] ?? null;
-            $msisdn         = $bodyRequest['msisdn'] ?? null;
-            $callbackAmount = $bodyRequest['amount'] ?? null;
-            $network        = $bodyRequest['network'] ?? null;
-
-            // Find payment request
-            $paymentRequest = null;
-            if ($gatewayId) {
-                $paymentRequest = PaymentRequest::where('gateway_id', (string) $gatewayId)
-                    ->where('operator_code', $operator_code)->first();
-            }
-            if (!$paymentRequest && $reference) {
-                $paymentRequest = PaymentRequest::where('request_ref', $reference)
-                    ->where('operator_code', $operator_code)->first();
-                if (!$paymentRequest) {
-                    $paymentRequest = PaymentRequest::where('operator_ref', $reference)
-                        ->where('operator_code', $operator_code)->first();
-                }
-            }
-            if (!$paymentRequest && $msisdn) {
-                // Last resort: match by phone + operator + processing status
-                $paymentRequest = PaymentRequest::where('phone', $msisdn)
-                    ->where('operator_code', $operator_code)
-                    ->where('status', 'processing')
-                    ->orderBy('created_at', 'desc')->first();
-            }
-
-            if (!$paymentRequest) {
-                Log::warning("Collection callback: payment request not found", [
-                    'gateway_id' => $gatewayId, 'reference' => $reference,
-                    'receiptNumber' => $receiptNumber, 'msisdn' => $msisdn,
-                    'operator' => $operator_code,
-                ]);
-                return response()->json(['message' => 'Payment request not found.'], 404);
-            }
-
-            // Collection callback with receiptNumber = successful
-            $newStatus = $receiptNumber ? 'completed' : 'failed';
-
-            $paymentRequest->update([
-                'callback_data' => $request->all(),
-                'receipt_number' => $receiptNumber ?: $paymentRequest->receipt_number,
-                'operator_ref'  => $gatewayId ? (string) $gatewayId : ($reference ?: $paymentRequest->operator_ref),
-                'gateway_id'    => $gatewayId ? (string) $gatewayId : $paymentRequest->gateway_id,
-                'status'        => $newStatus,
-                'error_message' => ($newStatus === 'failed') ? 'Collection callback without receipt number' : null,
-            ]);
-
-        } else {
-            // ── DISBURSEMENT CALLBACK (body.result) or fallback ──
-            $body = $bodyResult ?? $bodyResponse ?? $request->input('body') ?? $request->all();
-
-            $resultCode        = (string) ($body['resultCode'] ?? $body['responseCode'] ?? '');
-            $resultStatus      = $body['resultStatus'] ?? $body['responseStatus'] ?? '';
-            $receiptNumber     = $body['receiptNumber'] ?? null;
-            $referenceNumber   = $body['referenceNumber'] ?? $body['reference'] ?? null;
-            $transactionNumber = $body['transactionNumber'] ?? null;
-            $gatewayId         = $body['gatewayId'] ?? null;
-            $callbackAmount    = $body['amount'] ?? null;
-            $callbackMessage   = strtolower($body['message'] ?? '');
-
-            // Find payment request
-            $paymentRequest = null;
-            if ($gatewayId) {
-                $paymentRequest = PaymentRequest::where('gateway_id', (string) $gatewayId)
-                    ->where('operator_code', $operator_code)->first();
-            }
-            if (!$paymentRequest && $transactionNumber) {
-                $paymentRequest = PaymentRequest::where('operator_ref', (string) $transactionNumber)
-                    ->where('operator_code', $operator_code)->first();
-            }
-            if (!$paymentRequest && $referenceNumber) {
-                $paymentRequest = PaymentRequest::where('request_ref', $referenceNumber)
-                    ->where('operator_code', $operator_code)->first();
-                if (!$paymentRequest) {
-                    $paymentRequest = PaymentRequest::where('operator_ref', $referenceNumber)
-                        ->where('operator_code', $operator_code)->first();
-                }
-            }
-
-            if (!$paymentRequest) {
-                Log::warning("Disbursement callback: payment request not found", [
-                    'gateway_id' => $gatewayId, 'transactionNumber' => $transactionNumber,
-                    'referenceNumber' => $referenceNumber, 'receiptNumber' => $receiptNumber,
-                    'operator' => $operator_code,
-                ]);
-                return response()->json(['message' => 'Payment request not found.'], 404);
-            }
-
-            // resultCode "0" or message "SUCCESS" = completed
-            $newStatus = 'processing';
-            if ($resultCode === '0' || $callbackMessage === 'success') {
-                $newStatus = 'completed';
-            } elseif ($resultCode !== '' && $resultCode !== '0') {
-                $newStatus = 'failed';
-            } elseif ($callbackMessage) {
-                $newStatus = $this->mapOperatorStatus($callbackMessage);
-            }
-
-            $paymentRequest->update([
-                'callback_data' => $request->all(),
-                'receipt_number' => $receiptNumber ?: $paymentRequest->receipt_number,
-                'operator_ref'  => $transactionNumber ?: ($referenceNumber ?: $paymentRequest->operator_ref),
-                'gateway_id'    => $gatewayId ? (string) $gatewayId : $paymentRequest->gateway_id,
-                'status'        => $newStatus,
-                'error_message' => ($newStatus === 'failed') ? ($resultStatus ?: 'Operator returned error code: ' . $resultCode) : null,
-            ]);
+        // Fallback: search by reference in operator_ref column
+        if (!$paymentRequest && !empty($parsed['reference'])) {
+            $paymentRequest = PaymentRequest::where('operator_ref', (string) $parsed['reference'])
+                ->where('operator_code', $operator_code)->first();
         }
+
+        // Last resort: match by phone + operator + processing status
+        if (!$paymentRequest && !empty($parsed['phone'])) {
+            $paymentRequest = PaymentRequest::where('phone', $parsed['phone'])
+                ->where('operator_code', $operator_code)
+                ->where('status', 'processing')
+                ->orderBy('created_at', 'desc')->first();
+        }
+
+        if (!$paymentRequest) {
+            Log::warning("Callback: payment request not found", [
+                'parsed' => $parsed, 'operator' => $operator_code,
+            ]);
+            return response()->json(['message' => 'Payment request not found.'], 404);
+        }
+
+        $newStatus = $parsed['status'] ?? 'processing';
+
+        $paymentRequest->update([
+            'callback_data'  => $payload,
+            'receipt_number' => $parsed['receipt_number'] ?: $paymentRequest->receipt_number,
+            'operator_ref'   => $parsed['operator_ref'] ?: $paymentRequest->operator_ref,
+            'gateway_id'     => $parsed['gateway_id'] ? (string) $parsed['gateway_id'] : $paymentRequest->gateway_id,
+            'status'         => $newStatus,
+            'error_message'  => ($newStatus === 'failed') ? ($parsed['error_message'] ?? 'Operator returned failure') : null,
+        ]);
 
         // If completed, record the transaction and update wallet
         if ($newStatus === 'completed') {
@@ -741,79 +664,15 @@ class PaymentController extends Controller
             ];
         }
 
-        $url = rtrim($operator->api_url, '/') . '/' . ltrim($path, '/');
-
-        // Build operator header with spId, merchantCode, spPassword, timestamp, apiVersion
-        $apiHeader = $operator->buildApiHeader();
-
-        // Map type to DIGIVAS command
-        $command = ($type === 'collection') ? 'UssdPush' : 'Disbursement';
-
-        $payload = [
-            'header' => $apiHeader,
-            'body' => [
-                'request' => [
-                    'command'            => $command,
-                    'command1'           => $command,
-                    'reference'          => $paymentRequest->request_ref,
-                    'transactionID'      => $paymentRequest->request_ref,
-                    'msisdn'             => $paymentRequest->phone,
-                    'amount'             => (string) $paymentRequest->amount,
-                    'currency'           => $paymentRequest->currency,
-                    'transactionChannel' => 'MOBAPP',
-                    'callbackUrl'        => $operator->callback_url,
-                ],
-            ],
-        ];
-
         try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json',
-                ])
-                ->post($url, $payload);
-
-            $responseData = $response->json() ?? [];
-
-            // Extract the operator acknowledgment: body.response
-            $body = $responseData['body']['response'] ?? $responseData['body'] ?? $responseData;
-            $responseCode = (string) ($body['responseCode'] ?? '');
-            $gatewayId = $body['gatewayId'] ?? null;
-            $reference = $body['reference'] ?? null;
-            $transactionNumber = $body['transactionNumber'] ?? null;
-            $responseStatus = $body['responseStatus'] ?? '';
-
-            // responseCode "0" means operator accepted the request
-            if ($responseCode === '0') {
-                Log::info("Operator push accepted [{$operator->code}]", [
-                    'gatewayId' => $gatewayId,
-                    'transactionNumber' => $transactionNumber,
-                    'reference' => $reference,
-                    'responseStatus' => $responseStatus,
-                ]);
-
-                return [
-                    'success' => true,
-                    'operator_ref' => (string) ($transactionNumber ?: $reference),
-                    'gateway_id' => $gatewayId,
-                    'request_payload' => $payload,
-                    'response' => $responseData,
-                ];
-            }
-
+            $gateway = GatewayFactory::make($operator->gateway_type ?? 'digivas');
+            return $gateway->push($operator, $paymentRequest, $type);
+        } catch (\InvalidArgumentException $e) {
+            Log::error("Unsupported gateway type [{$operator->gateway_type}] for operator [{$operator->code}]");
             return [
                 'success' => false,
-                'error' => $responseStatus ?: ('Operator error code: ' . $responseCode),
-                'request_payload' => $payload,
-                'response' => $responseData,
-            ];
-        } catch (\Exception $e) {
-            Log::error("Operator push failed [{$operator->code}]: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'Failed to connect to operator: ' . $e->getMessage(),
-                'request_payload' => $payload,
+                'error' => 'Unsupported gateway type: ' . ($operator->gateway_type ?? 'unknown'),
+                'request_payload' => null,
                 'response' => null,
             ];
         }

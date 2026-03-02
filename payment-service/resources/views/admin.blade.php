@@ -2377,9 +2377,9 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gateway</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Country</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">API URL</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SP ID</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Merchant Code</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Callback URL</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -2392,9 +2392,15 @@
                                     <td class="px-4 py-3">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800" x-text="op.code"></span>
                                     </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800" x-text="(op.gateway_type || 'digivas').replace('_', ' ')"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-600 text-xs">
+                                        <span x-text="op.country || 'TZ'"></span>
+                                        <span class="text-gray-400 ml-1" x-text="'(+' + (op.country_code || '255') + ')'"></span>
+                                        <span class="text-gray-400 ml-1" x-text="op.currency || 'TZS'"></span>
+                                    </td>
                                     <td class="px-4 py-3 text-gray-600 font-mono text-xs max-w-[200px] truncate" x-text="op.api_url"></td>
-                                    <td class="px-4 py-3 text-gray-600 text-xs" x-text="op.sp_id || '—'"></td>
-                                    <td class="px-4 py-3 text-gray-600 text-xs" x-text="op.merchant_code || '—'"></td>
                                     <td class="px-4 py-3 text-gray-600 font-mono text-xs max-w-[200px] truncate" x-text="op.callback_url || '—'"></td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
@@ -2703,23 +2709,66 @@
                             <input type="text" x-model="opForm.code" placeholder="mpesa" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Gateway Type *</label>
+                            <select x-model="opForm.gateway_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                                <option value="digivas">DIGIVAS EPG (Tanzania)</option>
+                                <option value="safaricom_daraja">Safaricom Daraja (Kenya)</option>
+                                <option value="airtel_africa">Airtel Africa (Multi-Country)</option>
+                                <option value="mtn_momo">MTN MoMo (Multi-Country)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Currency</label>
+                            <select x-model="opForm.currency" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                                <option value="TZS">TZS - Tanzanian Shilling</option>
+                                <option value="KES">KES - Kenyan Shilling</option>
+                                <option value="UGX">UGX - Ugandan Shilling</option>
+                                <option value="RWF">RWF - Rwandan Franc</option>
+                                <option value="GHS">GHS - Ghanaian Cedi</option>
+                                <option value="ZMW">ZMW - Zambian Kwacha</option>
+                                <option value="MWK">MWK - Malawian Kwacha</option>
+                                <option value="XAF">XAF - Central African CFA</option>
+                                <option value="XOF">XOF - West African CFA</option>
+                                <option value="USD">USD - US Dollar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Country Code (ISO)</label>
+                            <input type="text" x-model="opForm.country" placeholder="TZ" maxlength="5" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono uppercase">
+                            <p class="text-[10px] text-gray-400 mt-0.5">ISO 3166 code: TZ, KE, UG, RW, GH, ZM, etc.</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Phone Country Code</label>
+                            <input type="text" x-model="opForm.country_code" placeholder="255" maxlength="10" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
+                            <p class="text-[10px] text-gray-400 mt-0.5">Dialing code without +: 255, 254, 256, etc.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Phone Prefixes (comma-separated)</label>
+                        <input type="text" x-model="opForm.prefixes_text" placeholder="074,075,076" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
+                        <p class="text-[10px] text-gray-400 mt-0.5">Local prefixes to auto-detect this operator, e.g. 074,075,076</p>
+                    </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">API Base URL *</label>
                         <input type="url" x-model="opForm.api_url" placeholder="https://operator.example.com" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">SP ID</label>
+                            <label class="block text-xs font-medium text-gray-700 mb-1" x-text="opForm.gateway_type === 'safaricom_daraja' ? 'Consumer Key' : (opForm.gateway_type === 'airtel_africa' ? 'Client ID' : (opForm.gateway_type === 'mtn_momo' ? 'Subscription Key' : 'SP ID'))"></label>
                             <input type="text" x-model="opForm.sp_id" placeholder="100100" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Merchant Code</label>
+                            <label class="block text-xs font-medium text-gray-700 mb-1" x-text="opForm.gateway_type === 'safaricom_daraja' ? 'ShortCode' : (opForm.gateway_type === 'mtn_momo' ? 'API User ID' : 'Merchant Code')"></label>
                             <input type="text" x-model="opForm.merchant_code" placeholder="1001001" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">SP Password</label>
-                        <input type="password" x-model="opForm.sp_password" :placeholder="editingOperator ? '(leave blank to keep current)' : 'Enter SP password'" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
+                        <label class="block text-xs font-medium text-gray-700 mb-1" x-text="opForm.gateway_type === 'safaricom_daraja' ? 'Consumer Secret' : (opForm.gateway_type === 'airtel_africa' ? 'Client Secret' : (opForm.gateway_type === 'mtn_momo' ? 'API User Secret' : 'SP Password'))"></label>
+                        <input type="password" x-model="opForm.sp_password" :placeholder="editingOperator ? '(leave blank to keep current)' : 'Enter password/secret'" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -2735,6 +2784,15 @@
                         <label class="block text-xs font-medium text-gray-700 mb-1">Our Callback URL (shared with operator)</label>
                         <input type="url" x-model="opForm.callback_url" placeholder="https://api.payin.com/api/callback/mpesa" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono">
                         <p class="text-[10px] text-gray-400 mt-1">The URL you register with operator. Format: https://yourhost/api/callback/{operator_code}</p>
+                    </div>
+                    <!-- Extra Config (JSON) for gateway-specific settings -->
+                    <div x-show="opForm.gateway_type !== 'digivas'">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Extra Config (JSON)</label>
+                        <textarea x-model="opForm.extra_config_text" placeholder='{"passkey": "...", "initiator_name": "..."}'
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 outline-none font-mono h-20"></textarea>
+                        <p class="text-[10px] text-gray-400 mt-0.5" x-show="opForm.gateway_type === 'safaricom_daraja'">Safaricom: passkey, initiator_name, security_credential</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5" x-show="opForm.gateway_type === 'airtel_africa'">Airtel: pin</p>
+                        <p class="text-[10px] text-gray-400 mt-0.5" x-show="opForm.gateway_type === 'mtn_momo'">MTN: environment, target_environment, callback_host</p>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -3944,7 +4002,7 @@ function adminPanel() {
         // Operators (admin)
         operatorsList: [], opLoading: false,
         showOperatorModal: false, editingOperator: null,
-        opForm: { name: '', code: '', api_url: '', sp_id: '', merchant_code: '', sp_password: '', collection_path: '/collection', disbursement_path: '/disbursement', callback_url: '', api_version: '5.0', status: 'active' },
+        opForm: { name: '', code: '', gateway_type: 'digivas', country: 'TZ', country_code: '255', currency: 'TZS', api_url: '', sp_id: '', merchant_code: '', sp_password: '', collection_path: '/collection', disbursement_path: '/disbursement', callback_url: '', api_version: '5.0', status: 'active', prefixes_text: '', extra_config_text: '' },
         opSaving: false, opError: '', opSuccess: '',
 
         // Payment Requests (admin)
@@ -5274,6 +5332,10 @@ function adminPanel() {
                 this.opForm = {
                     name: op.name || '',
                     code: op.code || '',
+                    gateway_type: op.gateway_type || 'digivas',
+                    country: op.country || 'TZ',
+                    country_code: op.country_code || '255',
+                    currency: op.currency || 'TZS',
                     api_url: op.api_url || '',
                     sp_id: op.sp_id || '',
                     merchant_code: op.merchant_code || '',
@@ -5283,9 +5345,11 @@ function adminPanel() {
                     callback_url: op.callback_url || '',
                     api_version: op.api_version || '5.0',
                     status: op.status || 'active',
+                    prefixes_text: (op.prefixes || []).join(','),
+                    extra_config_text: op.extra_config ? JSON.stringify(op.extra_config, null, 2) : '',
                 };
             } else {
-                this.opForm = { name: '', code: '', api_url: '', sp_id: '', merchant_code: '', sp_password: '', collection_path: '/collection', disbursement_path: '/disbursement', callback_url: '', api_version: '5.0', status: 'active' };
+                this.opForm = { name: '', code: '', gateway_type: 'digivas', country: 'TZ', country_code: '255', currency: 'TZS', api_url: '', sp_id: '', merchant_code: '', sp_password: '', collection_path: '/collection', disbursement_path: '/disbursement', callback_url: '', api_version: '5.0', status: 'active', prefixes_text: '', extra_config_text: '' };
             }
             this.showOperatorModal = true;
         },
@@ -5299,6 +5363,20 @@ function adminPanel() {
                 const method = this.editingOperator ? 'PUT' : 'POST';
                 const body = { ...this.opForm };
                 if (this.editingOperator && !body.sp_password) delete body.sp_password;
+                // Convert prefixes_text to array
+                if (body.prefixes_text) {
+                    body.prefixes = body.prefixes_text.split(',').map(p => p.trim()).filter(p => p);
+                } else {
+                    body.prefixes = [];
+                }
+                delete body.prefixes_text;
+                // Convert extra_config_text to object
+                if (body.extra_config_text) {
+                    try { body.extra_config = JSON.parse(body.extra_config_text); } catch(e) { this.opError = 'Invalid JSON in Extra Config'; this.opSaving = false; return; }
+                } else {
+                    body.extra_config = null;
+                }
+                delete body.extra_config_text;
                 const res = await fetch(url, { method, headers: this.getHeaders(), body: JSON.stringify(body) });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();

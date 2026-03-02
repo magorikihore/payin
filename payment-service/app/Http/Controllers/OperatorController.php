@@ -29,6 +29,10 @@ class OperatorController extends Controller
                 'id'                => $op->id,
                 'name'              => $op->name,
                 'code'              => $op->code,
+                'gateway_type'      => $op->gateway_type ?? 'digivas',
+                'country'           => $op->country ?? 'TZ',
+                'country_code'      => $op->country_code ?? '255',
+                'currency'          => $op->currency ?? 'TZS',
                 'api_url'           => $op->api_url,
                 'sp_id'             => $op->sp_id,
                 'merchant_code'     => $op->merchant_code,
@@ -37,6 +41,7 @@ class OperatorController extends Controller
                 'disbursement_path' => $op->disbursement_path,
                 'status_path'       => $op->status_path,
                 'callback_url'      => $op->callback_url,
+                'prefixes'          => $op->prefixes,
                 'status'            => $op->status,
                 'extra_config'      => $op->extra_config,
                 'created_at'        => $op->created_at,
@@ -72,6 +77,10 @@ class OperatorController extends Controller
         $request->validate([
             'name'              => 'required|string|max:100',
             'code'              => 'required|string|max:50|unique:operators,code',
+            'gateway_type'      => 'nullable|string|in:digivas,safaricom_daraja,airtel_africa,mtn_momo',
+            'country'           => 'nullable|string|max:5',
+            'country_code'      => 'nullable|string|max:10',
+            'currency'          => 'nullable|string|max:10',
             'api_url'           => 'required|url|max:500',
             'sp_id'             => 'nullable|string|max:100',
             'merchant_code'     => 'nullable|string|max:100',
@@ -81,12 +90,19 @@ class OperatorController extends Controller
             'disbursement_path' => 'nullable|string|max:200',
             'status_path'       => 'nullable|string|max:200',
             'callback_url'      => 'nullable|url|max:500',
+            'prefixes'          => 'nullable|array',
+            'prefixes.*'        => 'string|max:10',
+            'extra_config'      => 'nullable|array',
             'status'            => 'nullable|in:active,inactive',
         ]);
 
         $operator = Operator::create([
             'name'              => $request->name,
             'code'              => strtolower($request->code),
+            'gateway_type'      => $request->gateway_type ?? 'digivas',
+            'country'           => $request->country ?? 'TZ',
+            'country_code'      => $request->country_code ?? '255',
+            'currency'          => $request->currency ?? 'TZS',
             'api_url'           => $request->api_url,
             'sp_id'             => $request->sp_id,
             'merchant_code'     => $request->merchant_code,
@@ -96,6 +112,8 @@ class OperatorController extends Controller
             'disbursement_path' => $request->disbursement_path,
             'status_path'       => $request->status_path,
             'callback_url'      => $request->callback_url,
+            'prefixes'          => $request->prefixes,
+            'extra_config'      => $request->extra_config,
             'status'            => $request->status ?? 'active',
         ]);
 
@@ -123,6 +141,10 @@ class OperatorController extends Controller
         $request->validate([
             'name'              => 'sometimes|string|max:100',
             'code'              => 'sometimes|string|max:50|unique:operators,code,' . $id,
+            'gateway_type'      => 'nullable|string|in:digivas,safaricom_daraja,airtel_africa,mtn_momo',
+            'country'           => 'nullable|string|max:5',
+            'country_code'      => 'nullable|string|max:10',
+            'currency'          => 'nullable|string|max:10',
             'api_url'           => 'sometimes|url|max:500',
             'sp_id'             => 'nullable|string|max:100',
             'merchant_code'     => 'nullable|string|max:100',
@@ -132,14 +154,26 @@ class OperatorController extends Controller
             'disbursement_path' => 'nullable|string|max:200',
             'status_path'       => 'nullable|string|max:200',
             'callback_url'      => 'nullable|url|max:500',
+            'prefixes'          => 'nullable|array',
+            'prefixes.*'        => 'string|max:10',
+            'extra_config'      => 'nullable|array',
             'status'            => 'nullable|in:active,inactive',
         ]);
 
         $data = $request->only([
-            'name', 'api_url', 'sp_id', 'merchant_code', 'api_version',
+            'name', 'gateway_type', 'country', 'country_code', 'currency',
+            'api_url', 'sp_id', 'merchant_code', 'api_version',
             'collection_path', 'disbursement_path', 'status_path',
             'callback_url', 'status',
         ]);
+
+        if ($request->has('prefixes')) {
+            $data['prefixes'] = $request->prefixes;
+        }
+
+        if ($request->has('extra_config')) {
+            $data['extra_config'] = $request->extra_config;
+        }
 
         if ($request->filled('code')) {
             $data['code'] = strtolower($request->code);
@@ -193,16 +227,21 @@ class OperatorController extends Controller
             return response()->json(['message' => 'Operator not found.'], 404);
         }
 
-        // Build a test header/body to confirm the API is reachable
-        $header = $operator->buildApiHeader();
-
-        return response()->json([
+        // Build test details based on gateway type
+        $details = [
             'message' => 'Operator connection details generated.',
             'operator' => $operator->name,
+            'gateway_type' => $operator->gateway_type ?? 'digivas',
+            'country' => $operator->country ?? 'TZ',
             'api_url' => $operator->api_url,
-            'test_header' => $header,
             'collection_path' => $operator->collection_path,
             'disbursement_path' => $operator->disbursement_path,
-        ]);
+        ];
+
+        if (($operator->gateway_type ?? 'digivas') === 'digivas') {
+            $details['test_header'] = $operator->buildApiHeader();
+        }
+
+        return response()->json($details);
     }
 }

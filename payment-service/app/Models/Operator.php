@@ -24,6 +24,10 @@ class Operator extends Model
         'callback_url',
         'status',
         'extra_config',
+        'gateway_type',
+        'country',
+        'country_code',
+        'currency',
     ];
 
     protected $hidden = [
@@ -45,9 +49,8 @@ class Operator extends Model
 
     /**
      * Detect the operator by phone number prefix.
-     * Phone can be in format: XXXXXXXXX (9 digits), 0XXXXXXXXX (10 digits),
-     * 255XXXXXXXXX (12 digits), or +255XXXXXXXXX.
-     * Prefixes stored as 3-digit local format: 075, 065, 068, 062, etc.
+     * Supports multiple countries by checking the country_code column.
+     * Phone can be in format: local (0XX), international (+CCCXX), or subscriber (9 digits).
      * Returns the matching active Operator or null.
      */
     public static function detectByPhone(string $phone): ?self
@@ -56,31 +59,37 @@ class Operator extends Model
         $phone = preg_replace('/[\s\-\.]/', '', $phone);
         $phone = ltrim($phone, '+');
 
-        // Convert to local 10-digit format (0XXXXXXXXX)
-        if (str_starts_with($phone, '255') && strlen($phone) >= 12) {
-            // 255XXXXXXXXX -> 0XXXXXXXXX
-            $phone = '0' . substr($phone, 3);
-        } elseif (!str_starts_with($phone, '0') && strlen($phone) === 9) {
-            // 9-digit subscriber number -> 0XXXXXXXXX
-            $phone = '0' . $phone;
-        }
-
-        // Must be at least 10 digits and start with 0
-        if (!str_starts_with($phone, '0') || strlen($phone) < 10) {
-            return null;
-        }
-
-        // Extract the 3-digit prefix (e.g., 0754xxx -> "075")
-        $prefix = substr($phone, 0, 3);
-
         $operators = self::where('status', 'active')
             ->whereNotNull('prefixes')
             ->get();
 
         foreach ($operators as $operator) {
             $prefixes = $operator->prefixes ?? [];
-            if (in_array($prefix, $prefixes)) {
-                return $operator;
+            $cc = $operator->country_code ?? '255';
+
+            // Try to match with country code prefix
+            if (str_starts_with($phone, $cc)) {
+                $local = '0' . substr($phone, strlen($cc));
+                $prefix = substr($local, 0, 3);
+                if (in_array($prefix, $prefixes)) {
+                    return $operator;
+                }
+            }
+
+            // Try local format (starts with 0)
+            if (str_starts_with($phone, '0')) {
+                $prefix = substr($phone, 0, 3);
+                if (in_array($prefix, $prefixes)) {
+                    return $operator;
+                }
+            }
+
+            // Try subscriber number (9 digits, no leading 0 or country code)
+            if (!str_starts_with($phone, '0') && strlen($phone) === 9) {
+                $prefix = '0' . substr($phone, 0, 2);
+                if (in_array($prefix, $prefixes)) {
+                    return $operator;
+                }
             }
         }
 
