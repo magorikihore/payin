@@ -87,6 +87,9 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/accounts/{id}/rate-limit', [AdminController::class, 'updateRateLimit']);
         Route::get('/users', [AdminController::class, 'users']);
         Route::put('/users/{id}/reset-password', [AdminController::class, 'resetPassword']);
+        Route::put('/users/{id}/ban', [AdminController::class, 'banUser']);
+        Route::put('/users/{id}/unban', [AdminController::class, 'unbanUser']);
+        Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
 
         // Admin user management (super_admin only)
         Route::get('/admin-users', [AdminController::class, 'adminUsers']);

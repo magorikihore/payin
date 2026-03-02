@@ -75,6 +75,12 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
+        // Check if user is banned
+        if ($user->is_banned) {
+            Auth::logout();
+            return response()->json(['message' => 'Your account has been suspended. Contact support for more information.'], 403);
+        }
+
         // Check account status (skip for super_admin)
         if (!$user->isSuperAdmin() && $user->account) {
             // If account is already active, skip KYC checks

@@ -60,6 +60,9 @@ class User extends Authenticatable
         'account_id',
         'role',
         'permissions',
+        'is_banned',
+        'banned_at',
+        'ban_reason',
     ];
 
     protected $appends = ['full_name'];
@@ -90,6 +93,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'permissions' => 'array',
+            'is_banned' => 'boolean',
+            'banned_at' => 'datetime',
         ];
     }
 

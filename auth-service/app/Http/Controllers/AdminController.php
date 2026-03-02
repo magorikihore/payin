@@ -468,15 +468,134 @@ class AdminController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->select('id', 'account_id', 'firstname', 'lastname', 'name', 'email', 'role', 'created_at')
+        if ($request->filled('status')) {
+            if ($request->status === 'banned') {
+                $query->where('is_banned', true);
+            } elseif ($request->status === 'active') {
+                $query->where(function ($q) {
+                    $q->where('is_banned', false)->orWhereNull('is_banned');
+                });
+            }
+        }
+
+        $users = $query->select('id', 'account_id', 'firstname', 'lastname', 'name', 'email', 'role', 'is_banned', 'banned_at', 'ban_reason', 'created_at')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         return response()->json($users);
     }
 
+    // ==================== USER BAN / DELETE ====================
+
     /**
-     * Update account rate limit (requests per minute).
+     * Ban a user (soft disable — user cannot login).
+     */
+    public function banUser(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_users')) return $denied;
+
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $user = User::find($id);
+        if (!$user) return response()->json(['message' => 'User not found.'], 404);
+
+        if (in_array($user->role, ['super_admin', 'admin_user'])) {
+            return response()->json(['message' => 'Cannot ban admin users. Remove admin privileges first.'], 403);
+        }
+
+        $user->update([
+            'is_banned' => true,
+            'banned_at' => now(),
+            'ban_reason' => $request->reason ?? 'Banned by admin',
+        ]);
+
+        // Revoke all access tokens
+        $user->tokens()->delete();
+
+        return response()->json([
+            'message' => "User {$user->email} has been banned.",
+            'user' => $user->fresh(),
+        ]);
+    }
+
+    /**
+     * Unban a user (re-enable login).
+     */
+    public function unbanUser(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_users')) return $denied;
+
+        $user = User::find($id);
+        if (!$user) return response()->json(['message' => 'User not found.'], 404);
+
+        $user->update([
+            'is_banned' => false,
+            'banned_at' => null,
+            'ban_reason' => null,
+        ]);
+
+        return response()->json([
+            'message' => "User {$user->email} has been unbanned.",
+            'user' => $user->fresh(),
+        ]);
+    }
+
+    /**
+     * Hard delete a user (permanent removal).
+     * Only allowed for users with no completed transactions.
+     */
+    public function deleteUser(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $user = User::with('account')->find($id);
+        if (!$user) return response()->json(['message' => 'User not found.'], 404);
+
+        if (in_array($user->role, ['super_admin', 'admin_user'])) {
+            return response()->json(['message' => 'Cannot delete admin users from here. Use Admin Users management.'], 403);
+        }
+
+        // Revoke tokens
+        $user->tokens()->delete();
+
+        // If user is an owner, check if they're the only owner of the account
+        if ($user->role === 'owner' && $user->account_id) {
+            $otherOwners = User::where('account_id', $user->account_id)
+                ->where('id', '!=', $user->id)
+                ->where('role', 'owner')
+                ->count();
+
+            // Delete all account users if this was the only owner
+            if ($otherOwners === 0) {
+                // Delete other users of this account
+                User::where('account_id', $user->account_id)
+                    ->where('id', '!=', $user->id)
+                    ->each(function ($u) { $u->tokens()->delete(); $u->delete(); });
+
+                // Delete API keys
+                if (class_exists(\App\Models\ApiKey::class)) {
+                    \App\Models\ApiKey::where('account_id', $user->account_id)->delete();
+                }
+
+                // Delete the account itself
+                if ($user->account) {
+                    $user->account->delete();
+                }
+            }
+        }
+
+        $email = $user->email;
+        $user->delete();
+
+        return response()->json([
+            'message' => "User {$email} and associated data permanently deleted.",
+        ]);
+    }
+
+    /**
+     * Reset a user's password (admin).
      */
     public function updateRateLimit(Request $request, $id): JsonResponse
     {

@@ -648,6 +648,11 @@
                         <option value="admin">Admin</option>
                         <option value="viewer">Viewer</option>
                     </select>
+                    <select x-model="usrStatusFilter" @change="usrPage=1; fetchUsers()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="banned">Banned</option>
+                    </select>
                 </div>
             </div>
 
@@ -666,13 +671,14 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200">
                                 <template x-for="usr in adminUsers" :key="usr.id">
-                                    <tr class="hover:bg-gray-50">
+                                    <tr class="hover:bg-gray-50" :class="usr.is_banned ? 'bg-red-50' : ''">
                                         <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="(usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="usr.email"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600">
@@ -684,9 +690,29 @@
                                                 :class="{'bg-purple-100 text-purple-800': usr.role==='owner','bg-blue-100 text-blue-800': usr.role==='admin','bg-gray-100 text-gray-800': usr.role==='viewer'}"
                                                 x-text="usr.role"></span>
                                         </td>
+                                        <td class="px-6 py-4">
+                                            <template x-if="usr.is_banned">
+                                                <div>
+                                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Banned</span>
+                                                    <p class="text-xs text-red-500 mt-1" x-text="usr.ban_reason || ''"></p>
+                                                </div>
+                                            </template>
+                                            <template x-if="!usr.is_banned">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                                            </template>
+                                        </td>
                                         <td class="px-6 py-4 text-sm text-gray-500" x-text="formatDate(usr.created_at)"></td>
                                         <td class="px-6 py-4">
-                                            <button @click="adminResetPassword(usr.id, (usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name)" class="text-xs bg-yellow-500 text-white px-3 py-1.5 rounded hover:bg-yellow-600 font-medium">Reset Password</button>
+                                            <div class="flex flex-wrap gap-1">
+                                                <button @click="adminResetPassword(usr.id, (usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name)" class="text-xs bg-yellow-500 text-white px-3 py-1.5 rounded hover:bg-yellow-600 font-medium">Reset PW</button>
+                                                <template x-if="!usr.is_banned">
+                                                    <button @click="openBanModal(usr)" class="text-xs bg-orange-500 text-white px-3 py-1.5 rounded hover:bg-orange-600 font-medium">Ban</button>
+                                                </template>
+                                                <template x-if="usr.is_banned">
+                                                    <button @click="executeUnban(usr)" class="text-xs bg-green-500 text-white px-3 py-1.5 rounded hover:bg-green-600 font-medium">Unban</button>
+                                                </template>
+                                                <button @click="openDeleteModal(usr)" class="text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 font-medium">Delete</button>
+                                            </div>
                                         </td>
                                     </tr>
                                 </template>
@@ -699,6 +725,55 @@
                             <button @click="usrPage--; fetchUsers()" :disabled="!usrPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Previous</button>
                             <button @click="usrPage++; fetchUsers()" :disabled="!usrPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Next</button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ban User Modal -->
+            <div x-show="showBanModal" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showBanModal = false">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Ban User</h3>
+                    <p class="text-sm text-gray-600 mb-4">You are about to ban <strong x-text="banUserName"></strong>. They will be logged out and unable to log in.</p>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Reason for ban <span class="text-red-500">*</span></label>
+                    <textarea x-model="banReason" rows="3" placeholder="e.g. Spam account, fraudulent activity..."
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none"></textarea>
+                    <div class="flex justify-end gap-3 mt-4">
+                        <button @click="showBanModal = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                        <button @click="executeBan()" :disabled="!banReason.trim() || banLoading"
+                            class="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2">
+                            <svg x-show="banLoading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            Ban User
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete User Modal -->
+            <div x-show="showDeleteModal" x-cloak class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showDeleteModal = false">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-red-700">Permanently Delete User</h3>
+                            <p class="text-xs text-gray-500">This action cannot be undone</p>
+                        </div>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                        <p class="text-sm text-red-700">This will permanently delete the user, revoke all tokens, and remove associated data. If they are the sole owner of an account, that account will also be deleted.</p>
+                    </div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type the user's email to confirm:</label>
+                    <p class="text-xs text-gray-500 mb-2 font-mono" x-text="deleteUserEmail"></p>
+                    <input type="text" x-model="deleteConfirmEmail" placeholder="Enter email to confirm"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    <div class="flex justify-end gap-3 mt-4">
+                        <button @click="showDeleteModal = false; deleteConfirmEmail = ''" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                        <button @click="executeDelete()" :disabled="deleteConfirmEmail !== deleteUserEmail || deleteLoading"
+                            class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2">
+                            <svg x-show="deleteLoading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            Delete Permanently
+                        </button>
                     </div>
                 </div>
             </div>
@@ -3481,7 +3556,9 @@ function adminPanel() {
         accounts: [], accLoading: false, accSearch: '', accStatusFilter: '', accPage: 1, accPagination: {},
 
         // Users
-        adminUsers: [], usrLoading: false, usrSearch: '', usrRoleFilter: '', usrPage: 1, usrPagination: {},
+        adminUsers: [], usrLoading: false, usrSearch: '', usrRoleFilter: '', usrStatusFilter: '', usrPage: 1, usrPagination: {},
+        showBanModal: false, banUserId: null, banUserName: '', banReason: '', banLoading: false,
+        showDeleteModal: false, deleteUserId: null, deleteUserEmail: '', deleteConfirmEmail: '', deleteLoading: false,
 
         // Transactions (admin)
         adminTransactions: [], txnLoading: false, txnSearch: '', txnStatusFilter: '', txnTypeFilter: '', txnOperatorFilter: '', txnDateFrom: '', txnDateTo: '', txnPage: 1, txnPagination: {}, txnExportLoading: false,
@@ -3870,6 +3947,7 @@ function adminPanel() {
                 let url = `{{ config("services.auth_service.url") }}/api/admin/users?page=${this.usrPage}`;
                 if (this.usrSearch) url += `&search=${encodeURIComponent(this.usrSearch)}`;
                 if (this.usrRoleFilter) url += `&role=${this.usrRoleFilter}`;
+                if (this.usrStatusFilter) url += `&status=${this.usrStatusFilter}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();
@@ -3893,6 +3971,80 @@ function adminPanel() {
                     alert(data.message || 'Failed to reset password.');
                 }
             } catch (e) { console.error(e); alert('Error resetting password.'); }
+        },
+
+        // ---- Ban / Unban / Delete Users ----
+        openBanModal(usr) {
+            this.banUserId = usr.id;
+            this.banUserName = (usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name;
+            this.banReason = '';
+            this.showBanModal = true;
+        },
+
+        async executeBan() {
+            this.banLoading = true;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/users/${this.banUserId}/ban`, {
+                    method: 'PUT', headers: this.getHeaders(),
+                    body: JSON.stringify({ reason: this.banReason })
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'User banned successfully.');
+                    this.showBanModal = false;
+                    this.fetchUsers();
+                } else {
+                    alert(data.message || 'Failed to ban user.');
+                }
+            } catch (e) { console.error(e); alert('Error banning user.'); }
+            this.banLoading = false;
+        },
+
+        async executeUnban(usr) {
+            const name = (usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name;
+            if (!confirm(`Unban ${name}? They will be able to log in again.`)) return;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/users/${usr.id}/unban`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'User unbanned successfully.');
+                    this.fetchUsers();
+                } else {
+                    alert(data.message || 'Failed to unban user.');
+                }
+            } catch (e) { console.error(e); alert('Error unbanning user.'); }
+        },
+
+        openDeleteModal(usr) {
+            this.deleteUserId = usr.id;
+            this.deleteUserEmail = usr.email;
+            this.deleteConfirmEmail = '';
+            this.showDeleteModal = true;
+        },
+
+        async executeDelete() {
+            this.deleteLoading = true;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/users/${this.deleteUserId}`, {
+                    method: 'DELETE', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'User deleted permanently.');
+                    this.showDeleteModal = false;
+                    this.deleteConfirmEmail = '';
+                    this.fetchUsers();
+                    this.fetchStats();
+                } else {
+                    alert(data.message || 'Failed to delete user.');
+                }
+            } catch (e) { console.error(e); alert('Error deleting user.'); }
+            this.deleteLoading = false;
         },
 
         // ---- Admin Transaction Export ----
