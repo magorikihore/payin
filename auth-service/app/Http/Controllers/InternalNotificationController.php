@@ -11,6 +11,7 @@ use App\Notifications\AdminSettlementRequestedNotification;
 use App\Notifications\AdminTransferRequestedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class InternalNotificationController extends Controller
 {
@@ -74,9 +75,12 @@ class InternalNotificationController extends Controller
     {
         // Notify admin users
         $admins = User::whereIn('role', ['super_admin', 'admin_user'])->get();
+        \Log::info('notifyAdmins: found ' . $admins->count() . ' admin user(s)');
+
         foreach ($admins as $admin) {
             try {
                 $admin->notify($notification);
+                \Log::info('notifyAdmins: sent to admin user ' . $admin->email);
             } catch (\Throwable $e) {
                 \Log::warning('Failed to notify admin ' . $admin->email . ': ' . $e->getMessage());
             }
@@ -84,16 +88,19 @@ class InternalNotificationController extends Controller
 
         // Also notify configured notification email addresses
         $notifEmails = AdminSetting::getNotificationEmails();
+        \Log::info('notifyAdmins: configured notification emails: ' . json_encode($notifEmails));
         $adminEmails = $admins->pluck('email')->map(fn($e) => strtolower($e))->toArray();
 
         foreach ($notifEmails as $email) {
             // Skip if this email belongs to an admin user (already notified above)
-            if (in_array(strtolower($email), $adminEmails)) continue;
+            if (in_array(strtolower($email), $adminEmails)) {
+                \Log::info('notifyAdmins: skipping ' . $email . ' (already notified as admin user)');
+                continue;
+            }
 
             try {
-                $tempUser = new User(['email' => $email, 'name' => 'Admin']);
-                $tempUser->exists = false;
-                $tempUser->notify($notification);
+                Notification::route('mail', $email)->notify($notification);
+                \Log::info('notifyAdmins: sent to notification email ' . $email);
             } catch (\Throwable $e) {
                 \Log::warning('Failed to notify email ' . $email . ': ' . $e->getMessage());
             }

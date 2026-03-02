@@ -1145,7 +1145,7 @@ class AdminController extends Controller
         if ($denied = $this->checkSuperAdmin($request)) return $denied;
 
         $request->validate([
-            'emails' => 'required|array|max:10',
+            'emails' => 'present|array|max:10',
             'emails.*' => 'required|email|max:255',
         ]);
 
