@@ -8,10 +8,13 @@ use App\Models\Account;
 use App\Models\User;
 use App\Notifications\WelcomeNotification;
 use App\Notifications\AdminKycSubmittedNotification;
+use App\Notifications\AdminNewRegistrationNotification;
+use App\Models\AdminSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -60,6 +63,41 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
             // Don't fail registration if email fails
             \Log::warning('Welcome email failed: ' . $e->getMessage());
+        }
+
+        // Notify admins about new registration
+        try {
+            $notification = new AdminNewRegistrationNotification([
+                'business_name' => $validated['business_name'],
+                'owner_name' => $validated['firstname'] . ' ' . $validated['lastname'],
+                'email' => $validated['email'],
+                'country' => $country,
+                'account_ref' => $account->account_ref,
+            ]);
+
+            // Send to all admin users
+            $admins = User::whereIn('role', ['super_admin', 'admin_user'])->get();
+            foreach ($admins as $admin) {
+                try {
+                    $admin->notify($notification);
+                } catch (\Throwable $e) {
+                    \Log::warning('Admin registration notification failed for ' . $admin->email . ': ' . $e->getMessage());
+                }
+            }
+
+            // Send to configured notification emails
+            $notifEmails = AdminSetting::getNotificationEmails();
+            $adminEmails = $admins->pluck('email')->map(fn($e) => strtolower($e))->toArray();
+            foreach ($notifEmails as $email) {
+                if (in_array(strtolower($email), $adminEmails)) continue;
+                try {
+                    Notification::route('mail', $email)->notify($notification);
+                } catch (\Throwable $e) {
+                    \Log::warning('Registration notification to ' . $email . ' failed: ' . $e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Admin new-registration notification failed: ' . $e->getMessage());
         }
 
         return response()->json(['user' => $user, 'token' => $token], 201);
