@@ -113,6 +113,10 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/mail-config', [AdminController::class, 'updateMailConfig']);
         Route::post('/mail-config/test', [AdminController::class, 'sendTestEmail']);
 
+        // Notification emails (super_admin only)
+        Route::get('/notification-emails', [AdminController::class, 'getNotificationEmails']);
+        Route::put('/notification-emails', [AdminController::class, 'updateNotificationEmails']);
+
         // Email templates (super_admin only)
         Route::get('/email-templates', [AdminController::class, 'emailTemplates']);
         Route::post('/email-templates', [AdminController::class, 'createEmailTemplate']);

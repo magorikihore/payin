@@ -2884,6 +2884,71 @@
                 </form>
             </div>
 
+            <!-- ===== NOTIFICATION EMAIL ADDRESSES ===== -->
+            <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
+                <div class="flex items-center mb-1">
+                    <svg class="w-5 h-5 text-orange-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-800">Notification Email Addresses</h3>
+                </div>
+                <p class="text-sm text-gray-500 mb-5">
+                    Add email addresses to receive admin notifications (settlement requests, transfer approvals, etc.).
+                    These emails receive the same alerts sent to admin users.
+                </p>
+
+                <div x-show="notifMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm"
+                    :class="notifMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'"
+                    x-text="notifMsg"></div>
+
+                <div x-show="notifLoading" class="text-center py-6">
+                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                </div>
+
+                <div x-show="!notifLoading" x-cloak>
+                    <!-- Current emails -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Notification Recipients</label>
+                        <div x-show="notifEmails.length === 0" class="text-sm text-gray-400 italic mb-2">No notification emails configured yet.</div>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <template x-for="(email, idx) in notifEmails" :key="idx">
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm bg-blue-50 text-blue-700 border border-blue-200">
+                                    <svg class="w-4 h-4 mr-1.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    <span x-text="email"></span>
+                                    <button @click="removeNotifEmail(idx)" class="ml-2 text-blue-400 hover:text-red-500 transition" title="Remove">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </span>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Add new email -->
+                    <div class="flex items-end gap-3">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Add Email Address</label>
+                            <input type="email" x-model="notifEmailInput" @keydown.enter.prevent="addNotifEmail()"
+                                placeholder="e.g. alerts@payin.co.tz"
+                                class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <button @click="addNotifEmail()" type="button"
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium whitespace-nowrap">
+                            + Add
+                        </button>
+                    </div>
+
+                    <!-- Save button -->
+                    <div class="mt-5 pt-4 border-t flex items-center justify-between">
+                        <p class="text-xs text-gray-400">Maximum 10 email addresses. Changes take effect immediately after saving.</p>
+                        <button @click="saveNotifEmails()" :disabled="notifSaving"
+                            class="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50">
+                            <span x-show="!notifSaving">Save Notification Emails</span>
+                            <span x-show="notifSaving">Saving...</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Test Email -->
             <div class="bg-white rounded-xl shadow-md border p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-1">Send Test Email</h3>
@@ -3679,6 +3744,10 @@ function adminPanel() {
         mailForm: { MAIL_MAILER: 'smtp', MAIL_HOST: '', MAIL_PORT: '587', MAIL_USERNAME: '', MAIL_PASSWORD: '', MAIL_ENCRYPTION: 'tls', MAIL_FROM_ADDRESS: '', MAIL_FROM_NAME: 'Payin' },
         mailLoading: false, mailSaving: false, mailMsg: '', mailMsgType: 'success',
         testMailAddress: '', testMailSending: false, testMailMsg: '', testMailMsgType: 'success',
+
+        // Notification Emails
+        notifEmails: [], notifEmailInput: '', notifLoading: false, notifSaving: false,
+        notifMsg: '', notifMsgType: 'success',
 
         // Email Templates
         emailTemplates: [], tplLoading: false, tplSaving: false, tplMsg: '', tplMsgType: 'success',
@@ -5206,8 +5275,9 @@ function adminPanel() {
                 }
             } catch (e) { this.mailMsg = 'Failed to load mail config.'; this.mailMsgType = 'error'; }
             this.mailLoading = false;
-            // Also load templates
+            // Also load templates and notification emails
             this.fetchEmailTemplates();
+            this.fetchNotifEmails();
         },
 
         async saveMailConfig() {
@@ -5238,6 +5308,68 @@ function adminPanel() {
                 this.testMailMsgType = res.ok ? 'success' : 'error';
             } catch (e) { this.testMailMsg = 'Network error.'; this.testMailMsgType = 'error'; }
             this.testMailSending = false;
+        },
+
+        // ==================== NOTIFICATION EMAILS ====================
+        async fetchNotifEmails() {
+            this.notifLoading = true;
+            this.notifMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/notification-emails', { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    this.notifEmails = data.emails || [];
+                }
+            } catch (e) { this.notifMsg = 'Failed to load notification emails.'; this.notifMsgType = 'error'; }
+            this.notifLoading = false;
+        },
+
+        addNotifEmail() {
+            const email = (this.notifEmailInput || '').trim().toLowerCase();
+            if (!email) return;
+            // Basic email validation
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                this.notifMsg = 'Please enter a valid email address.';
+                this.notifMsgType = 'error';
+                return;
+            }
+            if (this.notifEmails.includes(email)) {
+                this.notifMsg = 'This email is already in the list.';
+                this.notifMsgType = 'error';
+                return;
+            }
+            if (this.notifEmails.length >= 10) {
+                this.notifMsg = 'Maximum 10 notification emails allowed.';
+                this.notifMsgType = 'error';
+                return;
+            }
+            this.notifEmails.push(email);
+            this.notifEmailInput = '';
+            this.notifMsg = '';
+        },
+
+        removeNotifEmail(idx) {
+            this.notifEmails.splice(idx, 1);
+        },
+
+        async saveNotifEmails() {
+            this.notifSaving = true;
+            this.notifMsg = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/notification-emails', {
+                    method: 'PUT', headers: this.getHeaders(),
+                    body: JSON.stringify({ emails: this.notifEmails })
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                this.notifMsg = data.message || (res.ok ? 'Saved.' : 'Failed.');
+                this.notifMsgType = res.ok ? 'success' : 'error';
+                if (res.ok && data.emails) {
+                    this.notifEmails = data.emails;
+                }
+            } catch (e) { this.notifMsg = 'Network error.'; this.notifMsgType = 'error'; }
+            this.notifSaving = false;
         },
 
         // ==================== EMAIL TEMPLATES ====================

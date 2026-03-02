@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\AdminSetting;
 use App\Models\User;
 use App\Notifications\TransferApprovedNotification;
 use App\Notifications\SettlementApprovedNotification;
@@ -66,16 +67,35 @@ class InternalNotificationController extends Controller
     }
 
     /**
-     * Send a notification to all admin-level users (super_admin + admin_user).
+     * Send a notification to all admin-level users (super_admin + admin_user)
+     * and to any configured notification email addresses.
      */
     private function notifyAdmins($notification): void
     {
+        // Notify admin users
         $admins = User::whereIn('role', ['super_admin', 'admin_user'])->get();
         foreach ($admins as $admin) {
             try {
                 $admin->notify($notification);
             } catch (\Throwable $e) {
                 \Log::warning('Failed to notify admin ' . $admin->email . ': ' . $e->getMessage());
+            }
+        }
+
+        // Also notify configured notification email addresses
+        $notifEmails = AdminSetting::getNotificationEmails();
+        $adminEmails = $admins->pluck('email')->map(fn($e) => strtolower($e))->toArray();
+
+        foreach ($notifEmails as $email) {
+            // Skip if this email belongs to an admin user (already notified above)
+            if (in_array(strtolower($email), $adminEmails)) continue;
+
+            try {
+                $tempUser = new User(['email' => $email, 'name' => 'Admin']);
+                $tempUser->exists = false;
+                $tempUser->notify($notification);
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to notify email ' . $email . ': ' . $e->getMessage());
             }
         }
     }

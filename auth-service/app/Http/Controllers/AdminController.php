@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\AdminSetting;
 use App\Models\EmailTemplate;
 use App\Models\User;
 use App\Notifications\AccountOpeningNotification;
@@ -1119,6 +1120,43 @@ class AdminController extends Controller
             'message' => "Bulk email sent to {$sent} recipient(s)." . ($failed ? " {$failed} failed." : ''),
             'sent' => $sent,
             'failed' => $failed,
+        ]);
+    }
+
+    // ==================== NOTIFICATION EMAILS ====================
+
+    /**
+     * Get the configured notification email addresses.
+     */
+    public function getNotificationEmails(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $emails = AdminSetting::getNotificationEmails();
+
+        return response()->json(['emails' => $emails]);
+    }
+
+    /**
+     * Update the notification email addresses.
+     */
+    public function updateNotificationEmails(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkSuperAdmin($request)) return $denied;
+
+        $request->validate([
+            'emails' => 'required|array|max:10',
+            'emails.*' => 'required|email|max:255',
+        ]);
+
+        $emails = array_map('strtolower', array_map('trim', $request->emails));
+        $emails = array_values(array_unique($emails));
+
+        AdminSetting::setNotificationEmails($emails);
+
+        return response()->json([
+            'message' => 'Notification emails updated successfully.',
+            'emails' => $emails,
         ]);
     }
 }
