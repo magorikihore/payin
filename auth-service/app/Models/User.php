@@ -27,6 +27,8 @@ class User extends Authenticatable
         'create_settlement',
         'view_settlements',
         'wallet_transfer',
+        'create_payout',
+        'approve_payout',
         'add_user',
         'view_users',
         'view_account_info',

@@ -41,6 +41,13 @@ Route::middleware('auth.service')->group(function () {
     Route::post('/disbursement', [PaymentController::class, 'disbursement']);
     Route::post('/disbursement/batch', [PaymentController::class, 'batchDisbursement']);
 
+    // Payout approval (maker-checker)
+    Route::get('/payouts/pending', [PaymentController::class, 'pendingPayouts']);
+    Route::put('/payouts/{id}/approve', [PaymentController::class, 'approvePayout']);
+    Route::put('/payouts/{id}/reject', [PaymentController::class, 'rejectPayout']);
+    Route::post('/payouts/bulk-approve', [PaymentController::class, 'bulkApprovePayout']);
+    Route::post('/payouts/bulk-reject', [PaymentController::class, 'bulkRejectPayout']);
+
     // Active operators (for dashboard send-money form)
     Route::get('/operators', [PaymentController::class, 'activeOperators']);
 

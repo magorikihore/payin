@@ -35,6 +35,10 @@ class PaymentRequest extends Model
         'callback_attempts',
         'callback_sent_at',
         'transaction_id',
+        'created_by',
+        'approved_by',
+        'approved_at',
+        'approval_notes',
     ];
 
     protected function casts(): array
@@ -47,6 +51,7 @@ class PaymentRequest extends Model
             'operator_response' => 'array',
             'callback_data' => 'array',
             'callback_sent_at' => 'datetime',
+            'approved_at' => 'datetime',
         ];
     }
 

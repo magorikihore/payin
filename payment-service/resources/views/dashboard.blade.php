@@ -60,11 +60,12 @@
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'wallet' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     Wallet
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="goToTab('send-money')"
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('create_payout') || hasPerm('approve_payout') || hasPerm('view_transactions')" @click="goToTab('send-money')"
                     :class="activeTab === 'send-money' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
-                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group relative">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'send-money' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     Send Money
+                    <span x-show="pendingPayoutsCount > 0" x-cloak class="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" x-text="pendingPayoutsCount"></span>
                 </button>
                 <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="goToTab('settlements')"
                     :class="activeTab === 'settlements' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
@@ -390,11 +391,12 @@
                     </div>
                     <p class="text-xs font-semibold text-gray-700">Transactions</p>
                 </button>
-                <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="goToTab('send-money')" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
+                <button x-show="hasPerm('wallet_transfer') || hasPerm('create_payout') || hasPerm('approve_payout') || hasPerm('view_transactions')" @click="goToTab('send-money')" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group relative">
                     <div class="p-2 bg-gray-100 rounded-lg inline-flex group-hover:bg-gray-200 transition mb-2">
                         <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
                     </div>
                     <p class="text-xs font-semibold text-gray-700">Send Money</p>
+                    <span x-show="pendingPayoutsCount > 0" x-cloak class="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" x-text="pendingPayoutsCount"></span>
                 </button>
                 <button x-show="hasPerm('wallet_transfer') || hasPerm('view_transactions')" @click="goToTab('wallet')" class="bg-white rounded-xl border shadow-sm p-4 hover:shadow-md transition text-center group">
                     <div class="p-2 bg-gray-100 rounded-lg inline-flex group-hover:bg-gray-200 transition mb-2">
@@ -1731,13 +1733,18 @@
 
         <!-- ==================== SEND MONEY TAB ==================== -->
         <div x-show="activeTab === 'send-money'" x-cloak>
-            <!-- Sub-tabs: Single / Batch -->
+            <!-- Sub-tabs: Single / Batch / Approvals -->
             <div class="border-b border-gray-200 mb-6">
                 <nav class="flex space-x-6">
-                    <button @click="sendMoneySubTab = 'single'" :class="sendMoneySubTab === 'single' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    <button x-show="hasPerm('create_payout') || hasPerm('wallet_transfer')" @click="sendMoneySubTab = 'single'" :class="sendMoneySubTab === 'single' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                         class="py-2 px-1 border-b-2 font-medium text-sm transition">Single Payout</button>
-                    <button @click="sendMoneySubTab = 'batch'" :class="sendMoneySubTab === 'batch' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                    <button x-show="hasPerm('create_payout') || hasPerm('wallet_transfer')" @click="sendMoneySubTab = 'batch'" :class="sendMoneySubTab === 'batch' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
                         class="py-2 px-1 border-b-2 font-medium text-sm transition">Batch Payout</button>
+                    <button x-show="hasPerm('approve_payout')" @click="sendMoneySubTab = 'approvals'; fetchPendingPayouts()" :class="sendMoneySubTab === 'approvals' ? 'border-gblue-500 text-gblue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+                        class="py-2 px-1 border-b-2 font-medium text-sm transition relative">
+                        Pending Approvals
+                        <span x-show="pendingPayoutsCount > 0" x-cloak class="ml-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" x-text="pendingPayoutsCount"></span>
+                    </button>
                 </nav>
             </div>
 
@@ -1818,7 +1825,7 @@
                             <input type="text" x-model="payoutForm.description" placeholder="e.g. Salary payment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                         </div>
                         <button type="submit" :disabled="payoutLoading" class="w-full bg-gblue-500 text-white px-6 py-2.5 rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
-                            <span x-show="!payoutLoading">Send Money</span>
+                            <span x-show="!payoutLoading" x-text="(hasPerm('create_payout') && !hasPerm('approve_payout') && user?.role !== 'owner') ? 'Submit for Approval' : 'Send Money'">Send Money</span>
                             <span x-show="payoutLoading">Sending...</span>
                         </button>
                     </form>
@@ -1973,7 +1980,7 @@
 
                         <div class="flex justify-end mt-3">
                             <button @click="sendBatchPayout()" :disabled="batchLoading || batchResults.length > 0" class="px-6 py-2.5 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
-                                <span x-show="!batchLoading">Send Batch</span>
+                                <span x-show="!batchLoading" x-text="(hasPerm('create_payout') && !hasPerm('approve_payout') && user?.role !== 'owner') ? 'Submit Batch for Approval' : 'Send Batch'">Send Batch</span>
                                 <span x-show="batchLoading">Sending...</span>
                             </button>
                         </div>
@@ -2036,6 +2043,123 @@
                             <input type="text" inputmode="numeric" x-model="manualAmountDisplay" @input="formatAmountInput($event, 'manual')" placeholder="Amount" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <input type="text" x-model="manualRow.reference" placeholder="Reference (optional)" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <button @click="addManualRow()" class="px-4 py-2 bg-gblue-500 text-white rounded-lg hover:bg-gblue-600 text-sm font-medium">+ Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= PENDING APPROVALS ======= -->
+            <div x-show="sendMoneySubTab === 'approvals'" x-cloak>
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white rounded-xl shadow-md border p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-yellow-100 rounded-lg mr-3">
+                                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Pending Payouts</p>
+                                <p class="text-xl font-bold text-gray-800" x-text="pendingPayoutsCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md border p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Total Amount</p>
+                                <p class="text-xl font-bold text-gray-800" x-text="formatAmount(pendingPayoutsTotal) + ' ' + (walletCurrency || 'TZS')">0.00 TZS</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md border p-4">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-green-100 rounded-lg mr-3">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Selected</p>
+                                <p class="text-xl font-bold text-gray-800" x-text="selectedPayouts.length">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bulk Action Bar -->
+                <div x-show="selectedPayouts.length > 0" x-cloak class="bg-gblue-50 border border-gblue-200 rounded-xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+                    <span class="text-sm font-medium text-gblue-700"><span x-text="selectedPayouts.length"></span> payout(s) selected</span>
+                    <div class="flex gap-2">
+                        <button @click="bulkApprovePayouts()" :disabled="bulkApprovalLoading" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 inline-flex items-center">
+                            <svg x-show="bulkApprovalLoading" class="animate-spin h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            Approve All Selected
+                        </button>
+                        <button @click="bulkRejectPayouts()" :disabled="bulkApprovalLoading" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 inline-flex items-center">
+                            Reject All Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pending Payouts Table -->
+                <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                    <div class="px-6 py-4 border-b flex items-center justify-between">
+                        <h3 class="text-md font-semibold text-gray-700">Payouts Awaiting Approval</h3>
+                        <button @click="fetchPendingPayouts()" class="text-xs text-gblue-500 hover:text-gblue-700 font-medium">Refresh</button>
+                    </div>
+
+                    <!-- Loading -->
+                    <div x-show="pendingPayoutsLoading" class="p-6 text-center">
+                        <svg class="animate-spin h-6 w-6 mx-auto text-gblue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div x-show="!pendingPayoutsLoading && pendingPayouts.length === 0" x-cloak class="p-8 text-center">
+                        <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-gray-500 text-sm">No pending payouts to approve.</p>
+                    </div>
+
+                    <!-- Table -->
+                    <div x-show="!pendingPayoutsLoading && pendingPayouts.length > 0" x-cloak>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500"><input type="checkbox" :checked="selectAllPayouts" @change="toggleSelectAllPayouts()" class="rounded border-gray-300 text-gblue-600 focus:ring-gblue-500"></th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created By</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    <template x-for="p in pendingPayouts" :key="p.id">
+                                        <tr class="hover:bg-gray-50 transition">
+                                            <td class="px-4 py-3"><input type="checkbox" :value="p.id" x-model="selectedPayouts" class="rounded border-gray-300 text-gblue-600 focus:ring-gblue-500"></td>
+                                            <td class="px-4 py-3 text-xs font-mono text-gray-700" x-text="p.request_ref || '-'"></td>
+                                            <td class="px-4 py-3 text-sm text-gray-700" x-text="p.phone || '-'"></td>
+                                            <td class="px-4 py-3 text-sm text-right font-semibold text-gray-800" x-text="formatAmount(p.amount)"></td>
+                                            <td class="px-4 py-3 text-xs text-gray-600 uppercase" x-text="p.operator || '-'"></td>
+                                            <td class="px-4 py-3 text-xs text-gray-600 max-w-[150px] truncate" x-text="p.description || p.reference || '-'"></td>
+                                            <td class="px-4 py-3 text-xs text-gray-600" x-text="p.created_by_name || p.created_by || '-'"></td>
+                                            <td class="px-4 py-3 text-xs text-gray-500" x-text="p.created_at ? new Date(p.created_at).toLocaleString() : '-'"></td>
+                                            <td class="px-4 py-3 text-center">
+                                                <div class="flex items-center justify-center gap-1">
+                                                    <button @click="approveSinglePayout(p.id)" :disabled="approvalLoading[p.id]" class="px-2.5 py-1.5 bg-green-600 text-white rounded-md text-xs font-medium hover:bg-green-700 disabled:opacity-50 inline-flex items-center">
+                                                        <svg x-show="approvalLoading[p.id]" class="animate-spin h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                        Approve
+                                                    </button>
+                                                    <button @click="rejectSinglePayout(p.id)" :disabled="approvalLoading[p.id]" class="px-2.5 py-1.5 bg-red-600 text-white rounded-md text-xs font-medium hover:bg-red-700 disabled:opacity-50">Reject</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -2760,6 +2884,12 @@ function dashboard() {
         manualAmountDisplay: '',
         recentDisbursements: [], recentDisbLoading: false, disbPage: 1, disbPagination: {},
 
+        // Payout Approvals (maker-checker)
+        pendingPayouts: [], pendingPayoutsCount: 0, pendingPayoutsTotal: 0,
+        pendingPayoutsLoading: false, approvalLoading: {},
+        selectedPayouts: [], selectAllPayouts: false,
+        bulkApprovalLoading: false,
+
         // Password
         showPasswordModal: false, currentPassword: '', newPassword: '', confirmPassword: '',
         pwError: '', pwSuccess: '', pwLoading: false,
@@ -2768,7 +2898,7 @@ function dashboard() {
         accountUsers: [], accUsersLoading: false, addUserLoading: false,
         newUserForm: { firstname: '', lastname: '', email: '', password: '', role: 'viewer', permissions: [] },
         addUserMsg: '', addUserMsgType: '',
-        allPermissions: ['view_transactions', 'create_settlement', 'view_settlements', 'wallet_transfer', 'add_user', 'view_users', 'view_account_info', 'view_settings'],
+        allPermissions: ['view_transactions', 'create_settlement', 'view_settlements', 'wallet_transfer', 'create_payout', 'approve_payout', 'add_user', 'view_users', 'view_account_info', 'view_settings'],
         editingPermUserId: null, editingPerms: [],
 
         // Pending KYC
@@ -2869,7 +2999,14 @@ function dashboard() {
             // Trigger data fetches for the target tab
             switch(tab) {
                 case 'wallet': this.fetchWallet(); break;
-                case 'send-money': this.fetchPayoutOperators(); break;
+                case 'send-money':
+                    this.fetchPayoutOperators();
+                    if (this.hasPerm('approve_payout')) this.fetchPendingPayouts();
+                    // Default to approvals tab if user can only approve
+                    if (this.hasPerm('approve_payout') && !this.hasPerm('create_payout') && !this.hasPerm('wallet_transfer')) {
+                        this.sendMoneySubTab = 'approvals';
+                    }
+                    break;
                 case 'settlements': this.fetchSettlements(); break;
                 case 'account': this.fetchKyc(); break;
                 case 'users': this.fetchAccountUsers(); break;
@@ -2893,6 +3030,8 @@ function dashboard() {
                 create_settlement: 'Create Settlement',
                 view_settlements: 'View Settlements',
                 wallet_transfer: 'Wallet Transfer',
+                create_payout: 'Create Payout',
+                approve_payout: 'Approve Payout',
                 add_user: 'Add User',
                 view_users: 'View Users',
                 view_account_info: 'View Account Info',
@@ -3857,30 +3996,40 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     this.payoutMsg = errors || 'Failed to send.';
                     this.payoutMsgType = 'error';
                 } else {
-                    this.payoutMsg = data.message || 'Payout sent successfully!';
-                    this.payoutMsgType = 'success';
-                    this.lastPayoutResult = data;
-                    // Show receipt modal
-                    this.payoutReceipt = {
-                        request_ref: data.request_ref,
-                        phone: data.phone || this.payoutForm.phone,
-                        amount: data.amount || this.payoutForm.amount,
-                        operator: data.operator || this.detectedOperator.name,
-                        status: data.status || 'processing',
-                        platform_charge: this.payoutCharges?.platform_charge || 0,
-                        total_debit: Number(data.amount || this.payoutForm.amount) + Number(this.payoutCharges?.platform_charge || 0),
-                        currency: this.walletCurrency || 'TZS',
-                        reference: this.payoutForm.reference || '',
-                        description: this.payoutForm.description || '',
-                        date: new Date().toISOString(),
-                    };
-                    this.payoutReceiptOpen = true;
-                    this.payoutForm = { phone: '', amount: '', reference: '', description: '' };
-                    this.payoutAmountDisplay = '';
-                    this.detectedOperator = { name: '', code: '' };
-                    this.payoutCharges = null;
-                    this.disbPage = 1;
-                    this.fetchRecentDisbursements();
+                    if (data.requires_approval) {
+                        this.payoutMsg = 'Payout submitted for approval. An approver will review it before funds are sent.';
+                        this.payoutMsgType = 'success';
+                        this.payoutForm = { phone: '', amount: '', reference: '', description: '' };
+                        this.payoutAmountDisplay = '';
+                        this.detectedOperator = { name: '', code: '' };
+                        this.payoutCharges = null;
+                        this.fetchPendingPayouts();
+                    } else {
+                        this.payoutMsg = data.message || 'Payout sent successfully!';
+                        this.payoutMsgType = 'success';
+                        this.lastPayoutResult = data;
+                        // Show receipt modal
+                        this.payoutReceipt = {
+                            request_ref: data.request_ref,
+                            phone: data.phone || this.payoutForm.phone,
+                            amount: data.amount || this.payoutForm.amount,
+                            operator: data.operator || this.detectedOperator.name,
+                            status: data.status || 'processing',
+                            platform_charge: this.payoutCharges?.platform_charge || 0,
+                            total_debit: Number(data.amount || this.payoutForm.amount) + Number(this.payoutCharges?.platform_charge || 0),
+                            currency: this.walletCurrency || 'TZS',
+                            reference: this.payoutForm.reference || '',
+                            description: this.payoutForm.description || '',
+                            date: new Date().toISOString(),
+                        };
+                        this.payoutReceiptOpen = true;
+                        this.payoutForm = { phone: '', amount: '', reference: '', description: '' };
+                        this.payoutAmountDisplay = '';
+                        this.detectedOperator = { name: '', code: '' };
+                        this.payoutCharges = null;
+                        this.disbPage = 1;
+                        this.fetchRecentDisbursements();
+                    }
                 }
             } catch (e) { this.payoutMsg = 'Network error.'; this.payoutMsgType = 'error'; }
             this.payoutLoading = false;
@@ -4105,24 +4254,34 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
-                if (data.results) {
-                    this.batchResults = data.results;
-                    this.batchResultSummary = { sent: data.sent || 0, failed: data.failed || 0, total: data.total || 0 };
-                    data.results.forEach(r => {
-                        if (this.batchItems[r.index]) {
-                            this.batchItems[r.index]._status = r.success ? 'success' : 'failed';
-                        }
-                    });
+                if (data.requires_approval) {
+                    this.batchMsg = 'Batch submitted for approval. An approver will review before funds are sent.';
+                    this.batchMsgType = 'success';
+                    this.batchItems = [];
+                    this.batchName = '';
+                    this.batchCsvText = '';
+                    this.batchCharges = null;
+                    this.fetchPendingPayouts();
+                } else {
+                    if (data.results) {
+                        this.batchResults = data.results;
+                        this.batchResultSummary = { sent: data.sent || 0, failed: data.failed || 0, total: data.total || 0 };
+                        data.results.forEach(r => {
+                            if (this.batchItems[r.index]) {
+                                this.batchItems[r.index]._status = r.success ? 'success' : 'failed';
+                            }
+                        });
+                    }
+                    this.batchMsg = data.message || (res.ok ? 'Batch sent.' : 'Batch failed.');
+                    this.batchMsgType = data.failed === 0 ? 'success' : 'error';
+                    // Clear form to prevent duplicate sends
+                    this.batchItems = [];
+                    this.batchName = '';
+                    this.batchCsvText = '';
+                    this.batchCharges = null;
+                    this.disbPage = 1;
+                    this.fetchRecentDisbursements();
                 }
-                this.batchMsg = data.message || (res.ok ? 'Batch sent.' : 'Batch failed.');
-                this.batchMsgType = data.failed === 0 ? 'success' : 'error';
-                // Clear form to prevent duplicate sends
-                this.batchItems = [];
-                this.batchName = '';
-                this.batchCsvText = '';
-                this.batchCharges = null;
-                this.disbPage = 1;
-                this.fetchRecentDisbursements();
             } catch (e) { this.batchMsg = 'Network error.'; this.batchMsgType = 'error'; }
             this.batchLoading = false;
         },
@@ -4138,6 +4297,117 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 }
             } catch (e) { console.error(e); }
             this.recentDisbLoading = false;
+        },
+
+        // ---- Payout Approval (Maker-Checker) ----
+        async fetchPendingPayouts() {
+            this.pendingPayoutsLoading = true;
+            try {
+                const res = await fetch('/api/payouts/pending', { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.pendingPayouts = data.data || [];
+                    this.pendingPayoutsCount = data.count ?? this.pendingPayouts.length;
+                    this.pendingPayoutsTotal = data.total_amount ?? this.pendingPayouts.reduce((s, p) => s + Number(p.amount || 0), 0);
+                }
+            } catch (e) { console.error('fetchPendingPayouts', e); }
+            this.pendingPayoutsLoading = false;
+        },
+
+        async approveSinglePayout(id) {
+            if (!confirm('Approve this payout? Funds will be sent to the recipient.')) return;
+            this.approvalLoading = { ...this.approvalLoading, [id]: true };
+            try {
+                const res = await fetch(`/api/payouts/${id}/approve`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.fetchPendingPayouts();
+                    this.fetchRecentDisbursements();
+                    this.fetchWallet();
+                } else {
+                    alert(data.message || 'Failed to approve payout.');
+                }
+            } catch (e) { alert('Network error approving payout.'); }
+            this.approvalLoading = { ...this.approvalLoading, [id]: false };
+        },
+
+        async rejectSinglePayout(id) {
+            const notes = prompt('Rejection reason (optional):');
+            if (notes === null) return; // cancelled
+            this.approvalLoading = { ...this.approvalLoading, [id]: true };
+            try {
+                const res = await fetch(`/api/payouts/${id}/reject`, {
+                    method: 'PUT', headers: this.getHeaders(),
+                    body: JSON.stringify({ notes: notes || '' })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.fetchPendingPayouts();
+                } else {
+                    alert(data.message || 'Failed to reject payout.');
+                }
+            } catch (e) { alert('Network error rejecting payout.'); }
+            this.approvalLoading = { ...this.approvalLoading, [id]: false };
+        },
+
+        toggleSelectAllPayouts() {
+            if (this.selectAllPayouts) {
+                this.selectedPayouts = [];
+                this.selectAllPayouts = false;
+            } else {
+                this.selectedPayouts = this.pendingPayouts.map(p => p.id);
+                this.selectAllPayouts = true;
+            }
+        },
+
+        async bulkApprovePayouts() {
+            if (!this.selectedPayouts.length) return;
+            if (!confirm(`Approve ${this.selectedPayouts.length} payout(s)? Funds will be sent.`)) return;
+            this.bulkApprovalLoading = true;
+            try {
+                const res = await fetch('/api/payouts/bulk-approve', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ ids: this.selectedPayouts })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    const msg = `Approved: ${data.approved || 0}, Failed: ${data.failed || 0}`;
+                    alert(msg);
+                    this.selectedPayouts = [];
+                    this.selectAllPayouts = false;
+                    this.fetchPendingPayouts();
+                    this.fetchRecentDisbursements();
+                    this.fetchWallet();
+                } else {
+                    alert(data.message || 'Bulk approve failed.');
+                }
+            } catch (e) { alert('Network error during bulk approve.'); }
+            this.bulkApprovalLoading = false;
+        },
+
+        async bulkRejectPayouts() {
+            if (!this.selectedPayouts.length) return;
+            const notes = prompt('Rejection reason for all selected (optional):');
+            if (notes === null) return;
+            this.bulkApprovalLoading = true;
+            try {
+                const res = await fetch('/api/payouts/bulk-reject', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ ids: this.selectedPayouts, notes: notes || '' })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`Rejected: ${data.rejected || 0} payout(s).`);
+                    this.selectedPayouts = [];
+                    this.selectAllPayouts = false;
+                    this.fetchPendingPayouts();
+                } else {
+                    alert(data.message || 'Bulk reject failed.');
+                }
+            } catch (e) { alert('Network error during bulk reject.'); }
+            this.bulkApprovalLoading = false;
         },
 
         // ---- Helpers ----

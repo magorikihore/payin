@@ -101,6 +101,7 @@ class PaymentController extends Controller
 
     /**
      * Push Disbursement: Send money to a phone number.
+     * If the user has create_payout but not approve_payout, the payout goes to pending_approval.
      */
     public function disbursement(Request $request): JsonResponse
     {
@@ -148,6 +149,9 @@ class PaymentController extends Controller
             ], 422);
         }
 
+        // Determine if this payout requires approval (maker-checker)
+        $requiresApproval = $this->payoutRequiresApproval($user);
+
         // Create payment request record
         $requestRef = 'PAY-' . strtoupper(Str::random(12));
         $paymentRequest = PaymentRequest::create([
@@ -162,9 +166,24 @@ class PaymentController extends Controller
             'currency'        => $request->currency ?? 'TZS',
             'operator_code'   => $operator->code,
             'operator_name'   => $operator->name,
-            'status'          => 'pending',
+            'status'          => $requiresApproval ? 'pending_approval' : 'pending',
             'description'     => $request->description,
+            'created_by'      => $user->id ?? null,
         ]);
+
+        // If requires approval, return immediately without pushing to operator
+        if ($requiresApproval) {
+            return response()->json([
+                'success'      => true,
+                'message'      => 'Payout request submitted for approval.',
+                'request_ref'  => $requestRef,
+                'status'       => 'pending_approval',
+                'phone'        => $paymentRequest->phone,
+                'amount'       => $paymentRequest->amount,
+                'operator'     => $operator->name,
+                'requires_approval' => true,
+            ], 201);
+        }
 
         // Push to operator
         $pushResult = $this->pushToOperator($operator, $paymentRequest, 'disbursement');
@@ -470,6 +489,9 @@ class PaymentController extends Controller
             return response()->json(['message' => 'No account associated.'], 403);
         }
 
+        // Determine if this batch requires approval (maker-checker)
+        $requiresApproval = $this->payoutRequiresApproval($user);
+
         $results = [];
         $successCount = 0;
         $failCount = 0;
@@ -501,19 +523,21 @@ class PaymentController extends Controller
             $charges = $this->calculateCharges($accountId, $item['amount'], $operator->code, 'disbursement');
             $totalDebit = $item['amount'] + ($charges['platform_charge'] ?? 0);
 
-            $balanceCheck = $this->checkWalletBalance($accountId, $totalDebit, $request->bearerToken());
-            if (!$balanceCheck['sufficient']) {
-                $results[] = [
-                    'index' => $index,
-                    'phone' => $item['phone'],
-                    'amount' => $item['amount'],
-                    'success' => false,
-                    'error' => 'Insufficient wallet balance.',
-                    'required' => $totalDebit,
-                    'available' => $balanceCheck['balance'] ?? 0,
-                ];
-                $failCount++;
-                continue;
+            if (!$requiresApproval) {
+                $balanceCheck = $this->checkWalletBalance($accountId, $totalDebit, $request->bearerToken());
+                if (!$balanceCheck['sufficient']) {
+                    $results[] = [
+                        'index' => $index,
+                        'phone' => $item['phone'],
+                        'amount' => $item['amount'],
+                        'success' => false,
+                        'error' => 'Insufficient wallet balance.',
+                        'required' => $totalDebit,
+                        'available' => $balanceCheck['balance'] ?? 0,
+                    ];
+                    $failCount++;
+                    continue;
+                }
             }
 
             // Create payment request
@@ -530,10 +554,24 @@ class PaymentController extends Controller
                 'currency'        => 'TZS',
                 'operator_code'   => $operator->code,
                 'operator_name'   => $operator->name,
-                'status'          => 'pending',
+                'status'          => $requiresApproval ? 'pending_approval' : 'pending',
                 'description'     => $item['description'] ?? null,
                 'batch_name'      => $batchName,
+                'created_by'      => $user->id ?? null,
             ]);
+
+            if ($requiresApproval) {
+                $successCount++;
+                $results[] = [
+                    'index' => $index,
+                    'phone' => $paymentRequest->phone,
+                    'amount' => $paymentRequest->amount,
+                    'success' => true,
+                    'request_ref' => $requestRef,
+                    'status' => 'pending_approval',
+                ];
+                continue;
+            }
 
             // Push to operator
             $pushResult = $this->pushToOperator($operator, $paymentRequest, 'disbursement');
@@ -571,13 +609,18 @@ class PaymentController extends Controller
             }
         }
 
+        $message = $requiresApproval
+            ? "Batch submitted for approval: {$successCount} queued, {$failCount} failed."
+            : "Batch complete: {$successCount} sent, {$failCount} failed.";
+
         return response()->json([
             'success' => $failCount === 0,
-            'message' => "Batch complete: {$successCount} sent, {$failCount} failed.",
+            'message' => $message,
             'sent' => $successCount,
             'failed' => $failCount,
             'total' => count($request->items),
             'results' => $results,
+            'requires_approval' => $requiresApproval,
         ], $successCount > 0 ? 201 : 422);
     }
 
@@ -1000,5 +1043,346 @@ class PaymentController extends Controller
         $phone = ltrim($phone, '+');
 
         return $phone;
+    }
+
+    // ================================================================
+    //  PAYOUT APPROVAL (Maker-Checker)
+    // ================================================================
+
+    /**
+     * Determine if a payout requires approval based on user permissions.
+     * API key requests (no role/permissions) bypass approval.
+     * Owner always has both create+approve, so payouts go directly.
+     * Users with only create_payout need approval from approve_payout users.
+     */
+    private function payoutRequiresApproval(object $user): bool
+    {
+        $role = $user->role ?? null;
+
+        // API key requests have no role — bypass approval
+        if (!$role) {
+            return false;
+        }
+
+        // Owner always has full authority — no approval needed
+        if ($role === 'owner') {
+            return false;
+        }
+
+        // Get user's effective permissions
+        $perms = $user->effective_permissions ?? $user->permissions ?? [];
+        if (is_string($perms)) {
+            $perms = json_decode($perms, true) ?? [];
+        }
+
+        // If user has approve_payout, they can send directly (they ARE the approver)
+        if (in_array('approve_payout', $perms)) {
+            return false;
+        }
+
+        // If user has create_payout only, requires approval
+        if (in_array('create_payout', $perms)) {
+            return true;
+        }
+
+        // Legacy: users with wallet_transfer but no create/approve — send directly
+        return false;
+    }
+
+    /**
+     * List pending payout approvals for account users with approve_payout permission.
+     */
+    public function pendingPayouts(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        $query = PaymentRequest::where('account_id', $accountId)
+            ->where('type', 'disbursement')
+            ->where('status', 'pending_approval')
+            ->orderBy('created_at', 'desc');
+
+        $payouts = $query->get();
+
+        // Also get summary counts
+        $pendingCount = PaymentRequest::where('account_id', $accountId)
+            ->where('type', 'disbursement')
+            ->where('status', 'pending_approval')
+            ->count();
+
+        $pendingTotal = PaymentRequest::where('account_id', $accountId)
+            ->where('type', 'disbursement')
+            ->where('status', 'pending_approval')
+            ->sum('amount');
+
+        return response()->json([
+            'payouts' => $payouts,
+            'pending_count' => $pendingCount,
+            'pending_total' => (float) $pendingTotal,
+        ]);
+    }
+
+    /**
+     * Approve a pending payout and push it to the operator.
+     */
+    public function approvePayout(Request $request, $id): JsonResponse
+    {
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        // Check user has approve_payout permission
+        $role = $user->role ?? null;
+        $perms = $user->effective_permissions ?? $user->permissions ?? [];
+        if (is_string($perms)) $perms = json_decode($perms, true) ?? [];
+
+        if ($role !== 'owner' && !in_array('approve_payout', $perms)) {
+            return response()->json(['message' => 'You do not have permission to approve payouts.'], 403);
+        }
+
+        $payout = PaymentRequest::where('id', $id)
+            ->where('account_id', $accountId)
+            ->where('type', 'disbursement')
+            ->where('status', 'pending_approval')
+            ->first();
+
+        if (!$payout) {
+            return response()->json(['message' => 'Payout not found or already processed.'], 404);
+        }
+
+        // Prevent self-approval (maker cannot be checker) — except owner
+        if ($role !== 'owner' && $payout->created_by && $payout->created_by == ($user->id ?? null)) {
+            return response()->json(['message' => 'You cannot approve your own payout request.'], 403);
+        }
+
+        // Re-check wallet balance before execution
+        $totalDebit = $payout->amount + $payout->platform_charge;
+        $balanceCheck = $this->checkWalletBalance($accountId, $totalDebit, $request->bearerToken());
+        if (!$balanceCheck['sufficient']) {
+            return response()->json([
+                'message' => 'Insufficient wallet balance.',
+                'required' => $totalDebit,
+                'available' => $balanceCheck['balance'] ?? 0,
+            ], 422);
+        }
+
+        // Get operator
+        $operator = Operator::where('code', $payout->operator_code)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$operator) {
+            return response()->json(['message' => 'Operator is no longer active.'], 422);
+        }
+
+        // Push to operator
+        $pushResult = $this->pushToOperator($operator, $payout, 'disbursement');
+
+        $payout->update([
+            'operator_request'  => $pushResult['request_payload'],
+            'operator_response' => $pushResult['response'],
+            'operator_ref'      => $pushResult['operator_ref'] ?? null,
+            'gateway_id'        => $pushResult['gateway_id'] ?? null,
+            'status'            => $pushResult['success'] ? 'processing' : 'failed',
+            'error_message'     => $pushResult['error'] ?? null,
+            'approved_by'       => $user->id ?? null,
+            'approved_at'       => now(),
+            'approval_notes'    => $request->notes ?? null,
+        ]);
+
+        if (!$pushResult['success']) {
+            return response()->json([
+                'message' => 'Payout approved but failed to send to operator.',
+                'error' => $pushResult['error'] ?? 'Operator rejected the request.',
+                'payout' => $payout->fresh(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Payout approved and sent to operator.',
+            'payout' => $payout->fresh(),
+        ]);
+    }
+
+    /**
+     * Reject a pending payout.
+     */
+    public function rejectPayout(Request $request, $id): JsonResponse
+    {
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        // Check user has approve_payout permission
+        $role = $user->role ?? null;
+        $perms = $user->effective_permissions ?? $user->permissions ?? [];
+        if (is_string($perms)) $perms = json_decode($perms, true) ?? [];
+
+        if ($role !== 'owner' && !in_array('approve_payout', $perms)) {
+            return response()->json(['message' => 'You do not have permission to reject payouts.'], 403);
+        }
+
+        $payout = PaymentRequest::where('id', $id)
+            ->where('account_id', $accountId)
+            ->where('type', 'disbursement')
+            ->where('status', 'pending_approval')
+            ->first();
+
+        if (!$payout) {
+            return response()->json(['message' => 'Payout not found or already processed.'], 404);
+        }
+
+        $payout->update([
+            'status'         => 'rejected',
+            'approved_by'    => $user->id ?? null,
+            'approved_at'    => now(),
+            'approval_notes' => $request->notes ?? 'Rejected by approver.',
+        ]);
+
+        return response()->json([
+            'message' => 'Payout rejected.',
+            'payout' => $payout->fresh(),
+        ]);
+    }
+
+    /**
+     * Bulk approve multiple pending payouts.
+     */
+    public function bulkApprovePayout(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+        ]);
+
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        $role = $user->role ?? null;
+        $perms = $user->effective_permissions ?? $user->permissions ?? [];
+        if (is_string($perms)) $perms = json_decode($perms, true) ?? [];
+
+        if ($role !== 'owner' && !in_array('approve_payout', $perms)) {
+            return response()->json(['message' => 'You do not have permission to approve payouts.'], 403);
+        }
+
+        $payouts = PaymentRequest::where('account_id', $accountId)
+            ->where('type', 'disbursement')
+            ->where('status', 'pending_approval')
+            ->whereIn('id', $request->ids)
+            ->get();
+
+        $approved = 0;
+        $failed = 0;
+        $results = [];
+
+        foreach ($payouts as $payout) {
+            // Prevent self-approval — except owner
+            if ($role !== 'owner' && $payout->created_by && $payout->created_by == ($user->id ?? null)) {
+                $results[] = ['id' => $payout->id, 'ref' => $payout->request_ref, 'success' => false, 'error' => 'Cannot approve own request.'];
+                $failed++;
+                continue;
+            }
+
+            $totalDebit = $payout->amount + $payout->platform_charge;
+            $balanceCheck = $this->checkWalletBalance($accountId, $totalDebit, $request->bearerToken());
+            if (!$balanceCheck['sufficient']) {
+                $results[] = ['id' => $payout->id, 'ref' => $payout->request_ref, 'success' => false, 'error' => 'Insufficient balance.'];
+                $failed++;
+                continue;
+            }
+
+            $operator = Operator::where('code', $payout->operator_code)->where('status', 'active')->first();
+            if (!$operator) {
+                $results[] = ['id' => $payout->id, 'ref' => $payout->request_ref, 'success' => false, 'error' => 'Operator inactive.'];
+                $failed++;
+                continue;
+            }
+
+            $pushResult = $this->pushToOperator($operator, $payout, 'disbursement');
+
+            $payout->update([
+                'operator_request'  => $pushResult['request_payload'],
+                'operator_response' => $pushResult['response'],
+                'operator_ref'      => $pushResult['operator_ref'] ?? null,
+                'gateway_id'        => $pushResult['gateway_id'] ?? null,
+                'status'            => $pushResult['success'] ? 'processing' : 'failed',
+                'error_message'     => $pushResult['error'] ?? null,
+                'approved_by'       => $user->id ?? null,
+                'approved_at'       => now(),
+            ]);
+
+            if ($pushResult['success']) {
+                $approved++;
+                $results[] = ['id' => $payout->id, 'ref' => $payout->request_ref, 'success' => true, 'status' => 'processing'];
+            } else {
+                $failed++;
+                $results[] = ['id' => $payout->id, 'ref' => $payout->request_ref, 'success' => false, 'error' => $pushResult['error'] ?? 'Operator error.'];
+            }
+        }
+
+        return response()->json([
+            'message' => "Bulk approval: {$approved} approved, {$failed} failed.",
+            'approved' => $approved,
+            'failed' => $failed,
+            'results' => $results,
+        ]);
+    }
+
+    /**
+     * Bulk reject multiple pending payouts.
+     */
+    public function bulkRejectPayout(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        $role = $user->role ?? null;
+        $perms = $user->effective_permissions ?? $user->permissions ?? [];
+        if (is_string($perms)) $perms = json_decode($perms, true) ?? [];
+
+        if ($role !== 'owner' && !in_array('approve_payout', $perms)) {
+            return response()->json(['message' => 'You do not have permission to reject payouts.'], 403);
+        }
+
+        $count = PaymentRequest::where('account_id', $accountId)
+            ->where('type', 'disbursement')
+            ->where('status', 'pending_approval')
+            ->whereIn('id', $request->ids)
+            ->update([
+                'status' => 'rejected',
+                'approved_by' => $user->id ?? null,
+                'approved_at' => now(),
+                'approval_notes' => $request->notes ?? 'Bulk rejected.',
+            ]);
+
+        return response()->json([
+            'message' => "{$count} payout(s) rejected.",
+            'rejected' => $count,
+        ]);
     }
 }
