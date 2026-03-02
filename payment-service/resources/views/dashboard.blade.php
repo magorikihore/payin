@@ -550,21 +550,49 @@
 
         <!-- ==================== WALLET TAB ==================== -->
         <div x-show="activeTab === 'wallet'">
+
+            <!-- Multi-Currency Selector -->
+            <div x-show="multiCurrencyEnabled && allCurrencies.length > 1" x-cloak class="mb-6">
+                <div class="bg-white rounded-xl shadow-md border p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                            <h3 class="text-sm font-semibold text-gray-700">Multi-Currency Wallets</h3>
+                        </div>
+                        <span class="text-xs text-gray-400" x-text="allCurrencies.length + ' currencies'"></span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="cur in allCurrencies" :key="'cursel_'+cur">
+                            <button @click="selectedWalletCurrency = cur"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition border"
+                                :class="selectedWalletCurrency === cur
+                                    ? 'bg-gblue-500 text-white border-gblue-500 shadow-md'
+                                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'">
+                                <span x-text="cur"></span>
+                                <template x-if="getCurrencyGroup(cur)">
+                                    <span class="ml-1 text-xs opacity-75" x-text="'(' + formatAmount(getCurrencyGroup(cur).overall_balance) + ')'"></span>
+                                </template>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
             <!-- Overall Balance Summary -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-gradient-to-br from-gblue-500 to-gblue-600 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Overall Balance</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(overallBalance) + ' ' + walletCurrency"></p>
+                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(activeOverallBalance) + ' ' + activeWalletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Collection + Disbursement</p>
                 </div>
                 <div class="bg-gradient-to-br from-ggreen-500 to-ggreen-600 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Collection (Payin)</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></p>
+                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(activeCollectionTotal) + ' ' + activeWalletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Money received from customers</p>
                 </div>
                 <div class="bg-gradient-to-br from-gred-400 to-gred-500 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Disbursement (Payout)</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></p>
+                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(activeDisbursementTotal) + ' ' + activeWalletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Available for payouts</p>
                 </div>
             </div>
@@ -582,7 +610,7 @@
             <!-- ======= COLLECTION SUB-TAB ======= -->
             <div x-show="walletSubTab === 'collection'">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <template x-for="w in collectionWallets" :key="w.id">
+                    <template x-for="w in activeCollectionWallets" :key="w.id">
                         <div class="bg-white rounded-xl shadow-md border p-5">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center space-x-2">
@@ -591,7 +619,7 @@
                                 </div>
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Collection</span>
                             </div>
-                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
+                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + activeWalletCurrency"></p>
                         </div>
                     </template>
                 </div>
@@ -651,7 +679,7 @@
             <!-- ======= DISBURSEMENT SUB-TAB ======= -->
             <div x-show="walletSubTab === 'disbursement'">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <template x-for="w in disbursementWallets" :key="w.id">
+                    <template x-for="w in activeDisbursementWallets" :key="w.id">
                         <div class="bg-white rounded-xl shadow-md border p-5">
                             <div class="flex items-center justify-between mb-2">
                                 <div class="flex items-center space-x-2">
@@ -660,7 +688,7 @@
                                 </div>
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-gblue-50 text-gblue-700">Disbursement</span>
                             </div>
-                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
+                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + activeWalletCurrency"></p>
                             <p class="text-xs text-gray-500 mt-2">Funds available for payout / settlement</p>
                         </div>
                     </template>
@@ -3085,6 +3113,8 @@ function dashboard() {
         walletCurrency: 'TZS',
         collectionWallets: [], disbursementWallets: [], operators: [],
         overallBalance: 0, collectionTotal: 0, disbursementTotal: 0,
+        multiCurrencyEnabled: false, walletsByCurrency: [], allCurrencies: [],
+        selectedWalletCurrency: '',
         walletTransactions: [], walletTxnOperatorFilter: '', walletTxnTypeFilter: '', wtPage: 1, wtPagination: {},
         creditAmounts: {}, creditDescs: {}, transferAmounts: {}, transferAmountDisplays: {},
         walletCreditLoading: {}, walletTransferLoading: {},
@@ -3641,6 +3671,10 @@ function dashboard() {
                 this.disbursementTotal = parseFloat(data.disbursement_total) || 0;
                 this.operators = data.operators || [];
                 this.walletCurrency = data.currency || 'TZS';
+                this.multiCurrencyEnabled = data.multi_currency_enabled || false;
+                this.walletsByCurrency = data.wallets_by_currency || [];
+                this.allCurrencies = data.all_currencies || [this.walletCurrency];
+                if (!this.selectedWalletCurrency) this.selectedWalletCurrency = this.walletCurrency;
                 // Init per-operator reactive state
                 this.operators.forEach(op => {
                     if (!this.creditAmounts[op]) this.creditAmounts[op] = '';
@@ -3660,6 +3694,39 @@ function dashboard() {
             if (data.collection_total) this.collectionTotal = data.collection_total;
             if (data.disbursement_total) this.disbursementTotal = data.disbursement_total;
             if (data.currency) this.walletCurrency = data.currency;
+            if (data.wallets_by_currency) this.walletsByCurrency = data.wallets_by_currency;
+        },
+        // Multi-currency helpers
+        getCurrencyGroup(cur) {
+            return this.walletsByCurrency.find(g => g.currency === cur) || null;
+        },
+        get activeCollectionWallets() {
+            if (!this.multiCurrencyEnabled) return this.collectionWallets;
+            const g = this.getCurrencyGroup(this.selectedWalletCurrency);
+            return g ? g.collection_wallets : this.collectionWallets;
+        },
+        get activeDisbursementWallets() {
+            if (!this.multiCurrencyEnabled) return this.disbursementWallets;
+            const g = this.getCurrencyGroup(this.selectedWalletCurrency);
+            return g ? g.disbursement_wallets : this.disbursementWallets;
+        },
+        get activeOverallBalance() {
+            if (!this.multiCurrencyEnabled) return this.overallBalance;
+            const g = this.getCurrencyGroup(this.selectedWalletCurrency);
+            return g ? parseFloat(g.overall_balance) || 0 : this.overallBalance;
+        },
+        get activeCollectionTotal() {
+            if (!this.multiCurrencyEnabled) return this.collectionTotal;
+            const g = this.getCurrencyGroup(this.selectedWalletCurrency);
+            return g ? parseFloat(g.collection_total) || 0 : this.collectionTotal;
+        },
+        get activeDisbursementTotal() {
+            if (!this.multiCurrencyEnabled) return this.disbursementTotal;
+            const g = this.getCurrencyGroup(this.selectedWalletCurrency);
+            return g ? parseFloat(g.disbursement_total) || 0 : this.disbursementTotal;
+        },
+        get activeWalletCurrency() {
+            return this.multiCurrencyEnabled ? this.selectedWalletCurrency : this.walletCurrency;
         },
         async fetchWalletTransactions() {
             this.walletLoading.txns = true;
@@ -4779,6 +4846,14 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         // ---- Currency Exchange ----
         getSourceWalletBalance() {
             if (!this.fxForm.from_operator || !this.fxForm.from_currency) return '—';
+            // Look in walletsByCurrency for the right currency group
+            const curGroup = this.walletsByCurrency.find(g => g.currency === this.fxForm.from_currency);
+            if (curGroup) {
+                const wallets = this.fxForm.from_wallet_type === 'collection' ? curGroup.collection_wallets : curGroup.disbursement_wallets;
+                const w = wallets.find(w => w.operator === this.fxForm.from_operator);
+                return w ? this.formatAmount(w.balance) + ' ' + this.fxForm.from_currency : '0.00 ' + this.fxForm.from_currency;
+            }
+            // Fallback to base wallets
             const wallets = this.fxForm.from_wallet_type === 'collection' ? this.collectionWallets : this.disbursementWallets;
             const w = wallets.find(w => w.operator === this.fxForm.from_operator && (w.currency || this.walletCurrency) === this.fxForm.from_currency);
             return w ? this.formatAmount(w.balance) + ' ' + this.fxForm.from_currency : '0.00 ' + this.fxForm.from_currency;
