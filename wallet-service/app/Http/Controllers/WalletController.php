@@ -7,14 +7,65 @@ use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
-    private array $operators = ['M-Pesa', 'Tigo Pesa', 'Airtel Money', 'Halopesa'];
     private array $walletTypes = ['collection', 'disbursement'];
+
+    /**
+     * Fetch active operators from payment-service and cache for 5 minutes.
+     * Returns array of ['name' => ..., 'code' => ..., 'currency' => ..., 'country' => ...]
+     */
+    private function getActiveOperators(): array
+    {
+        return Cache::remember('active_operators', 300, function () {
+            try {
+                $url = config('services.payment_service.url', 'http://127.0.0.1:8002');
+                $response = Http::withHeaders([
+                    'X-Service-Key' => config('services.internal_service_key'),
+                ])->get("{$url}/api/operators/active");
+
+                if ($response->ok()) {
+                    return $response->json('operators') ?? [];
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to fetch operators from payment-service: ' . $e->getMessage());
+            }
+
+            // Fallback to hardcoded TZ operators if payment-service unavailable
+            return [
+                ['name' => 'M-Pesa',       'code' => 'mpesa',       'currency' => 'TZS', 'country' => 'TZ'],
+                ['name' => 'Tigo Pesa',     'code' => 'tigopesa',    'currency' => 'TZS', 'country' => 'TZ'],
+                ['name' => 'Airtel Money',  'code' => 'airtelmoney', 'currency' => 'TZS', 'country' => 'TZ'],
+                ['name' => 'Halopesa',      'code' => 'halopesa',    'currency' => 'TZS', 'country' => 'TZ'],
+            ];
+        });
+    }
+
+    /**
+     * Get the list of operator names (for backward compatibility).
+     */
+    private function getOperatorNames(): array
+    {
+        return array_map(fn($op) => $op['name'], $this->getActiveOperators());
+    }
+
+    /**
+     * Get operator info by name.
+     */
+    private function getOperatorByName(string $name): ?array
+    {
+        foreach ($this->getActiveOperators() as $op) {
+            if (strcasecmp($op['name'], $name) === 0) {
+                return $op;
+            }
+        }
+        return null;
+    }
 
     /**
      * Get all wallets (collection + disbursement per operator) + overall balances.
@@ -23,25 +74,46 @@ class WalletController extends Controller
     {
         $user = $request->user();
         $accountId = $user->account_id;
-        $currency = $user->account['currency'] ?? 'TZS';
+        $defaultCurrency = $user->account['currency'] ?? 'TZS';
 
-        // Ensure wallets exist for all operators and types
-        foreach ($this->operators as $operator) {
+        // Fetch active operators and ensure wallets exist for each
+        $activeOperators = $this->getActiveOperators();
+        $operatorNames = [];
+
+        foreach ($activeOperators as $op) {
+            $opName = $op['name'];
+            $opCurrency = $op['currency'] ?? $defaultCurrency;
+            $operatorNames[] = $opName;
+
             foreach ($this->walletTypes as $type) {
                 Wallet::firstOrCreate(
-                    ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => $type, 'currency' => $currency],
+                    ['account_id' => $accountId, 'operator' => $opName, 'wallet_type' => $type, 'currency' => $opCurrency],
                     ['user_id' => $user->id, 'balance' => 0, 'status' => 'active']
                 );
             }
         }
 
-        $wallets = Wallet::where('account_id', $accountId)->where('currency', $currency)->get();
+        // Get ALL wallets for this account (may include wallets from operators no longer active)
+        $wallets = Wallet::where('account_id', $accountId)->get();
         $collectionWallets = $wallets->where('wallet_type', 'collection')->values();
         $disbursementWallets = $wallets->where('wallet_type', 'disbursement')->values();
 
         $collectionTotal = $collectionWallets->sum('balance');
         $disbursementTotal = $disbursementWallets->sum('balance');
         $overallBalance = $collectionTotal + $disbursementTotal;
+
+        // Group wallets by currency for multi-currency display
+        $byCurrency = $wallets->groupBy('currency')->map(function ($currencyWallets, $currency) {
+            $collection = $currencyWallets->where('wallet_type', 'collection');
+            $disbursement = $currencyWallets->where('wallet_type', 'disbursement');
+            return [
+                'currency' => $currency,
+                'collection_total' => number_format($collection->sum('balance'), 2, '.', ''),
+                'disbursement_total' => number_format($disbursement->sum('balance'), 2, '.', ''),
+                'overall_balance' => number_format($currencyWallets->sum('balance'), 2, '.', ''),
+                'operators' => $currencyWallets->pluck('operator')->unique()->values(),
+            ];
+        })->values();
 
         // Recent transactions across all wallets
         $walletIds = $wallets->pluck('id');
@@ -63,8 +135,10 @@ class WalletController extends Controller
             'collection_total' => number_format($collectionTotal, 2, '.', ''),
             'disbursement_total' => number_format($disbursementTotal, 2, '.', ''),
             'overall_balance' => number_format($overallBalance, 2, '.', ''),
-            'currency' => $currency,
-            'operators' => $this->operators,
+            'currency' => $defaultCurrency,
+            'operators' => $operatorNames,
+            'active_operators' => $activeOperators,
+            'by_currency' => $byCurrency,
             'recent_transactions' => $recentTransactions,
         ]);
     }
@@ -77,7 +151,7 @@ class WalletController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:1',
-            'operator' => 'required|string|in:' . implode(',', $this->operators),
+            'operator' => 'required|string|in:' . implode(',', $this->getOperatorNames()),
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -86,7 +160,8 @@ class WalletController extends Controller
         $accountId = $user->account_id;
         $grossAmount = (float) $request->amount;
         $token = $request->bearerToken();
-        $currency = $user->account['currency'] ?? 'TZS';
+        $operatorInfo = $this->getOperatorByName($operator);
+        $currency = $operatorInfo['currency'] ?? ($user->account['currency'] ?? 'TZS');
 
         // Calculate charges from transaction-service
         $platformCharge = 0;
@@ -224,7 +299,7 @@ class WalletController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:1',
-            'operator' => 'required|string|in:' . implode(',', $this->operators),
+            'operator' => 'required|string|in:' . implode(',', $this->getOperatorNames()),
             'description' => 'nullable|string|max:255',
         ]);
 
@@ -279,7 +354,7 @@ class WalletController extends Controller
                     'reference' => $transferRef,
                     'operator' => $operator,
                     'amount' => $amount,
-                    'currency' => $user->account['currency'] ?? 'TZS',
+                    'currency' => $sourceWallet->currency ?? ($user->account['currency'] ?? 'TZS'),
                 ],
             ]);
         } catch (\Exception $e) {
@@ -482,7 +557,7 @@ class WalletController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:1',
-            'operator' => 'required|string|in:' . implode(',', $this->operators),
+            'operator' => 'required|string|in:' . implode(',', $this->getOperatorNames()),
             'settlement_ref' => 'required|string',
             'description' => 'nullable|string|max:255',
         ]);
@@ -659,7 +734,7 @@ class WalletController extends Controller
 
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'operator' => 'required|string|in:' . implode(',', $this->operators),
+            'operator' => 'required|string|in:' . implode(',', $this->getOperatorNames()),
             'account_id' => 'required',
             'description' => 'nullable|string|max:255',
         ]);
@@ -668,10 +743,12 @@ class WalletController extends Controller
         $amount = (float) $request->amount;
         $accountId = $request->account_id;
 
-        return DB::transaction(function () use ($operator, $amount, $accountId, $request, $user) {
+        $opCurrency = $this->getOperatorByName($operator)['currency'] ?? 'TZS';
+
+        return DB::transaction(function () use ($operator, $amount, $accountId, $request, $user, $opCurrency) {
             $wallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => 'disbursement'],
-                ['user_id' => 0, 'balance' => 0, 'currency' => 'TZS', 'status' => 'active']
+                ['user_id' => 0, 'balance' => 0, 'currency' => $opCurrency, 'status' => 'active']
             );
 
             if ($wallet->status !== 'active') {
@@ -720,7 +797,7 @@ class WalletController extends Controller
 
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'operator' => 'required|string|in:' . implode(',', $this->operators),
+            'operator' => 'required|string|in:' . implode(',', $this->getOperatorNames()),
             'account_id' => 'required',
             'description' => 'nullable|string|max:255',
         ]);
@@ -777,7 +854,7 @@ class WalletController extends Controller
 
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'operator' => 'required|string|in:' . implode(',', $this->operators),
+            'operator' => 'required|string|in:' . implode(',', $this->getOperatorNames()),
             'account_id' => 'required',
             'type' => 'required|string|in:collection,disbursement',
             'reversal_ref' => 'required|string',
@@ -944,7 +1021,8 @@ class WalletController extends Controller
         $request->validate([
             'account_id' => 'required',
             'amount'     => 'required|numeric|min:0.01',
-            'operator'   => 'required|string|in:' . implode(',', $this->operators),
+            'operator'   => 'required|string|in:' . implode(',', $this->getOperatorNames()),
+            'currency'   => 'nullable|string|max:10',
             'wallet_type'=> 'nullable|string|in:collection,disbursement',
             'reference'  => 'required|string',
             'description'=> 'nullable|string|max:255',
@@ -958,7 +1036,7 @@ class WalletController extends Controller
         return DB::transaction(function () use ($accountId, $amount, $operator, $walletType, $request) {
             $wallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['account_id' => $accountId, 'operator' => $operator, 'wallet_type' => $walletType],
-                ['user_id' => 0, 'balance' => 0, 'currency' => 'TZS', 'status' => 'active']
+                ['user_id' => 0, 'balance' => 0, 'currency' => $request->currency ?? ($this->getOperatorByName($operator)['currency'] ?? 'TZS'), 'status' => 'active']
             );
 
             $balanceBefore = $wallet->balance;
@@ -994,7 +1072,7 @@ class WalletController extends Controller
         $request->validate([
             'account_id' => 'required',
             'amount'     => 'required|numeric|min:0.01',
-            'operator'   => 'required|string|in:' . implode(',', $this->operators),
+            'operator'   => 'required|string|in:' . implode(',', $this->getOperatorNames()),
             'wallet_type'=> 'nullable|string|in:collection,disbursement',
             'reference'  => 'required|string',
             'description'=> 'nullable|string|max:255',

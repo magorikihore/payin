@@ -59,7 +59,7 @@ class OperatorController extends Controller
     {
         $operators = Operator::where('status', 'active')
             ->orderBy('name')
-            ->get(['id', 'name', 'code', 'status']);
+            ->get(['id', 'name', 'code', 'currency', 'country', 'country_code', 'status']);
 
         return response()->json(['operators' => $operators]);
     }

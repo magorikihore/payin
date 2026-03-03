@@ -918,15 +918,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-white rounded-xl shadow-sm p-6 border">
                         <p class="text-sm text-gray-500">Platform Collection Total</p>
-                        <p class="text-2xl font-bold text-green-600" x-text="formatAmount(walletData.platform_collection_total || 0) + ' TZS'"></p>
+                        <p class="text-2xl font-bold text-green-600" x-text="formatAmount(walletData.platform_collection_total || 0)"></p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border">
                         <p class="text-sm text-gray-500">Platform Disbursement Total</p>
-                        <p class="text-2xl font-bold text-blue-600" x-text="formatAmount(walletData.platform_disbursement_total || 0) + ' TZS'"></p>
+                        <p class="text-2xl font-bold text-blue-600" x-text="formatAmount(walletData.platform_disbursement_total || 0)"></p>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm p-6 border">
                         <p class="text-sm text-gray-500">Platform Overall Total</p>
-                        <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(walletData.platform_overall_total || 0) + ' TZS'"></p>
+                        <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(walletData.platform_overall_total || 0)"></p>
                     </div>
                 </div>
 
@@ -955,15 +955,15 @@
                                     <div class="space-y-2">
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs text-gray-500">Collection</span>
-                                            <span class="text-sm font-bold text-green-600" x-text="formatAmount(op.collection_total) + ' TZS'"></span>
+                                            <span class="text-sm font-bold text-green-600" x-text="formatAmount(op.collection_total)"></span>
                                         </div>
                                         <div class="flex items-center justify-between">
                                             <span class="text-xs text-gray-500">Disbursement</span>
-                                            <span class="text-sm font-bold text-blue-600" x-text="formatAmount(op.disbursement_total) + ' TZS'"></span>
+                                            <span class="text-sm font-bold text-blue-600" x-text="formatAmount(op.disbursement_total)"></span>
                                         </div>
                                         <div class="border-t pt-2 flex items-center justify-between">
                                             <span class="text-xs font-medium text-gray-700">Total</span>
-                                            <span class="text-sm font-extrabold text-gray-800" x-text="formatAmount(op.overall_total) + ' TZS'"></span>
+                                            <span class="text-sm font-extrabold text-gray-800" x-text="formatAmount(op.overall_total)"></span>
                                         </div>
                                     </div>
                                 </div>
@@ -991,14 +991,13 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
                             <select x-model="fundForm.operator" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
-                                <option value="M-Pesa">M-Pesa</option>
-                                <option value="Tigo Pesa">Tigo Pesa</option>
-                                <option value="Airtel Money">Airtel Money</option>
-                                <option value="Halopesa">Halopesa</option>
+                                <template x-for="op in (walletData.by_operator || [])" :key="'fund_op_'+op.operator">
+                                    <option :value="op.operator" x-text="op.operator"></option>
+                                </template>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount (TZS)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                             <input type="text" inputmode="numeric" x-model="fundAmountDisplay" @input="formatAmountInput($event, 'fund')" placeholder="0"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
@@ -1050,9 +1049,9 @@
                                                 <span class="text-sm font-semibold text-gray-800" x-text="accountName(acctWallet.account_id)"></span>
                                                 <span class="ml-2 text-xs text-gray-400" x-text="'#' + acctWallet.account_id"></span>
                                             </td>
-                                            <td class="px-6 py-4 text-sm font-medium text-green-600" x-text="formatAmount(acctWallet.collection_total) + ' TZS'"></td>
-                                            <td class="px-6 py-4 text-sm font-medium text-blue-600" x-text="formatAmount(acctWallet.disbursement_total) + ' TZS'"></td>
-                                            <td class="px-6 py-4 text-sm font-bold text-gray-800" x-text="formatAmount(acctWallet.overall_balance) + ' TZS'"></td>
+                                            <td class="px-6 py-4 text-sm font-medium text-green-600" x-text="formatAmount(acctWallet.collection_total)"></td>
+                                            <td class="px-6 py-4 text-sm font-medium text-blue-600" x-text="formatAmount(acctWallet.disbursement_total)"></td>
+                                            <td class="px-6 py-4 text-sm font-bold text-gray-800" x-text="formatAmount(acctWallet.overall_balance)"></td>
                                             <td class="px-6 py-4">
                                                 <button class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-200 font-medium">
                                                     View Wallets
@@ -1084,15 +1083,15 @@
                     <div class="grid grid-cols-3 gap-4 mb-6">
                         <div class="bg-green-50 rounded-xl p-4 border border-green-200">
                             <p class="text-xs text-green-700 font-medium">Collection</p>
-                            <p class="text-xl font-bold text-green-700 mt-1" x-text="formatAmount(walletModalData?.collection_total || 0) + ' TZS'"></p>
+                            <p class="text-xl font-bold text-green-700 mt-1" x-text="formatAmount(walletModalData?.collection_total || 0)"></p>
                         </div>
                         <div class="bg-blue-50 rounded-xl p-4 border border-blue-200">
                             <p class="text-xs text-blue-700 font-medium">Disbursement</p>
-                            <p class="text-xl font-bold text-blue-700 mt-1" x-text="formatAmount(walletModalData?.disbursement_total || 0) + ' TZS'"></p>
+                            <p class="text-xl font-bold text-blue-700 mt-1" x-text="formatAmount(walletModalData?.disbursement_total || 0)"></p>
                         </div>
                         <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
                             <p class="text-xs text-gray-600 font-medium">Overall</p>
-                            <p class="text-xl font-bold text-gray-800 mt-1" x-text="formatAmount(walletModalData?.overall_balance || 0) + ' TZS'"></p>
+                            <p class="text-xl font-bold text-gray-800 mt-1" x-text="formatAmount(walletModalData?.overall_balance || 0)"></p>
                         </div>
                     </div>
 
@@ -4519,8 +4518,8 @@ function adminPanel() {
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    this.fundMsg = data.message + ' Balance: ' + this.formatAmount(data.balance_after) + ' TZS'; this.fundMsgType = 'success';
-                    this.fundForm = { account_id: '', operator: 'M-Pesa', amount: '', description: '' };
+                    this.fundMsg = data.message + ' Balance: ' + this.formatAmount(data.balance_after); this.fundMsgType = 'success';
+                    this.fundForm = { account_id: '', operator: '', amount: '', description: '' };
                     this.fundAmountDisplay = '';
                     this.fetchAdminWallets();
                 } else {

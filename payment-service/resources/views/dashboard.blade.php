@@ -293,6 +293,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                    <th class="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Currency</th>
                                     <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Collection</th>
                                     <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Disbursement</th>
                                     <th class="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
@@ -307,19 +308,23 @@
                                                 <span class="text-sm font-medium text-gray-700" x-text="op"></span>
                                             </div>
                                         </td>
-                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ' ' + walletCurrency"></td>
-                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((disbursementWallets.find(w => w.operator === op)?.balance) || 0) + ' ' + walletCurrency"></td>
-                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ((disbursementWallets.find(w => w.operator === op)?.balance) || 0)) + ' ' + walletCurrency"></td>
+                                        <td class="px-5 py-3 text-sm text-gray-500" x-text="(collectionWallets.find(w => w.operator === op)?.currency) || (disbursementWallets.find(w => w.operator === op)?.currency) || walletCurrency"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ' ' + ((collectionWallets.find(w => w.operator === op)?.currency) || walletCurrency)"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-semibold text-gray-700" x-text="formatAmount((disbursementWallets.find(w => w.operator === op)?.balance) || 0) + ' ' + ((disbursementWallets.find(w => w.operator === op)?.currency) || walletCurrency)"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(((collectionWallets.find(w => w.operator === op)?.balance) || 0) + ((disbursementWallets.find(w => w.operator === op)?.balance) || 0)) + ' ' + ((collectionWallets.find(w => w.operator === op)?.currency) || walletCurrency)"></td>
                                     </tr>
                                 </template>
                             </tbody>
                             <tfoot class="bg-gray-50 border-t">
-                                <tr>
-                                    <td class="px-5 py-3 text-sm font-bold text-gray-700">Total</td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></td>
-                                    <td class="px-5 py-3 text-right text-sm font-bold text-gray-900" x-text="formatAmount(overallBalance) + ' ' + walletCurrency"></td>
-                                </tr>
+                                <template x-for="curr in (walletByCurrency || [{currency: walletCurrency, collection_total: collectionTotal, disbursement_total: disbursementTotal, overall_balance: overallBalance}])" :key="'total_'+curr.currency">
+                                    <tr>
+                                        <td class="px-5 py-3 text-sm font-bold text-gray-700" x-text="'Total (' + curr.currency + ')'"></td>
+                                        <td class="px-5 py-3 text-sm text-gray-500" x-text="curr.currency"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(curr.collection_total) + ' ' + curr.currency"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-800" x-text="formatAmount(curr.disbursement_total) + ' ' + curr.currency"></td>
+                                        <td class="px-5 py-3 text-right text-sm font-bold text-gray-900" x-text="formatAmount(curr.overall_balance) + ' ' + curr.currency"></td>
+                                    </tr>
+                                </template>
                             </tfoot>
                         </table>
                     </div>
@@ -3086,6 +3091,7 @@ function dashboard() {
         walletCurrency: 'TZS',
         collectionWallets: [], disbursementWallets: [], operators: [],
         overallBalance: 0, collectionTotal: 0, disbursementTotal: 0,
+        walletByCurrency: [],
 
         walletTransactions: [], walletTxnOperatorFilter: '', walletTxnTypeFilter: '', wtPage: 1, wtPagination: {},
         creditAmounts: {}, creditDescs: {}, transferAmounts: {}, transferAmountDisplays: {},
@@ -3643,6 +3649,7 @@ function dashboard() {
                 this.disbursementTotal = parseFloat(data.disbursement_total) || 0;
                 this.operators = data.operators || [];
                 this.walletCurrency = data.currency || 'TZS';
+                this.walletByCurrency = data.by_currency || [];
 
                 // Init per-operator reactive state
                 this.operators.forEach(op => {
