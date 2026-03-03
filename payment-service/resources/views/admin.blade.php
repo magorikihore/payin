@@ -582,7 +582,6 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paybill</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Business Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Collection Balance</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Disbursement Balance</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Users</th>
@@ -597,7 +596,6 @@
                                         <td class="px-6 py-4 text-sm font-mono text-gray-700" x-text="acc.account_ref"></td>
                                         <td class="px-6 py-4 text-sm font-mono font-semibold text-indigo-700" x-text="acc.paybill || '—'"></td>
                                         <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="acc.business_name"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-600" x-text="acc.email"></td>
                                         <td class="px-6 py-4 text-sm text-right font-semibold text-green-700" x-text="formatAmount(acc.collection_balance || 0) + ' ' + (acc.currency || 'TZS')"></td>
                                         <td class="px-6 py-4 text-sm text-right font-semibold text-blue-700" x-text="formatAmount(acc.disbursement_balance || 0) + ' ' + (acc.currency || 'TZS')"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="acc.users_count"></td>
