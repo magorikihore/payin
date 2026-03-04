@@ -20,6 +20,12 @@ echo ""
 echo ">> Pulling latest code from GitHub..."
 git pull origin main
 
+# Set permissions for the static website
+echo ""
+echo ">> Setting permissions for www (static site)..."
+chown -R www-data:www-data "$PROJECT_DIR/www"
+chmod -R 755 "$PROJECT_DIR/www"
+
 # Deploy each service
 for SERVICE in "${SERVICES[@]}"; do
     echo ""

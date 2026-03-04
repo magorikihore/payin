@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayIn &mdash; Tanzania's Payment Aggregation Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ── Reset ── */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        html {
+            scroll-behavior: smooth
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #1e293b;
+            overflow-x: hidden
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit
+        }
+
+        ul {
+            list-style: none
+        }
+
+        img {
+            max-width: 100%;
+            display: block
+        }
+
+        /* ── Colors ── */
+        :root {
+            --primary: #0d6efd;
+            --primary-dark: #084dc7;
+            --accent: #f59e0b;
+            --dark: #0f172a;
+            --gray: #64748b;
+            --light: #f8fafc;
+            --white: #ffffff;
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(15, 23, 42, .95);
+            backdrop-filter: blur(12px);
+            padding: 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 72px;
+            transition: box-shadow .3s;
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 4px 30px rgba(0, 0, 0, .25)
+        }
+
+        .navbar .logo {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--white);
+            letter-spacing: 1px
+        }
+
+        .navbar .logo span {
+            color: var(--accent)
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, .8);
+            font-size: .95rem;
+            font-weight: 500;
+            transition: color .2s
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--accent)
+        }
+
+        .nav-cta {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 10px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: .9rem;
+            transition: all .3s
+        }
+
+        .nav-cta:hover {
+            background: #d97706;
+            transform: translateY(-1px)
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            z-index: 1001
+        }
+
+        .hamburger span {
+            width: 26px;
+            height: 3px;
+            background: var(--white);
+            border-radius: 3px;
+            transition: all .3s
+        }
+
+        /* ── Hero ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--dark) 0%, #1e3a5f 50%, var(--primary-dark) 100%);
+            color: var(--white);
+            text-align: center;
+            padding: 120px 20px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245, 158, 11, .15), transparent 70%);
+            top: -200px;
+            right: -200px;
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(13, 110, 253, .2), transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 820px
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, .15);
+            color: var(--accent);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            letter-spacing: .5px
+        }
+
+        .hero h1 {
+            font-size: 3.4rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px
+        }
+
+        .hero h1 span {
+            color: var(--accent)
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, .75);
+            max-width: 620px;
+            margin: 0 auto 40px;
+            line-height: 1.7
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .btn {
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all .3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--dark)
+        }
+
+        .btn-primary:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(245, 158, 11, .35)
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid rgba(255, 255, 255, .3)
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-2px)
+        }
+
+        /* ── Stats Bar ── */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .1);
+            max-width: 900px;
+            margin: -50px auto 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 36px 20px;
+            border-right: 1px solid #e2e8f0
+        }
+
+        .stat-item:last-child {
+            border-right: none
+        }
+
+        .stat-item h3 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--primary)
+        }
+
+        .stat-item p {
+            font-size: .85rem;
+            color: var(--gray);
+            margin-top: 4px;
+            font-weight: 500
+        }
+
+        /* ── Section Common ── */
+        .section {
+            padding: 100px 40px
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 640px;
+            margin: 0 auto 60px
+        }
+
+        .section-header .tag {
+            display: inline-block;
+            background: rgba(13, 110, 253, .08);
+            color: var(--primary);
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: .8rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase
+        }
+
+        .section-header h2 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--dark)
+        }
+
+        .section-header p {
+            color: var(--gray);
+            font-size: 1.05rem;
+            line-height: 1.7
+        }
+
+        /* ── About ── */
+        #about {
+            background: var(--light)
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            max-width: 1100px;
+            margin: 0 auto;
+            align-items: center
+        }
+
+        .about-image {
+            position: relative
+        }
+
+        .about-image .img-box {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 20px;
+            padding: 40px;
+            color: var(--white);
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .about-image .img-box i {
+            font-size: 4rem;
+            opacity: .3;
+            position: absolute;
+            bottom: 20px;
+            right: 20px
+        }
+
+        .about-text h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--dark)
+        }
+
+        .about-text p {
+            color: var(--gray);
+            line-height: 1.8;
+            margin-bottom: 16px;
+            font-size: .98rem
+        }
+
+        .about-features {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 24px
+        }
+
+        .about-feature {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px
+        }
+
+        .about-feature i {
+            color: var(--primary);
+            font-size: 1.1rem;
+            margin-top: 4px
+        }
+
+        .about-feature span {
+            font-size: .95rem;
+            color: var(--dark);
+            font-weight: 500
+        }
+
+        /* ── Services ── */
+        #services {
+            background: var(--white)
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1100px;
+            margin: 0 auto
+        }
+
+        .service-card {
+            background: var(--white);
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 40px 30px;
+            transition: all .35s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .35s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .08);
+            border-color: transparent
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1)
+        }
+
+        .service-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--white)
+        }
+
+        .service-icon.blue {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark))
+        }
+
+        .service-icon.amber {
+            background: linear-gradient(135deg, var(--accent), #d97706)
+        }
+
+        .service-icon.green {
+            background: linear-gradient(135deg, #10b981, #059669)
+        }
+
+        .service-icon.purple {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9)
+        }
+
+        .service-icon.rose {
+            background: linear-gradient(135deg, #f43f5e, #be123c)
+        }
+
+        .service-icon.teal {
+            background: linear-gradient(135deg, #14b8a6, #0d9488)
+        }
+
+        .service-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark)
+        }
+
+        .service-card p {
+            color: var(--gray);
+            font-size: .92rem;
+            line-height: 1.7
+        }
+
+        /* ── Partners / Operators ── */
+        #partners {
+            background: var(--light)
+        }
+
+        .partners-logos {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            max-width: 900px;
+            margin: 0 auto
+        }
+
+        .partner-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 24px 36px;
+            background: var(--white);
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, .04);
+            transition: all .3s;
+            min-width: 150px;
+        }
+
+        .partner-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .08)
+        }
+
+        .partner-item i {
+            font-size: 2.4rem;
+            color: var(--primary)
+        }
+
+        .partner-item span {
+            font-weight: 600;
+            font-size: .9rem;
+            color: var(--dark)
+        }
+
+        .partner-item small {
+            font-size: .75rem;
+            color: var(--gray)
+        }
+
+        /* ── How It Works ── */
+        #how-it-works {
+            background: var(--white)
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative
+        }
+
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 12%;
+            right: 12%;
+            height: 2px;
+            background: #e2e8f0
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 1
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary);
+            box-shadow: 0 4px 15px rgba(13, 110, 253, .15)
+        }
+
+        .step h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--dark)
+        }
+
+        .step p {
+            font-size: .85rem;
+            color: var(--gray);
+            line-height: 1.6;
+            padding: 0 10px
+        }
+
+        /* ── Contact ── */
+        #contact {
+            background: var(--dark);
+            color: var(--white)
+        }
+
+        #contact .section-header h2 {
+            color: var(--white)
+        }
+
+        #contact .section-header p {
+            color: rgba(255, 255, 255, .6)
+        }
+
+        #contact .section-header .tag {
+            background: rgba(245, 158, 11, .15);
+            color: var(--accent)
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            max-width: 1000px;
+            margin: 0 auto
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 28px
+        }
+
+        .contact-item {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start
+        }
+
+        .contact-item .icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(13, 110, 253, .15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--primary);
+            flex-shrink: 0
+        }
+
+        .contact-item h4 {
+            font-size: .95rem;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .contact-item p {
+            font-size: .88rem;
+            color: rgba(255, 255, 255, .6);
+            line-height: 1.5
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: var(--white);
+            font-family: 'Poppins', sans-serif;
+            font-size: .92rem;
+            outline: none;
+            transition: border-color .3s;
+        }
+
+        .contact-form input::placeholder,
+        .contact-form textarea::placeholder {
+            color: rgba(255, 255, 255, .35)
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            border-color: var(--primary)
+        }
+
+        .contact-form textarea {
+            min-height: 130px;
+            resize: vertical
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        .contact-form .btn-primary {
+            width: 100%;
+            justify-content: center
+        }
+
+        /* ── Footer ── */
+        .footer {
+            background: #0a0f1e;
+            color: rgba(255, 255, 255, .5);
+            text-align: center;
+            padding: 30px 20px;
+            font-size: .85rem
+        }
+
+        .footer a {
+            color: var(--accent)
+        }
+
+        /* ── Mobile ── */
+        @media(max-width:1024px) {
+            .services-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .steps {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 40px
+            }
+
+            .steps::before {
+                display: none
+            }
+        }
+
+        @media(max-width:768px) {
+            .navbar {
+                padding: 0 20px
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background: var(--dark);
+                flex-direction: column;
+                justify-content: center;
+                gap: 28px;
+                transition: right .35s;
+                padding: 40px;
+            }
+
+            .nav-links.open {
+                right: 0
+            }
+
+            .hamburger {
+                display: flex
+            }
+
+            .hero h1 {
+                font-size: 2.2rem
+            }
+
+            .hero p {
+                font-size: 1rem
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                margin: -30px 20px 0
+            }
+
+            .stat-item:nth-child(2) {
+                border-right: none
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 30px
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 40px
+            }
+
+            .steps {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .section {
+                padding: 70px 20px
+            }
+
+            .form-row {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:480px) {
+            .stats-bar {
+                grid-template-columns: 1fr
+            }
+
+            .stat-item {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0
+            }
+
+            .stat-item:last-child {
+                border-bottom: none
+            }
+
+            .steps {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══ Navbar ══ -->
+    <nav class="navbar" id="navbar">
+        <a href="#" class="logo">Pay<span>In</span></a>
+        <div class="nav-links" id="navLinks">
+            <a href="#home" class="active">Home</a>
+            <a href="#about">About</a>
+            <a href="#services">Services</a>
+            <a href="#partners">Partners</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#contact">Contact</a>
+            <a href="#" class="nav-cta">Get Started</a>
+        </div>
+        <div class="hamburger" id="hamburger" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- ══ Hero ══ -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-badge"><i class="fas fa-shield-halved"></i> &nbsp;Trusted PSP in Tanzania</div>
+            <h1>One Platform to Manage <span>All Payments</span> in Tanzania</h1>
+            <p>PayIn connects banks and mobile operators under one roof &mdash; giving merchants a unified wallet,
+                real-time settlements, and seamless payment aggregation across Tanzania.</p>
+            <div class="hero-buttons">
+                <a href="#contact" class="btn btn-primary"><i class="fas fa-rocket"></i> Open Merchant Account</a>
+                <a href="#services" class="btn btn-outline"><i class="fas fa-play"></i> Explore Services</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ Stats Bar ══ -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <h3>6+</h3>
+            <p>Operator Integrations</p>
+        </div>
+        <div class="stat-item">
+            <h3>10+</h3>
+            <p>Bank Partners</p>
+        </div>
+        <div class="stat-item">
+            <h3>99.9%</h3>
+            <p>Uptime Guarantee</p>
+        </div>
+        <div class="stat-item">
+            <h3>24/7</h3>
+            <p>Dedicated Support</p>
+        </div>
+    </div>
+
+    <!-- ══ About ══ -->
+    <section class="section" id="about">
+        <div class="section-header">
+            <span class="tag">About PayIn</span>
+            <h2>Tanzania's Leading Payment Service Provider</h2>
+            <p>We bridge the gap between mobile operators, banks, and businesses &mdash; making digital payments simple,
+                fast, and reliable.</p>
+        </div>
+        <div class="about-grid">
+            <div class="about-image">
+                <div class="img-box">
+                    <h3 style="font-size:1.6rem;">Aggregating Tanzania's Payment Ecosystem</h3>
+                    <p style="color:rgba(255,255,255,.8);line-height:1.7">PayIn is a licensed Payment Service Provider
+                        (PSP) operating in Tanzania. We aggregate mobile money operators like M-Pesa, Tigo Pesa, Airtel
+                        Money, and Halopesa alongside major banks &mdash; into a single, powerful platform.</p>
+                    <p style="color:rgba(255,255,255,.6);font-size:.9rem;line-height:1.6">Our mission is to empower
+                        merchants and businesses with a unified payment solution that reduces complexity, speeds up
+                        settlements, and provides full visibility into every transaction.</p>
+                    <i class="fas fa-network-wired"></i>
+                </div>
+            </div>
+            <div class="about-text">
+                <h3>Why Choose PayIn?</h3>
+                <p>We understand the Tanzanian payment landscape. Our platform is built from the ground up to handle the
+                    unique challenges of operating across multiple mobile money networks and banking systems in East
+                    Africa.</p>
+                <p>Whether you're a small merchant or a large enterprise, PayIn gives you the tools to accept, manage,
+                    and settle payments from any channel &mdash; all through one dashboard and one wallet.</p>
+                <div class="about-features">
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Unified wallet for all mobile &amp; bank collections</span>
+                    </div>
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Real-time transaction monitoring &amp; reporting</span>
+                    </div>
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Fast settlement to your bank account</span>
+                    </div>
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Secure API integration for developers</span>
+                    </div>
+                    <div class="about-feature">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Dedicated merchant management system</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ Services ══ -->
+    <section class="section" id="services">
+        <div class="section-header">
+            <span class="tag">Our Services</span>
+            <h2>Everything You Need to Accept &amp; Manage Payments</h2>
+            <p>From payment aggregation to wallet management, we provide end-to-end payment solutions tailored for
+                Tanzanian businesses.</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon blue"><i class="fas fa-layer-group"></i></div>
+                <h3>Payment Aggregation</h3>
+                <p>Collect payments from M-Pesa, Tigo Pesa, Airtel Money, Halopesa, and major banks through a single
+                    integration. No need for separate contracts with each operator.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon amber"><i class="fas fa-wallet"></i></div>
+                <h3>Unified Wallet System</h3>
+                <p>All your collections from different operators and banks land in one wallet. View balances, track
+                    inflows, and manage payouts from a single dashboard.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon green"><i class="fas fa-building-columns"></i></div>
+                <h3>Merchant Accounts</h3>
+                <p>Open a merchant account in minutes. Get your own payment credentials, sub-accounts, and tools to
+                    start accepting digital payments immediately.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon purple"><i class="fas fa-chart-line"></i></div>
+                <h3>Management Dashboard</h3>
+                <p>A powerful management system to monitor transactions, generate reports, reconcile settlements, and
+                    manage your business operations in real time.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon rose"><i class="fas fa-money-bill-transfer"></i></div>
+                <h3>Settlement &amp; Payouts</h3>
+                <p>Automatic daily settlements to your preferred bank account. Configure settlement schedules, split
+                    payments, and manage disbursements effortlessly.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon teal"><i class="fas fa-code"></i></div>
+                <h3>Developer APIs</h3>
+                <p>RESTful APIs with comprehensive documentation. Integrate payment collection and disbursement into
+                    your app, website, or ERP system with ease.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ Partners ══ -->
+    <section class="section" id="partners">
+        <div class="section-header">
+            <span class="tag">Our Partners</span>
+            <h2>Connected Operators &amp; Banks</h2>
+            <p>We work with leading mobile operators and financial institutions across Tanzania to provide complete
+                payment coverage.</p>
+        </div>
+        <div class="partners-logos">
+            <div class="partner-item">
+                <i class="fas fa-mobile-screen-button" style="color:#e32636"></i>
+                <span>M-Pesa</span>
+                <small>Vodacom</small>
+            </div>
+            <div class="partner-item">
+                <i class="fas fa-mobile-screen-button" style="color:#004f9f"></i>
+                <span>Tigo Pesa</span>
+                <small>Tigo</small>
+            </div>
+            <div class="partner-item">
+                <i class="fas fa-mobile-screen-button" style="color:#ff0000"></i>
+                <span>Airtel Money</span>
+                <small>Airtel</small>
+            </div>
+            <div class="partner-item">
+                <i class="fas fa-mobile-screen-button" style="color:#00a651"></i>
+                <span>Halopesa</span>
+                <small>Halotel</small>
+            </div>
+            <div class="partner-item">
+                <i class="fas fa-building-columns" style="color:#003366"></i>
+                <span>CRDB Bank</span>
+                <small>Banking</small>
+            </div>
+            <div class="partner-item">
+                <i class="fas fa-building-columns" style="color:#c8102e"></i>
+                <span>NMB Bank</span>
+                <small>Banking</small>
+            </div>
+            <div class="partner-item">
+                <i class="fas fa-building-columns" style="color:#0066b3"></i>
+                <span>NBC Bank</span>
+                <small>Banking</small>
+            </div>
+            <div class="partner-item">
+                <i class="fas fa-building-columns" style="color:#1a1a6c"></i>
+                <span>Stanbic Bank</span>
+                <small>Banking</small>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ How It Works ══ -->
+    <section class="section" id="how-it-works">
+        <div class="section-header">
+            <span class="tag">How It Works</span>
+            <h2>Get Started in 4 Simple Steps</h2>
+            <p>From sign-up to receiving your first payment &mdash; we've made the process as smooth as possible.</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h4>Create Account</h4>
+                <p>Sign up and provide your business details to open your merchant account.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h4>Integrate</h4>
+                <p>Use our APIs or plug-and-play dashboard to connect your business to PayIn.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h4>Accept Payments</h4>
+                <p>Start collecting from M-Pesa, Tigo Pesa, Airtel Money, banks, and more.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h4>Get Settled</h4>
+                <p>Funds settle automatically to your bank account on your preferred schedule.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ Contact ══ -->
+    <section class="section" id="contact">
+        <div class="section-header">
+            <span class="tag">Contact Us</span>
+            <h2>Let's Talk Payments</h2>
+            <p>Ready to simplify your payment operations? Reach out to our team and we'll get you started.</p>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-info">
+                <div class="contact-item">
+                    <div class="icon-box"><i class="fas fa-location-dot"></i></div>
+                    <div>
+                        <h4>Our Office</h4>
+                        <p>Dar es Salaam, Tanzania<br>Masaki, Haile Selassie Road</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="icon-box"><i class="fas fa-envelope"></i></div>
+                    <div>
+                        <h4>Email Us</h4>
+                        <p>info@payin.co.tz<br>support@payin.co.tz</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="icon-box"><i class="fas fa-phone"></i></div>
+                    <div>
+                        <h4>Call Us</h4>
+                        <p>+255 22 000 0000<br>+255 78 000 0000</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <div class="icon-box"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <h4>Working Hours</h4>
+                        <p>Mon &ndash; Fri: 8:00 AM &ndash; 6:00 PM<br>Sat: 9:00 AM &ndash; 1:00 PM</p>
+                    </div>
+                </div>
+            </div>
+            <form class="contact-form" onsubmit="handleSubmit(event)">
+                <div class="form-row">
+                    <input type="text" placeholder="Your Name" required>
+                    <input type="email" placeholder="Your Email" required>
+                </div>
+                <input type="text" placeholder="Company / Business Name">
+                <input type="text" placeholder="Subject">
+                <textarea placeholder="Tell us about your payment needs..." required></textarea>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Message</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ══ Footer ══ -->
+    <footer class="footer">
+        <p>&copy; 2026 <a href="#">PayIn</a>. All rights reserved. &mdash; Licensed Payment Service Provider, Tanzania.
+        </p>
+    </footer>
+
+    <!-- ══ Scripts ══ -->
+    <script>
+        // Mobile menu toggle
+        function toggleMenu() {
+            document.getElementById('navLinks').classList.toggle('open');
+        }
+
+        // Close mobile menu on link click
+        document.querySelectorAll('.nav-links a').forEach(function (link) {
+            link.addEventListener('click', function () {
+                document.getElementById('navLinks').classList.remove('open');
+            });
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            var navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Active nav link on scroll
+        var sections = document.querySelectorAll('section[id]');
+        window.addEventListener('scroll', function () {
+            var scrollY = window.pageYOffset;
+            sections.forEach(function (section) {
+                var sectionTop = section.offsetTop - 100;
+                var sectionHeight = section.offsetHeight;
+                var sectionId = section.getAttribute('id');
+                var navLink = document.querySelector('.nav-links a[href="#' + sectionId + '"]');
+                if (navLink) {
+                    if (scrollY >= sectionTop && scrollY < sectionTop + sectionHeight) {
+                        navLink.classList.add('active');
+                    } else {
+                        navLink.classList.remove('active');
+                    }
+                }
+            });
+        });
+
+        // Contact form handler
+        function handleSubmit(e) {
+            e.preventDefault();
+            alert('Thank you for your message! Our team will get back to you shortly.');
+            e.target.reset();
+        }
+    </script>
+
+</body>
+
+</html>
