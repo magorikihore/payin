@@ -5,15 +5,12 @@
 @section('content')
 <div x-data="adminPanel()" x-init="init()" x-cloak>
     <!-- Navigation -->
-    <nav class="bg-gray-900 shadow-sm border-b border-gray-700">
+    <nav class="shadow-sm border-b border-gray-700" style="background:rgba(15,23,42,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <svg class="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span class="ml-2 text-xl font-bold text-white">Payin Admin</span>
+                    <a href="https://www.payin.co.tz" class="text-xl font-extrabold text-white tracking-wide" style="letter-spacing:1px;font-family:'Poppins',sans-serif">Pay<span class="text-amber-400">In</span></a>
+                    <span class="ml-2 text-xs bg-amber-400/20 text-amber-400 px-2 py-0.5 rounded-full font-semibold">Admin</span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-300">Super Admin: <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>

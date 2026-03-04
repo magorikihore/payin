@@ -5,17 +5,14 @@
 @section('content')
 <div x-data="dashboard()" x-init="init()" x-cloak>
     <!-- Top Navbar -->
-    <nav class="bg-gray-900 shadow-lg border-b border-gray-800 fixed top-0 left-0 right-0 z-30">
+    <nav class="fixed top-0 left-0 right-0 z-30 shadow-lg border-b border-gray-800" style="background:rgba(15,23,42,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
         <div class="px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-14">
                 <div class="flex items-center">
                     <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden mr-3 text-gray-400 hover:text-white">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
-                    <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                    </svg>
-                    <span class="ml-2 text-lg font-bold text-white">Payin</span>
+                    <a href="https://www.payin.co.tz" class="text-xl font-extrabold text-white tracking-wide" style="letter-spacing:1px;font-family:'Poppins',sans-serif">Pay<span class="text-amber-400">In</span></a>
                 </div>
                 <div class="flex items-center space-x-3">
                     <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="(user?.firstname || user?.name || 'User')"></span></span>
