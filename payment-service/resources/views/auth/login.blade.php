@@ -3,28 +3,27 @@
 @section('title', 'Login - Payin')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center py-8" x-data="loginForm()">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg">
-        <!-- Google-style color strip -->
-        <div class="flex h-1 rounded-t-xl overflow-hidden mb-6 -mx-8 -mt-8">
+<div class="min-h-screen flex items-center justify-center py-8" x-data="loginForm()" style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#084dc7 100%)">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg">
+        <!-- PayIn brand color strip -->
+        <div class="flex h-1.5 rounded-t-xl overflow-hidden mb-6 -mx-8 -mt-8">
             <div class="flex-1 bg-gblue-500"></div>
-            <div class="flex-1 bg-gred-500"></div>
             <div class="flex-1 bg-gyellow-500"></div>
-            <div class="flex-1 bg-ggreen-500"></div>
         </div>
 
         <div class="text-center mb-8" x-show="!showRegister">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gblue-50 rounded-full mb-4">
-                <svg class="w-8 h-8 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
+            <div class="mb-4">
+                <span class="text-3xl font-extrabold text-gray-800 tracking-wide" style="font-family:'Poppins',sans-serif">Pay<span class="text-gyellow-500">In</span></span>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">LOGIN</h2>
-            <p class="text-gray-500 mt-1">Login to your account</p>
+            <h2 class="text-2xl font-bold text-gray-800">Welcome Back</h2>
+            <p class="text-gray-500 mt-1">Sign in to your merchant account</p>
         </div>
 
         <!-- Register Header -->
         <div x-show="showRegister" x-cloak class="mb-8">
+            <div class="mb-4">
+                <span class="text-3xl font-extrabold text-gray-800 tracking-wide" style="font-family:'Poppins',sans-serif">Pay<span class="text-gyellow-500">In</span></span>
+            </div>
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Let's get Started</h2>
             <p class="text-gray-500 text-sm mb-3">To accelerate your application, you will need:</p>
             <div class="space-y-2 text-sm text-gray-600">

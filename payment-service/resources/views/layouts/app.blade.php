@@ -6,17 +6,17 @@
     <title>@yield('title', 'Payin')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
     tailwind.config = {
         theme: {
             extend: {
-                fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                fontFamily: { sans: ['Poppins', 'Inter', 'system-ui', 'sans-serif'] },
                 colors: {
-                    gblue:  { 50: '#e8f0fe', 100: '#d2e3fc', 200: '#aecbfa', 300: '#8ab4f8', 400: '#669df6', 500: '#4285F4', 600: '#1a73e8', 700: '#1967d2', 800: '#185abc', 900: '#174ea6' },
+                    gblue:  { 50: '#e8f0fe', 100: '#d2e3fc', 200: '#aecbfa', 300: '#6ea8fe', 400: '#3d8bfd', 500: '#0d6efd', 600: '#0a58ca', 700: '#084dc7', 800: '#063aa0', 900: '#042b7a' },
                     gred:   { 50: '#fce8e6', 100: '#fad2cf', 200: '#f6aea9', 300: '#f28b82', 400: '#ee675c', 500: '#EA4335', 600: '#d93025', 700: '#c5221f', 800: '#b31412', 900: '#a50e0e' },
-                    gyellow:{ 50: '#fef7e0', 100: '#feefc3', 200: '#fde293', 300: '#fdd663', 400: '#fcc934', 500: '#FBBC05', 600: '#f9ab00', 700: '#f29900', 800: '#e37400', 900: '#d56e0a' },
+                    gyellow:{ 50: '#fefce8', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
                     ggreen: { 50: '#e6f4ea', 100: '#ceead6', 200: '#a8dab5', 300: '#81c995', 400: '#5bb974', 500: '#34A853', 600: '#1e8e3e', 700: '#188038', 800: '#137333', 900: '#0d652d' },
                 }
             }
@@ -29,15 +29,16 @@
         @keyframes payin-spin { to { transform: rotate(360deg); } }
         .payin-loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); transition: opacity .4s ease; }
         .payin-loader.fade-out { opacity: 0; pointer-events: none; }
-        .payin-loader .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.15); border-top-color: #3b82f6; border-radius: 50%; animation: payin-spin .8s linear infinite; }
-        .payin-loader .loader-text { margin-top: 20px; color: #94a3b8; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: .5px; }
-        .payin-loader .loader-brand { color: #fff; font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 24px; }
+        .payin-loader .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,.15); border-top-color: #f59e0b; border-radius: 50%; animation: payin-spin .8s linear infinite; }
+        .payin-loader .loader-text { margin-top: 20px; color: #94a3b8; font-family: 'Poppins', 'Inter', sans-serif; font-size: 14px; font-weight: 500; letter-spacing: .5px; }
+        .payin-loader .loader-brand { color: #fff; font-family: 'Poppins', 'Inter', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 24px; letter-spacing: 1px; }
+        .payin-loader .loader-brand span { color: #f59e0b; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen font-sans">
     <!-- Global Loading Overlay -->
     <div id="payin-global-loader" class="payin-loader">
-        <div class="loader-brand">Payin</div>
+        <div class="loader-brand">Pay<span>In</span></div>
         <div class="spinner"></div>
         <div class="loader-text">Please wait...</div>
     </div>
