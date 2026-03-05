@@ -30,6 +30,7 @@ class RegisterRequest extends FormRequest
             'currency' => ['nullable', 'string', 'max:10'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'confirmed', 'min:6'],
+            'referral_code' => ['nullable', 'string', 'max:20'],
             // Honeypot: must be empty (bots fill hidden fields)
             'website' => ['nullable', 'max:0'],
             '_form_loaded_at' => ['nullable', 'numeric'],

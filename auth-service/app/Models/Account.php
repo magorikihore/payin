@@ -50,6 +50,9 @@ class Account extends Model
         'kyc_approved_by',
         'status',
         'rate_limit',
+        'referral_code',
+        'referred_by',
+        'referred_at',
     ];
 
     protected $casts = [
@@ -58,6 +61,7 @@ class Account extends Model
         'kyc_update_allowed' => 'boolean',
         'multi_currency_enabled' => 'boolean',
         'allowed_currencies' => 'array',
+        'referred_at' => 'datetime',
     ];
 
     public function users(): HasMany

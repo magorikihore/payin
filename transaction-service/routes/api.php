@@ -6,6 +6,7 @@ use App\Http\Controllers\ChargeConfigController;
 use App\Http\Controllers\ReversalController;
 use App\Http\Controllers\PlatformWithdrawalController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\ReferralCommissionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth.service')->group(function () {
@@ -52,10 +53,21 @@ Route::middleware('auth.service')->group(function () {
     Route::post('/admin/platform-withdrawals', [PlatformWithdrawalController::class, 'store']);
     Route::put('/admin/platform-withdrawals/{id}/complete', [PlatformWithdrawalController::class, 'complete']);
     Route::put('/admin/platform-withdrawals/{id}/cancel', [PlatformWithdrawalController::class, 'cancel']);
+
+    // Referral Commission configs (super_admin only)
+    Route::get('/admin/referral-commissions', [ReferralCommissionController::class, 'index']);
+    Route::post('/admin/referral-commissions', [ReferralCommissionController::class, 'store']);
+    Route::put('/admin/referral-commissions/{id}', [ReferralCommissionController::class, 'update']);
+    Route::delete('/admin/referral-commissions/{id}', [ReferralCommissionController::class, 'destroy']);
+
+    // Referral Earnings (super_admin only)
+    Route::get('/admin/referral-earnings', [ReferralCommissionController::class, 'earnings']);
 });
 
 // Internal service-to-service routes (protected by service key)
 Route::middleware('internal.service')->group(function () {
     Route::post('/internal/transactions', [TransactionController::class, 'internalStore']);
     Route::post('/internal/charges/calculate', [ChargeConfigController::class, 'calculate']);
+    Route::post('/internal/referral-commission/calculate', [ReferralCommissionController::class, 'calculate']);
+    Route::post('/internal/referral-commission/record', [ReferralCommissionController::class, 'recordEarning']);
 });

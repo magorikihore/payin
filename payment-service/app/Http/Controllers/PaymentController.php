@@ -342,6 +342,7 @@ class PaymentController extends Controller
         if ($newStatus === 'completed') {
             $this->recordTransaction($paymentRequest);
             $this->updateWallet($paymentRequest);
+            $this->processReferralCommission($paymentRequest);
         }
 
         // Send callback to merchant
@@ -820,6 +821,81 @@ class PaymentController extends Controller
             }
         } catch (\Exception $e) {
             Log::error("Wallet update failed for {$paymentRequest->request_ref}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Process referral commission: if the transacting account was referred by another,
+     * calculate and credit the referrer's wallet with the commission.
+     */
+    private function processReferralCommission(PaymentRequest $paymentRequest): void
+    {
+        try {
+            $authServiceUrl = config('services.auth_service.url');
+            $txnServiceUrl = config('services.transaction_service.url');
+            $walletServiceUrl = config('services.wallet_service.url');
+            $serviceKey = config('services.internal_service_key');
+
+            // 1. Get the transacting account to check if it has a referrer
+            $accountRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->get("{$authServiceUrl}/api/admin/accounts/{$paymentRequest->account_id}");
+
+            if (!$accountRes->successful()) return;
+
+            $account = $accountRes->json()['account'] ?? null;
+            $referrerAccountId = $account['referred_by'] ?? null;
+
+            if (!$referrerAccountId) return; // No referrer, nothing to do
+
+            // 2. Calculate the commission via transaction-service
+            $commissionRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->post("{$txnServiceUrl}/api/internal/referral-commission/calculate", [
+                    'amount' => $paymentRequest->amount,
+                    'operator' => $paymentRequest->operator_name,
+                    'transaction_type' => $paymentRequest->type,
+                    'referrer_account_id' => $referrerAccountId,
+                ]);
+
+            if (!$commissionRes->successful()) return;
+
+            $commission = $commissionRes->json();
+            $commissionAmount = (float) ($commission['commission_amount'] ?? 0);
+
+            if ($commissionAmount <= 0) return; // No commission configured
+
+            // 3. Credit the referrer's wallet
+            $walletRef = 'COMM-' . $paymentRequest->request_ref;
+            $walletRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->post("{$walletServiceUrl}/api/internal/wallet/credit", [
+                    'account_id' => (string) $referrerAccountId,
+                    'amount' => $commissionAmount,
+                    'operator' => $paymentRequest->operator_name,
+                    'wallet_type' => 'collection',
+                    'reference' => $walletRef,
+                    'description' => 'Referral commission from ' . $paymentRequest->request_ref,
+                ]);
+
+            $walletStatus = $walletRes->successful() ? 'credited' : 'failed';
+
+            // 4. Record the earning in transaction-service
+            Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->post("{$txnServiceUrl}/api/internal/referral-commission/record", [
+                    'referrer_account_id' => $referrerAccountId,
+                    'referred_account_id' => $paymentRequest->account_id,
+                    'transaction_ref' => $paymentRequest->request_ref,
+                    'transaction_amount' => $paymentRequest->amount,
+                    'operator' => $paymentRequest->operator_name,
+                    'transaction_type' => $paymentRequest->type,
+                    'commission_type' => $commission['commission_type'],
+                    'commission_rate' => $commission['commission_rate'],
+                    'commission_amount' => $commissionAmount,
+                    'status' => $walletStatus,
+                    'wallet_reference' => $walletRef,
+                ]);
+
+            Log::info("Referral commission {$walletStatus}: {$commissionAmount} to account {$referrerAccountId} from {$paymentRequest->request_ref}");
+        } catch (\Exception $e) {
+            Log::error("Referral commission failed for {$paymentRequest->request_ref}: " . $e->getMessage());
         }
     }
 

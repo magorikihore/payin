@@ -36,6 +36,12 @@ Route::get('/internal/bank-accounts/{accountId}', [BankAccountController::class,
 // Internal: Create bank account for an account (called by admin create-business)
 Route::post('/internal/bank-accounts/create', [BankAccountController::class, 'internalStore']);
 
+// Public: Validate a referral code (used by registration form)
+Route::get('/referral-code/{code}', [AdminController::class, 'lookupByReferralCode']);
+
+// Internal: Lookup account by referral code (called by other services)
+Route::get('/internal/referral-code/{code}', [AdminController::class, 'lookupByReferralCode']);
+
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -127,5 +133,10 @@ Route::middleware('auth:api')->group(function () {
         Route::delete('/email-templates/{id}', [AdminController::class, 'deleteEmailTemplate']);
         Route::post('/email-templates/send', [AdminController::class, 'sendTemplateEmail']);
         Route::post('/bulk-email/send', [AdminController::class, 'sendBulkEmail']);
+
+        // Referral management (admin)
+        Route::put('/accounts/{id}/referral', [AdminController::class, 'updateAccountReferral']);
+        Route::post('/accounts/{id}/generate-referral-code', [AdminController::class, 'generateReferralCode']);
+        Route::get('/referral-code/{code}', [AdminController::class, 'lookupByReferralCode']);
     });
 });

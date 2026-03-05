@@ -33,7 +33,7 @@ class AuthController extends Controller
         $currency = $validated['currency'] ?? ($currencyMap[$country] ?? 'TZS');
 
         // Create account (KYC not yet submitted — user must complete after login)
-        $account = Account::create([
+        $accountData = [
             'account_ref' => 'ACC-' . strtoupper(Str::random(8)),
             'business_name' => $validated['business_name'],
             'email' => $validated['email'],
@@ -41,7 +41,18 @@ class AuthController extends Controller
             'currency' => $currency,
             'kyc_submitted_at' => null,
             'status' => 'pending',
-        ]);
+        ];
+
+        // Handle referral code — link new account to referrer
+        if (!empty($validated['referral_code'])) {
+            $referrer = Account::where('referral_code', $validated['referral_code'])->first();
+            if ($referrer) {
+                $accountData['referred_by'] = $referrer->id;
+                $accountData['referred_at'] = now();
+            }
+        }
+
+        $account = Account::create($accountData);
 
         // Create owner user
         $user = User::create([

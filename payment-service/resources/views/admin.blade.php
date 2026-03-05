@@ -42,6 +42,8 @@
                 </button>
                 <button x-show="hasPerm('admin_charges')" @click="goToTab('charges')" :class="activeTab === 'charges' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Charges</button>
+                <button x-show="hasPerm('admin_charges')" @click="goToTab('referrals')" :class="activeTab === 'referrals' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                    class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Referrals</button>
                 <button x-show="hasPerm('admin_ip_whitelist')" @click="goToTab('ipwhitelist')" :class="activeTab === 'ipwhitelist' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
                     IP Whitelist
@@ -1477,6 +1479,235 @@
             </div>
         </div>
 
+        <!-- ==================== REFERRAL COMMISSIONS TAB ==================== -->
+        <div x-show="activeTab === 'referrals'" class="mt-6">
+            <!-- Add Commission Config Form -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Add Referral Commission Rule</h3>
+                <div x-show="refCommMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm"
+                    :class="refCommMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'"
+                    x-text="refCommMsg"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" x-model="refCommForm.name" placeholder="e.g. Agent 5% Collection"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Referrer Account ID <span class="text-gray-400">(blank = all)</span></label>
+                        <input type="number" x-model="refCommForm.referrer_account_id" placeholder="Leave empty for global"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
+                        <select x-model="refCommForm.operator" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                            <option value="all">All Operators</option>
+                            <option value="M-Pesa">M-Pesa</option>
+                            <option value="Tigo Pesa">Tigo Pesa</option>
+                            <option value="Airtel Money">Airtel Money</option>
+                            <option value="Halopesa">Halopesa</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Transaction Type</label>
+                        <select x-model="refCommForm.transaction_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                            <option value="all">All</option>
+                            <option value="collection">Collection</option>
+                            <option value="disbursement">Disbursement</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Commission Type</label>
+                        <select x-model="refCommForm.commission_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                            <option value="fixed">Fixed</option>
+                            <option value="percentage">Percentage</option>
+                            <option value="dynamic">Dynamic (Tiered)</option>
+                        </select>
+                    </div>
+                    <div x-show="refCommForm.commission_type !== 'dynamic'">
+                        <label class="block text-sm font-medium text-gray-700 mb-1" x-text="refCommForm.commission_type === 'percentage' ? 'Commission (%)' : 'Commission (TZS)'"></label>
+                        <input type="number" step="0.01" x-model="refCommForm.commission_value"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <div x-show="refCommForm.commission_type !== 'dynamic'">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Min Amount</label>
+                        <input type="number" step="0.01" x-model="refCommForm.min_amount"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <div x-show="refCommForm.commission_type !== 'dynamic'">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Max Amount <span class="text-gray-400">(0 = no limit)</span></label>
+                        <input type="number" step="0.01" x-model="refCommForm.max_amount"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Max Commission Cap <span class="text-gray-400">(0 = no cap)</span></label>
+                        <input type="number" step="0.01" x-model="refCommForm.max_commission"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                </div>
+
+                <!-- Dynamic Tiers -->
+                <div x-show="refCommForm.commission_type === 'dynamic'" class="mt-4">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Commission Tiers</h4>
+                    <template x-for="(tier, idx) in refCommForm.tiers" :key="idx">
+                        <div class="flex items-end gap-3 mb-2">
+                            <div>
+                                <label class="block text-xs text-gray-500">Min</label>
+                                <input type="number" step="0.01" x-model="tier.min_amount" class="w-24 px-2 py-1 border border-gray-300 rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500">Max</label>
+                                <input type="number" step="0.01" x-model="tier.max_amount" class="w-24 px-2 py-1 border border-gray-300 rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500">Type</label>
+                                <select x-model="tier.commission_type" class="w-28 px-2 py-1 border border-gray-300 rounded text-sm">
+                                    <option value="fixed">Fixed</option>
+                                    <option value="percentage">Percentage</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500">Value</label>
+                                <input type="number" step="0.01" x-model="tier.commission_value" class="w-24 px-2 py-1 border border-gray-300 rounded text-sm">
+                            </div>
+                            <button @click="refCommForm.tiers.splice(idx, 1)" class="text-red-500 hover:text-red-700 text-sm pb-1">&times;</button>
+                        </div>
+                    </template>
+                    <button @click="refCommForm.tiers.push({ min_amount: 0, max_amount: 0, commission_type: 'fixed', commission_value: '' })" class="text-sm text-blue-600 hover:text-blue-800">+ Add Tier</button>
+                </div>
+
+                <div class="mt-4">
+                    <button @click="saveRefComm()" :disabled="refCommLoading"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+                        x-text="refCommEditId ? 'Update Commission Rule' : 'Add Commission Rule'"></button>
+                    <button x-show="refCommEditId" @click="resetRefCommForm()" class="ml-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">Cancel Edit</button>
+                </div>
+            </div>
+
+            <!-- Commission Configs Table -->
+            <div class="bg-white rounded-xl shadow-sm border mb-6">
+                <div class="p-4 border-b flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-800">Commission Rules</h3>
+                    <button @click="loadRefComms()" class="text-sm text-blue-600 hover:text-blue-800">Refresh</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Name</th>
+                                <th class="px-4 py-3 text-left">Operator</th>
+                                <th class="px-4 py-3 text-left">Type</th>
+                                <th class="px-4 py-3 text-left">Commission</th>
+                                <th class="px-4 py-3 text-left">Amount Range</th>
+                                <th class="px-4 py-3 text-left">Cap</th>
+                                <th class="px-4 py-3 text-left">Referrer</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                                <th class="px-4 py-3 text-left">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <template x-for="rc in refComms" :key="rc.id">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3" x-text="rc.name"></td>
+                                    <td class="px-4 py-3" x-text="rc.operator"></td>
+                                    <td class="px-4 py-3">
+                                        <span x-text="rc.transaction_type" class="capitalize"></span>
+                                        <span class="ml-1 text-xs text-gray-500" x-text="'(' + rc.commission_type + ')'"></span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <template x-if="rc.commission_type === 'dynamic'">
+                                            <span class="text-xs text-purple-600">Tiered</span>
+                                        </template>
+                                        <template x-if="rc.commission_type === 'percentage'">
+                                            <span x-text="parseFloat(rc.commission_value).toFixed(2) + '%'"></span>
+                                        </template>
+                                        <template x-if="rc.commission_type === 'fixed'">
+                                            <span x-text="Number(rc.commission_value).toLocaleString() + ' TZS'"></span>
+                                        </template>
+                                    </td>
+                                    <td class="px-4 py-3 text-xs" x-text="Number(rc.min_amount).toLocaleString() + ' - ' + (rc.max_amount == 0 ? '∞' : Number(rc.max_amount).toLocaleString())"></td>
+                                    <td class="px-4 py-3 text-xs" x-text="rc.max_commission == 0 ? 'No cap' : Number(rc.max_commission).toLocaleString() + ' TZS'"></td>
+                                    <td class="px-4 py-3 text-xs" x-text="rc.referrer_account_id || 'Global'"></td>
+                                    <td class="px-4 py-3">
+                                        <span :class="rc.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'" class="px-2 py-1 rounded-full text-xs font-medium" x-text="rc.status"></span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <button @click="editRefComm(rc)" class="text-blue-600 hover:text-blue-800 text-xs mr-2">Edit</button>
+                                        <button @click="deleteRefComm(rc.id)" class="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Referral Earnings -->
+            <div class="bg-white rounded-xl shadow-sm border">
+                <div class="p-4 border-b">
+                    <h3 class="font-semibold text-gray-800 mb-3">Referral Earnings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                            <p class="text-xs text-green-600">Total Credited</p>
+                            <p class="text-lg font-bold text-green-700" x-text="Number(refEarnSummary.total_earned || 0).toLocaleString() + ' TZS'"></p>
+                        </div>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                            <p class="text-xs text-yellow-600">Pending</p>
+                            <p class="text-lg font-bold text-yellow-700" x-text="Number(refEarnSummary.total_pending || 0).toLocaleString() + ' TZS'"></p>
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                            <p class="text-xs text-blue-600">Total Transactions</p>
+                            <p class="text-lg font-bold text-blue-700" x-text="refEarnSummary.total_transactions || 0"></p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <input type="number" x-model="refEarnAccountFilter" placeholder="Referrer Account ID" class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-48">
+                        <button @click="loadRefEarnings()" class="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Filter</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Date</th>
+                                <th class="px-4 py-3 text-left">Referrer</th>
+                                <th class="px-4 py-3 text-left">Client</th>
+                                <th class="px-4 py-3 text-left">Txn Ref</th>
+                                <th class="px-4 py-3 text-left">Txn Amount</th>
+                                <th class="px-4 py-3 text-left">Type</th>
+                                <th class="px-4 py-3 text-left">Commission</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            <template x-for="e in refEarnings" :key="e.id">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-xs" x-text="new Date(e.created_at).toLocaleString()"></td>
+                                    <td class="px-4 py-3" x-text="e.referrer_account_id"></td>
+                                    <td class="px-4 py-3" x-text="e.referred_account_id"></td>
+                                    <td class="px-4 py-3 font-mono text-xs" x-text="e.transaction_ref"></td>
+                                    <td class="px-4 py-3" x-text="Number(e.transaction_amount).toLocaleString()"></td>
+                                    <td class="px-4 py-3 capitalize" x-text="e.transaction_type"></td>
+                                    <td class="px-4 py-3 font-semibold text-green-700" x-text="Number(e.commission_amount).toLocaleString() + ' TZS'"></td>
+                                    <td class="px-4 py-3">
+                                        <span :class="e.status === 'credited' ? 'bg-green-100 text-green-700' : e.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'" class="px-2 py-1 rounded-full text-xs font-medium" x-text="e.status"></span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div x-show="refEarnPagination.last_page > 1" class="p-4 border-t flex justify-between items-center">
+                    <span class="text-sm text-gray-600" x-text="'Page ' + refEarnPage + ' of ' + refEarnPagination.last_page"></span>
+                    <div class="flex gap-2">
+                        <button @click="refEarnPage--; loadRefEarnings()" :disabled="refEarnPage <= 1" class="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50">Prev</button>
+                        <button @click="refEarnPage++; loadRefEarnings()" :disabled="refEarnPage >= refEarnPagination.last_page" class="px-3 py-1 bg-gray-200 rounded text-sm disabled:opacity-50">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== IP WHITELIST TAB ==================== -->
         <div x-show="activeTab === 'ipwhitelist'" class="mt-6">
             <!-- Search & Filters -->
@@ -1750,6 +1981,28 @@
                         </div>
 
                         <!-- Identity Verification -->
+                        <div class="px-6 py-4">
+                            <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Referral Info</h4>
+                            <div class="grid grid-cols-3 gap-4 mb-3">
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Referral Code</label>
+                                    <p class="text-sm font-medium text-indigo-700 font-mono" x-text="kycAccount?.referral_code || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Referred By (Account ID)</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.referred_by || '—'"></p>
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 uppercase">Referred At</label>
+                                    <p class="text-sm font-medium text-gray-800" x-text="kycAccount?.referred_at ? new Date(kycAccount.referred_at).toLocaleDateString() : '—'"></p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button @click="generateRefCode(kycAccount.id)" class="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700" x-show="!kycAccount?.referral_code">Generate Referral Code</button>
+                                <button @click="editRefCodePrompt(kycAccount)" class="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700">Edit Referral Settings</button>
+                            </div>
+                        </div>
+
                         <div class="px-6 py-4">
                             <h4 class="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Identity Verification</h4>
                             <div class="grid grid-cols-2 gap-4">
@@ -4033,6 +4286,11 @@ function adminPanel() {
         // Charge Revenue
         chargeRevenue: {},
 
+        // Referral Commissions
+        refComms: [], refCommLoading: false, refCommMsg: '', refCommMsgType: 'success', refCommEditId: null,
+        refCommForm: { name: '', referrer_account_id: '', operator: 'all', transaction_type: 'all', commission_type: 'percentage', commission_value: '', min_amount: 0, max_amount: 0, max_commission: 0, tiers: [{ min_amount: 0, max_amount: 0, commission_type: 'fixed', commission_value: '' }] },
+        refEarnings: [], refEarnSummary: {}, refEarnPagination: {}, refEarnPage: 1, refEarnAccountFilter: '',
+
         // Platform Profit Withdrawals
         profitSummary: { total_earned: 0, total_withdrawn: 0, total_pending: 0, available_balance: 0 },
         profitWithdrawals: [], profitWdPagination: {}, profitWdPage: 1,
@@ -4199,6 +4457,7 @@ function adminPanel() {
                 case 'wallets': this.fetchAdminWallets(); break;
                 case 'settlements': this.fetchAdminSettlements(); break;
                 case 'charges': this.fetchCharges(); break;
+                case 'referrals': this.loadRefComms(); this.loadRefEarnings(); break;
                 case 'ipwhitelist': this.fetchAdminIps(); break;
                 case 'transfers': this.fetchAdminInternalTransfers(); break;
                 case 'reversals': this.fetchAdminReversals(); break;
@@ -5054,6 +5313,136 @@ function adminPanel() {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchCharges();
+            } catch (e) { console.error(e); }
+        },
+
+        /* ==================== ACCOUNT REFERRAL HELPERS ==================== */
+        async generateRefCode(accountId) {
+            if (!confirm('Generate a referral code for this account?')) return;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${accountId}/generate-referral-code`, {
+                    method: 'POST', headers: this.getHeaders()
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Referral code generated: ' + data.referral_code);
+                    this.kycAccount = data.account;
+                } else {
+                    alert(data.message || 'Failed');
+                }
+            } catch (e) { console.error(e); alert('Error generating code'); }
+        },
+        async editRefCodePrompt(account) {
+            const code = prompt('Referral Code:', account.referral_code || '');
+            if (code === null) return;
+            const referredBy = prompt('Referred By Account ID (leave empty to clear):', account.referred_by || '');
+            if (referredBy === null) return;
+            try {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${account.id}/referral`, {
+                    method: 'PUT',
+                    headers: { ...this.getHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        referral_code: code || null,
+                        referred_by: referredBy ? parseInt(referredBy) : null
+                    })
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                if (res.ok) {
+                    alert(data.message || 'Updated');
+                    this.kycAccount = data.account;
+                } else {
+                    alert(data.message || 'Failed');
+                }
+            } catch (e) { console.error(e); alert('Error updating referral'); }
+        },
+
+        /* ==================== REFERRAL COMMISSIONS ==================== */
+        async loadRefComms() {
+            try {
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/admin/referral-commissions', { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.refComms = data.commissions || [];
+                }
+            } catch (e) { console.error(e); }
+        },
+
+        async saveRefComm() {
+            if (!this.refCommForm.name) { this.refCommMsg = 'Name is required.'; this.refCommMsgType = 'error'; return; }
+            if (this.refCommForm.commission_type !== 'dynamic' && !this.refCommForm.commission_value) {
+                this.refCommMsg = 'Commission value is required.'; this.refCommMsgType = 'error'; return;
+            }
+            this.refCommLoading = true; this.refCommMsg = '';
+            try {
+                const payload = { ...this.refCommForm };
+                if (payload.commission_type !== 'dynamic') delete payload.tiers;
+                if (!payload.referrer_account_id) payload.referrer_account_id = null;
+
+                const url = this.refCommEditId
+                    ? `{{ config("services.transaction_service.public_url") }}/api/admin/referral-commissions/${this.refCommEditId}`
+                    : '{{ config("services.transaction_service.public_url") }}/api/admin/referral-commissions';
+                const method = this.refCommEditId ? 'PUT' : 'POST';
+
+                const res = await fetch(url, { method, headers: this.getHeaders(), body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (!res.ok) {
+                    const errors = data.errors ? Object.values(data.errors).flat().join(' ') : data.message;
+                    this.refCommMsg = errors || 'Failed.'; this.refCommMsgType = 'error'; return;
+                }
+                this.refCommMsg = data.message; this.refCommMsgType = 'success';
+                this.resetRefCommForm();
+                this.loadRefComms();
+                setTimeout(() => { this.refCommMsg = ''; }, 3000);
+            } catch (e) { this.refCommMsg = 'Service unavailable.'; this.refCommMsgType = 'error'; }
+            finally { this.refCommLoading = false; }
+        },
+
+        editRefComm(rc) {
+            this.refCommEditId = rc.id;
+            this.refCommForm = {
+                name: rc.name,
+                referrer_account_id: rc.referrer_account_id || '',
+                operator: rc.operator,
+                transaction_type: rc.transaction_type,
+                commission_type: rc.commission_type,
+                commission_value: rc.commission_value,
+                min_amount: rc.min_amount,
+                max_amount: rc.max_amount,
+                max_commission: rc.max_commission,
+                tiers: rc.tiers || [{ min_amount: 0, max_amount: 0, commission_type: 'fixed', commission_value: '' }],
+            };
+        },
+
+        resetRefCommForm() {
+            this.refCommEditId = null;
+            this.refCommForm = { name: '', referrer_account_id: '', operator: 'all', transaction_type: 'all', commission_type: 'percentage', commission_value: '', min_amount: 0, max_amount: 0, max_commission: 0, tiers: [{ min_amount: 0, max_amount: 0, commission_type: 'fixed', commission_value: '' }] };
+        },
+
+        async deleteRefComm(id) {
+            if (!confirm('Delete this commission rule?')) return;
+            try {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/admin/referral-commissions/${id}`, {
+                    method: 'DELETE', headers: this.getHeaders()
+                });
+                if (res.ok) this.loadRefComms();
+            } catch (e) { console.error(e); }
+        },
+
+        async loadRefEarnings() {
+            try {
+                let url = `{{ config("services.transaction_service.public_url") }}/api/admin/referral-earnings?page=${this.refEarnPage}`;
+                if (this.refEarnAccountFilter) url += `&referrer_account_id=${this.refEarnAccountFilter}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.refEarnings = data.earnings?.data || [];
+                    this.refEarnPagination = data.earnings || {};
+                    this.refEarnSummary = data.summary || {};
+                }
             } catch (e) { console.error(e); }
         },
 

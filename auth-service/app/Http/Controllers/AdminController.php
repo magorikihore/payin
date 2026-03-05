@@ -142,6 +142,14 @@ class AdminController extends Controller
                 'kyc_approved_by' => $request->user()->id,
             ]);
 
+            // Auto-generate referral code if not set
+            if (!$account->referral_code) {
+                do {
+                    $refCode = 'REF-' . strtoupper(Str::random(8));
+                } while (Account::where('referral_code', $refCode)->exists());
+                $account->update(['referral_code' => $refCode]);
+            }
+
             // Notify account owner
             try {
                 $owner = $account->owner;
@@ -1196,6 +1204,104 @@ class AdminController extends Controller
         return response()->json([
             'message' => 'Notification emails updated successfully.',
             'emails' => $emails,
+        ]);
+    }
+
+    // ─── Referral Management ───────────────────────────────────────
+
+    /**
+     * Update referral settings for an account (referral_code + referred_by).
+     */
+    public function updateAccountReferral(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
+
+        $request->validate([
+            'referral_code' => 'nullable|string|max:20',
+            'referred_by'   => 'nullable|integer|exists:accounts,id',
+        ]);
+
+        $account = Account::find($id);
+        if (!$account) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        // Prevent self-referral
+        if ($request->referred_by && (int) $request->referred_by === (int) $id) {
+            return response()->json(['message' => 'An account cannot refer itself.'], 422);
+        }
+
+        $updateData = [];
+
+        if ($request->has('referral_code')) {
+            $code = $request->referral_code;
+            if ($code) {
+                // Check uniqueness
+                $existing = Account::where('referral_code', $code)->where('id', '!=', $id)->first();
+                if ($existing) {
+                    return response()->json(['message' => 'Referral code already taken.'], 422);
+                }
+            }
+            $updateData['referral_code'] = $code ?: null;
+        }
+
+        if ($request->has('referred_by')) {
+            $updateData['referred_by'] = $request->referred_by;
+            $updateData['referred_at'] = $request->referred_by ? now() : null;
+        }
+
+        $account->update($updateData);
+
+        return response()->json([
+            'message' => 'Referral settings updated.',
+            'account' => $account->fresh(),
+        ]);
+    }
+
+    /**
+     * Generate a unique referral code for an account.
+     */
+    public function generateReferralCode(Request $request, $id): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
+
+        $account = Account::find($id);
+        if (!$account) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        // Generate unique code
+        do {
+            $code = 'REF-' . strtoupper(Str::random(8));
+        } while (Account::where('referral_code', $code)->exists());
+
+        $account->update(['referral_code' => $code]);
+
+        return response()->json([
+            'message' => 'Referral code generated.',
+            'referral_code' => $code,
+            'account' => $account->fresh(),
+        ]);
+    }
+
+    /**
+     * Lookup account by referral code (used during registration / admin).
+     */
+    public function lookupByReferralCode(Request $request, $code): JsonResponse
+    {
+        $account = Account::where('referral_code', $code)->first();
+
+        if (!$account) {
+            return response()->json(['message' => 'No account found with that referral code.'], 404);
+        }
+
+        return response()->json([
+            'account' => [
+                'id'            => $account->id,
+                'account_ref'   => $account->account_ref,
+                'business_name' => $account->business_name,
+                'referral_code' => $account->referral_code,
+            ],
         ]);
     }
 }
