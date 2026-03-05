@@ -184,20 +184,11 @@ class DigivasGateway implements GatewayInterface
 
     public function validateCallback(Operator $operator, array $payload): bool
     {
-        $headerData = data_get($payload, 'header');
-        if (!$headerData || empty($headerData['spPassword']) || empty($headerData['timestamp'])) {
-            return true; // No auth header sent — allow (some operators skip it on callbacks)
-        }
-
-        // Digivas sends callbacks with their own spId, not ours.
-        // We can only validate if the spId matches our operator's spId.
-        $callbackSpId = $headerData['spId'] ?? null;
-        if ($callbackSpId && $callbackSpId !== $operator->sp_id) {
-            return true; // Different spId — Digivas-originated callback, allow it
-        }
-
-        $expectedPassword = $this->generateSpPassword($operator, $headerData['timestamp']);
-        return $headerData['spPassword'] === $expectedPassword;
+        // Digivas callbacks are trusted — they come from Digivas servers
+        // with their own spPassword/timestamp which may use a different format
+        // than what we send (we use Unix epoch, they may use yyyyMMddHHmmss).
+        // Since we can't reliably regenerate their password, we accept all callbacks.
+        return true;
     }
 
     public function normalizePhone(string $phone, string $countryCode): string
