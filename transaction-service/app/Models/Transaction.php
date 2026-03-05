@@ -23,6 +23,7 @@ class Transaction extends Model
         'payment_method',
         'operator',
         'operator_receipt',
+        'phone_number',
         'metadata',
     ];
 

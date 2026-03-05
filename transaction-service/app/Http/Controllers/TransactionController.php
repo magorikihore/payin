@@ -72,6 +72,7 @@ class TransactionController extends Controller
             'description' => 'nullable|string|max:255',
             'payment_method' => 'nullable|string',
             'operator_receipt' => 'nullable|string',
+            'phone_number' => 'nullable|string|max:20',
             'user_id' => 'nullable|integer',
         ]);
 
@@ -89,6 +90,7 @@ class TransactionController extends Controller
             'payment_method' => $request->payment_method ?? 'mobile_money',
             'operator' => $request->operator,
             'operator_receipt' => $request->operator_receipt,
+            'phone_number' => $request->phone_number,
         ]);
 
         return response()->json([
@@ -312,6 +314,7 @@ class TransactionController extends Controller
                   ->orWhere('amount', 'like', "%{$search}%")
                   ->orWhere('operator', 'like', "%{$search}%")
                   ->orWhere('operator_receipt', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%")
                   ->orWhere('payment_method', 'like', "%{$search}%");
             });
         }

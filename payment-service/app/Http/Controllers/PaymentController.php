@@ -748,6 +748,7 @@ class PaymentController extends Controller
                     'description'      => $paymentRequest->description ?? ($paymentRequest->type === 'collection' ? 'USSD Collection' : 'Disbursement'),
                     'payment_method'   => 'mobile_money',
                     'operator_receipt' => $paymentRequest->receipt_number ?: $paymentRequest->operator_ref,
+                    'phone_number'     => $paymentRequest->phone,
                 ]);
 
             if ($response->successful()) {
