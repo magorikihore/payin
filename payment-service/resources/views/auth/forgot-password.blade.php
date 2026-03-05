@@ -137,7 +137,7 @@ function resetForm() {
             this.error = '';
             this.success = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/forgot-password', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/forgot-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ email: this.email })
@@ -161,7 +161,7 @@ function resetForm() {
             this.error = '';
             this.success = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/verify-reset-code', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/verify-reset-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ email: this.email, code: this.code })
@@ -190,7 +190,7 @@ function resetForm() {
                 return;
             }
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/reset-password', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/reset-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({

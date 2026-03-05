@@ -182,7 +182,7 @@ function loginForm() {
             this.loading = true;
             this.error = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/login', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ email: this.email, password: this.password })
@@ -241,7 +241,7 @@ function loginForm() {
             }
 
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/register', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({

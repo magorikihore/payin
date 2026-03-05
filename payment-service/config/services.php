@@ -36,7 +36,8 @@ return [
     ],
 
     'auth_service' => [
-        'url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),  // prod: https://auth.yourdomain.com
+        'url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),  // internal server-to-server
+        'public_url' => env('AUTH_SERVICE_PUBLIC_URL', env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001')),  // browser-facing
     ],
 
     'transaction_service' => [

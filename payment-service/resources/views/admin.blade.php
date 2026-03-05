@@ -1772,7 +1772,7 @@
                                     <template x-if="kycAccount?.id_document_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.id_document_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View ID Document &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.id_document_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View ID Document &rarr;</a>
                                         </div>
                                     </template>
                                     <template x-if="!kycAccount?.id_document_url">
@@ -1783,7 +1783,7 @@
                                     <template x-if="kycAccount?.certificate_of_incorporation_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.certificate_of_incorporation_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Certificate of Incorporation &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.certificate_of_incorporation_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Certificate of Incorporation &rarr;</a>
                                         </div>
                                     </template>
                                     <template x-if="!kycAccount?.certificate_of_incorporation_url">
@@ -1794,7 +1794,7 @@
                                     <template x-if="kycAccount?.business_license_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.business_license_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Business License &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.business_license_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Business License &rarr;</a>
                                         </div>
                                     </template>
                                     <template x-if="!kycAccount?.business_license_url">
@@ -1805,7 +1805,7 @@
                                     <template x-if="kycAccount?.tax_clearance_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tax_clearance_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Tax Clearance &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.tax_clearance_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Tax Clearance &rarr;</a>
                                         </div>
                                     </template>
                                     <template x-if="!kycAccount?.tax_clearance_url">
@@ -1816,7 +1816,7 @@
                                     <template x-if="kycAccount?.tin_certificate_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tin_certificate_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View TIN Certificate &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.tin_certificate_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View TIN Certificate &rarr;</a>
                                         </div>
                                     </template>
                                     <template x-if="!kycAccount?.tin_certificate_url">
@@ -1827,7 +1827,7 @@
                                     <template x-if="kycAccount?.company_memorandum_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_memorandum_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Company Memorandum &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.company_memorandum_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Company Memorandum &rarr;</a>
                                         </div>
                                     </template>
                                     <template x-if="!kycAccount?.company_memorandum_url">
@@ -1838,7 +1838,7 @@
                                     <template x-if="kycAccount?.company_resolution_url">
                                         <div class="flex items-center space-x-2">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 font-medium">Uploaded</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_resolution_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Company Resolution &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.company_resolution_url" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View Company Resolution &rarr;</a>
                                         </div>
                                     </template>
                                     <template x-if="!kycAccount?.company_resolution_url">
@@ -1991,7 +1991,7 @@
                                     <template x-if="kycAccount?.id_document_url">
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.id_document_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.id_document_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2002,7 +2002,7 @@
                                     <template x-if="kycAccount?.certificate_of_incorporation_url">
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.certificate_of_incorporation_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.certificate_of_incorporation_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2013,7 +2013,7 @@
                                     <template x-if="kycAccount?.business_license_url">
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.business_license_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.business_license_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2024,7 +2024,7 @@
                                     <template x-if="kycAccount?.tax_clearance_url">
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tax_clearance_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.tax_clearance_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2035,7 +2035,7 @@
                                     <template x-if="kycAccount?.tin_certificate_url">
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.tin_certificate_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.tin_certificate_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2046,7 +2046,7 @@
                                     <template x-if="kycAccount?.company_memorandum_url">
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_memorandum_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.company_memorandum_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -2057,7 +2057,7 @@
                                     <template x-if="kycAccount?.company_resolution_url">
                                         <div class="mt-2 flex items-center space-x-2">
                                             <span class="text-xs text-green-600">Current:</span>
-                                            <a :href="'{{ config('services.auth_service.url') }}' + kycAccount.company_resolution_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
+                                            <a :href="'{{ config('services.auth_service.public_url') }}' + kycAccount.company_resolution_url" target="_blank" class="text-xs text-blue-600 hover:underline">View existing &rarr;</a>
                                         </div>
                                     </template>
                                 </div>
@@ -4124,7 +4124,7 @@ function adminPanel() {
         bulkForm: { subject: '', greeting: 'Hello @{{name}},', body: '', action_text: '', action_url: '', footer: '— Payin Team' },
         bulkSending: false, bulkResult: '', bulkResultType: 'success', showBulkConfirm: false,
         logServiceUrls: {
-            auth: '{{ config("services.auth_service.url") }}/api/admin/logs',
+            auth: '{{ config("services.auth_service.public_url") }}/api/admin/logs',
             payment: '/api/admin/logs',
             transaction: '{{ config("services.transaction_service.url") }}/api/admin/logs',
             wallet: '{{ config("services.wallet_service.url") }}/api/admin/logs',
@@ -4229,7 +4229,7 @@ function adminPanel() {
             try {
                 let page = 1, hasMore = true;
                 while (hasMore) {
-                    const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts?page=${page}&per_page=100`, { headers: this.getHeaders() });
+                    const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts?page=${page}&per_page=100`, { headers: this.getHeaders() });
                     if (!res.ok) break;
                     const data = await res.json();
                     (data.data || []).forEach(a => { this.accountMap[a.id] = a.business_name; });
@@ -4241,7 +4241,7 @@ function adminPanel() {
 
         async fetchStats() {
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/stats', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/stats', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) this.stats = await res.json();
             } catch (e) { console.error(e); }
@@ -4333,7 +4333,7 @@ function adminPanel() {
         async fetchAccounts() {
             this.accLoading = true;
             try {
-                let url = `{{ config("services.auth_service.url") }}/api/admin/accounts?page=${this.accPage}`;
+                let url = `{{ config("services.auth_service.public_url") }}/api/admin/accounts?page=${this.accPage}`;
                 if (this.accSearch) url += `&search=${encodeURIComponent(this.accSearch)}`;
                 if (this.accStatusFilter) url += `&status=${this.accStatusFilter}`;
 
@@ -4368,7 +4368,7 @@ function adminPanel() {
             const label = status === 'active' ? 'approve/activate' : status;
             if (!confirm(`Are you sure you want to ${label} this account?`)) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${id}/status`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${id}/status`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ status })
                 });
                 if (res.ok) { this.fetchAccounts(); this.fetchStats(); }
@@ -4378,7 +4378,7 @@ function adminPanel() {
         async fetchUsers() {
             this.usrLoading = true;
             try {
-                let url = `{{ config("services.auth_service.url") }}/api/admin/users?page=${this.usrPage}`;
+                let url = `{{ config("services.auth_service.public_url") }}/api/admin/users?page=${this.usrPage}`;
                 if (this.usrSearch) url += `&search=${encodeURIComponent(this.usrSearch)}`;
                 if (this.usrRoleFilter) url += `&role=${this.usrRoleFilter}`;
                 if (this.usrStatusFilter) url += `&status=${this.usrStatusFilter}`;
@@ -4394,7 +4394,7 @@ function adminPanel() {
         async adminResetPassword(userId, userName) {
             if (!confirm(`Reset password for ${userName}? A new random password will be generated.`)) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/users/${userId}/reset-password`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/users/${userId}/reset-password`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -4418,7 +4418,7 @@ function adminPanel() {
         async executeBan() {
             this.banLoading = true;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/users/${this.banUserId}/ban`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/users/${this.banUserId}/ban`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ reason: this.banReason })
                 });
@@ -4439,7 +4439,7 @@ function adminPanel() {
             const name = (usr.firstname && usr.lastname) ? (usr.firstname + ' ' + usr.lastname) : usr.name;
             if (!confirm(`Unban ${name}? They will be able to log in again.`)) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/users/${usr.id}/unban`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/users/${usr.id}/unban`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -4463,7 +4463,7 @@ function adminPanel() {
         async executeDelete() {
             this.deleteLoading = true;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/users/${this.deleteUserId}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/users/${this.deleteUserId}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -4696,7 +4696,7 @@ function adminPanel() {
                 if (this.addBizMemoFile) fd.append('company_memorandum', this.addBizMemoFile);
                 if (this.addBizResolutionFile) fd.append('company_resolution', this.addBizResolutionFile);
 
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/create-business`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/create-business`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' },
                     body: fd
@@ -4709,7 +4709,7 @@ function adminPanel() {
                     // Save bank account if provided
                     if (data.account?.id && this.addBizForm.bank_name && this.addBizForm.bank_account_number) {
                         try {
-                            await fetch(`{{ config("services.auth_service.url") }}/api/internal/bank-accounts/create`, {
+                            await fetch(`{{ config("services.auth_service.public_url") }}/api/internal/bank-accounts/create`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                                 body: JSON.stringify({
@@ -4752,7 +4752,7 @@ function adminPanel() {
             this.kycEditing = false;
             this.kycEditMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${accountId}`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${accountId}`, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) {
                     const data = await res.json();
@@ -4771,7 +4771,7 @@ function adminPanel() {
 
         async fetchKycBankAccounts(accountId) {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/internal/bank-accounts/${accountId}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/internal/bank-accounts/${accountId}`, {
                     headers: { 'Accept': 'application/json' }
                 });
                 if (res.ok) {
@@ -4829,7 +4829,7 @@ function adminPanel() {
                 if (this.kycMemoFile) fd.append('company_memorandum', this.kycMemoFile);
                 if (this.kycResolutionFile) fd.append('company_resolution', this.kycResolutionFile);
                 const token = document.cookie.split('; ').find(c => c.startsWith('admin_token='))?.split('=')[1];
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/kyc`, {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' },
                     body: fd
@@ -4866,7 +4866,7 @@ function adminPanel() {
             if (!this.kycAccount) return;
             this.kycNoteSaving = true; this.kycNoteMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc-notes`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/kyc-notes`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ kyc_notes: this.kycNotesText })
                 });
                 if (res.ok) {
@@ -4882,7 +4882,7 @@ function adminPanel() {
             this.kycPaybillSaving = true;
             this.kycPaybillMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/status`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/status`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ status: this.kycAccount.status, paybill: this.kycPaybill.trim() })
                 });
                 if (res.ok) {
@@ -4902,7 +4902,7 @@ function adminPanel() {
             this.kycRateLimitSaving = true;
             this.kycRateLimitMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/rate-limit`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/rate-limit`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ rate_limit: val })
                 });
                 if (res.ok) {
@@ -4925,7 +4925,7 @@ function adminPanel() {
             if (!confirm('Approve this account KYC? The account will become active with paybill: ' + paybill)) return;
             this.kycActionLoading = true;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/status`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/status`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ status: 'active', paybill: paybill })
                 });
                 if (res.ok) {
@@ -4946,12 +4946,12 @@ function adminPanel() {
             try {
                 // Save rejection note
                 if (reason) {
-                    await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc-notes`, {
+                    await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/kyc-notes`, {
                         method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ kyc_notes: 'REJECTED: ' + reason })
                     });
                 }
                 // Set status to suspended (rejected)
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/status`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/status`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ status: 'suspended' })
                 });
                 if (res.ok) {
@@ -4968,7 +4968,7 @@ function adminPanel() {
             this.kycUpdatePermLoading = true;
             this.kycUpdatePermMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/kyc-update-permission`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/kyc-update-permission`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -5061,7 +5061,7 @@ function adminPanel() {
         async fetchAdminIps() {
             this.ipListLoading = true;
             try {
-                let url = `{{ config("services.auth_service.url") }}/api/admin/ip-whitelist?`;
+                let url = `{{ config("services.auth_service.public_url") }}/api/admin/ip-whitelist?`;
                 if (this.ipSearch) url += `search=${encodeURIComponent(this.ipSearch)}&`;
                 if (this.ipStatusFilter) url += `status=${this.ipStatusFilter}&`;
                 const res = await fetch(url, { headers: this.getHeaders() });
@@ -5075,7 +5075,7 @@ function adminPanel() {
 
         async fetchPendingIpCount() {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist?status=pending`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/ip-whitelist?status=pending`, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();
                 this.pendingIpCount = data.pending_count ?? 0;
@@ -5084,7 +5084,7 @@ function adminPanel() {
 
         async approveIp(id) {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist/${id}/approve`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/ip-whitelist/${id}/approve`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -5097,7 +5097,7 @@ function adminPanel() {
         async rejectIp(id) {
             const notes = prompt('Rejection reason (optional):');
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist/${id}/reject`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/ip-whitelist/${id}/reject`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ admin_notes: notes || '' })
                 });
@@ -5112,7 +5112,7 @@ function adminPanel() {
             if (!confirm('Suspend this IP? API requests from this IP will be blocked.')) return;
             const notes = prompt('Suspension reason (optional):');
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist/${id}/suspend`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/ip-whitelist/${id}/suspend`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ admin_notes: notes || '' })
                 });
@@ -5126,7 +5126,7 @@ function adminPanel() {
         async reactivateIp(id) {
             if (!confirm('Reactivate this IP? It will become active again.')) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/ip-whitelist/${id}/reactivate`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/ip-whitelist/${id}/reactivate`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -5497,7 +5497,7 @@ function adminPanel() {
         async fetchAdminUsers() {
             this.adminUsersLoading = true;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/admin-users`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/admin-users`, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();
                 this.adminUsersList = data.admin_users || [];
@@ -5533,8 +5533,8 @@ function adminPanel() {
             try {
                 const isEdit = !!this.editingAdminUser;
                 const url = isEdit
-                    ? `{{ config("services.auth_service.url") }}/api/admin/admin-users/${this.editingAdminUser.id}`
-                    : `{{ config("services.auth_service.url") }}/api/admin/admin-users`;
+                    ? `{{ config("services.auth_service.public_url") }}/api/admin/admin-users/${this.editingAdminUser.id}`
+                    : `{{ config("services.auth_service.public_url") }}/api/admin/admin-users`;
                 const method = isEdit ? 'PUT' : 'POST';
 
                 const body = {
@@ -5578,7 +5578,7 @@ function adminPanel() {
         async deleteAdminUser(au) {
             if (!confirm(`Delete admin user "${(au.firstname && au.lastname) ? (au.firstname + ' ' + au.lastname) : au.name}"? This cannot be undone.`)) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/admin-users/${au.id}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/admin-users/${au.id}`, {
                     method: 'DELETE', headers: this.getHeaders(),
                 });
                 const data = await res.json();
@@ -5590,7 +5590,7 @@ function adminPanel() {
         },
 
         logout() {
-            fetch('{{ config("services.auth_service.url") }}/api/logout', { method: 'POST', headers: this.getHeaders() }).finally(() => {
+            fetch('{{ config("services.auth_service.public_url") }}/api/logout', { method: 'POST', headers: this.getHeaders() }).finally(() => {
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('auth_user');
                 window.location.href = '/login';
@@ -5654,7 +5654,7 @@ function adminPanel() {
             this.mailLoading = true;
             this.mailMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/mail-config', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/mail-config', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();
                 if (res.ok && data.config) {
@@ -5671,7 +5671,7 @@ function adminPanel() {
             this.mailSaving = true;
             this.mailMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/mail-config', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/mail-config', {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify(this.mailForm)
                 });
                 if (this.handleUnauth(res)) return;
@@ -5686,7 +5686,7 @@ function adminPanel() {
             this.testMailSending = true;
             this.testMailMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/mail-config/test', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/mail-config/test', {
                     method: 'POST', headers: this.getHeaders(), body: JSON.stringify({ email: this.testMailAddress })
                 });
                 if (this.handleUnauth(res)) return;
@@ -5702,7 +5702,7 @@ function adminPanel() {
             this.notifLoading = true;
             this.notifMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/notification-emails', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/notification-emails', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();
                 if (res.ok) {
@@ -5744,7 +5744,7 @@ function adminPanel() {
             this.notifSaving = true;
             this.notifMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/notification-emails', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/notification-emails', {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ emails: this.notifEmails })
                 });
@@ -5764,7 +5764,7 @@ function adminPanel() {
             this.tplLoading = true;
             this.tplMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/email-templates', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();
                 if (res.ok && data.templates) {
@@ -5778,7 +5778,7 @@ function adminPanel() {
             this.tplSaving = true;
             this.tplMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/' + tpl.id, {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/email-templates/' + tpl.id, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ subject: tpl.subject, greeting: tpl.greeting, body: tpl.body, action_text: tpl.action_text || null, action_url: tpl.action_url || null, footer: tpl.footer, is_active: tpl.is_active })
                 });
@@ -5798,7 +5798,7 @@ function adminPanel() {
             this.tplSaving = true;
             this.tplMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/' + tpl.id + '/reset', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/email-templates/' + tpl.id + '/reset', {
                     method: 'POST', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -5817,7 +5817,7 @@ function adminPanel() {
             this.tplSaving = true;
             this.tplMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/email-templates', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(this.newTplForm)
                 });
@@ -5838,7 +5838,7 @@ function adminPanel() {
             this.tplSaving = true;
             this.tplMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/' + tpl.id, {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/email-templates/' + tpl.id, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -5876,7 +5876,7 @@ function adminPanel() {
                         return;
                     }
                 }
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/email-templates/send', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/email-templates/send', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(payload)
                 });
@@ -5953,7 +5953,7 @@ function adminPanel() {
                 if (this.bulkRecipient === 'emails') {
                     payload.emails = this.bulkEmails.split(',').map(e => e.trim()).filter(e => e);
                 }
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/admin/bulk-email/send', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/admin/bulk-email/send', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(payload)
                 });
@@ -6068,7 +6068,7 @@ function adminPanel() {
             this.kycMultiSaving = true;
             this.kycMultiMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/admin/accounts/${this.kycAccount.id}/multi-currency`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/admin/accounts/${this.kycAccount.id}/multi-currency`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({
                         multi_currency_enabled: this.kycMultiCurrency,

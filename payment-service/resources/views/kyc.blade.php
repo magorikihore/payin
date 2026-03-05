@@ -517,7 +517,7 @@ function kycPage() {
 
         async checkKycStatus() {
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/kyc', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/kyc', {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' }
                 });
                 if (res.ok) {
@@ -603,7 +603,7 @@ function kycPage() {
 
                 const authHeaders = { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' };
 
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/kyc', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/kyc', {
                     method: 'POST',
                     headers: authHeaders,
                     body: formData
@@ -619,7 +619,7 @@ function kycPage() {
                 // Save bank accounts
                 for (let i = 0; i < this.bankAccounts.length; i++) {
                     try {
-                        await fetch('{{ config("services.auth_service.url") }}/api/account/bank-accounts', {
+                        await fetch('{{ config("services.auth_service.public_url") }}/api/account/bank-accounts', {
                             method: 'POST',
                             headers: { ...authHeaders, 'Content-Type': 'application/json' },
                             body: JSON.stringify({ ...this.bankAccounts[i], is_default: i === 0 })

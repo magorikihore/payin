@@ -1284,7 +1284,7 @@
                             <!-- ID Document preview -->
                             <div x-show="kycData.id_document_url" class="mt-4 bg-gray-50 rounded-lg px-4 py-3 flex items-center space-x-2">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
-                                <a :href="'{{ config('services.auth_service.url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View ID Document &rarr;</a>
+                                <a :href="'{{ config('services.auth_service.public_url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View ID Document &rarr;</a>
                             </div>
                         </div>
 
@@ -1373,14 +1373,14 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
                                         <span class="text-sm text-gray-700">ID Document</span>
                                     </div>
-                                    <a :href="'{{ config('services.auth_service.url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View &rarr;</a>
+                                    <a :href="'{{ config('services.auth_service.public_url') }}' + kycData.id_document_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View &rarr;</a>
                                 </div>
                                 <div x-show="kycData.business_license_url" class="bg-gray-50 rounded-lg px-4 py-3 flex items-center justify-between">
                                     <div class="flex items-center space-x-2">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
                                         <span class="text-sm text-gray-700">Business License</span>
                                     </div>
-                                    <a :href="'{{ config('services.auth_service.url') }}' + kycData.business_license_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View &rarr;</a>
+                                    <a :href="'{{ config('services.auth_service.public_url') }}' + kycData.business_license_url" target="_blank" class="text-sm text-gblue-500 hover:text-gblue-700 font-medium">View &rarr;</a>
                                 </div>
                                 <div x-show="!kycData.id_document_url && !kycData.business_license_url" class="text-sm text-gray-400">No documents uploaded yet.</div>
                             </div>
@@ -1645,7 +1645,7 @@
                                     <p class="text-xs text-gray-400 mt-2">Accepted: JPG, PNG or PDF &middot; Max 5MB</p>
                                     <div x-show="kycData.id_document_url" x-cloak class="mt-3 flex items-center space-x-2">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
-                                        <a :href="'{{ config('services.auth_service.url') }}' + kycData.id_document_url" target="_blank"
+                                        <a :href="'{{ config('services.auth_service.public_url') }}' + kycData.id_document_url" target="_blank"
                                             class="text-xs text-gblue-500 hover:text-gblue-700 font-medium">View current document &rarr;</a>
                                     </div>
                                 </div>
@@ -1657,7 +1657,7 @@
                                     <p class="text-xs text-gray-400 mt-2">Accepted: JPG, PNG or PDF &middot; Max 5MB</p>
                                     <div x-show="kycData.business_license_url" x-cloak class="mt-3 flex items-center space-x-2">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ggreen-50 text-ggreen-700 font-medium">Uploaded</span>
-                                        <a :href="'{{ config('services.auth_service.url') }}' + kycData.business_license_url" target="_blank"
+                                        <a :href="'{{ config('services.auth_service.public_url') }}' + kycData.business_license_url" target="_blank"
                                             class="text-xs text-gblue-500 hover:text-gblue-700 font-medium">View current license &rarr;</a>
                                     </div>
                                 </div>
@@ -3312,7 +3312,7 @@ function dashboard() {
 
         async refreshUser() {
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/user', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/user', { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.user = data;
@@ -3328,7 +3328,7 @@ function dashboard() {
 
         async fetchCallback() {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/callback`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/callback`, { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.callbackUrl = data.callback_url || '';
@@ -3340,7 +3340,7 @@ function dashboard() {
         async fetchKyc() {
             this.kycFormLoading = true;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/kyc`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/kyc`, { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.kycData = data.kyc || {};
@@ -3409,7 +3409,7 @@ function dashboard() {
                 if (this.kycIdFile) formData.append('id_document', this.kycIdFile);
                 if (this.kycLicenseFile) formData.append('business_license', this.kycLicenseFile);
 
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/kyc`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/kyc`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, 'Accept': 'application/json' },
                     body: formData
@@ -3431,7 +3431,7 @@ function dashboard() {
             this.callbackLoading = true;
             this.callbackMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/callback`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/callback`, {
                     method: 'PUT',
                     headers: this.getHeaders(),
                     body: JSON.stringify({ callback_url: this.callbackUrl || null })
@@ -3455,7 +3455,7 @@ function dashboard() {
         async fetchIps() {
             this.ipLoading = true;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/ips`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/ips`, { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.ipList = data.ips || [];
@@ -3469,7 +3469,7 @@ function dashboard() {
             this.ipAddLoading = true;
             this.ipMsg = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/ips`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/ips`, {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({ ip_address: this.newIpAddress.trim(), label: this.newIpLabel.trim() || null })
                 });
@@ -3494,7 +3494,7 @@ function dashboard() {
         async deleteIp(id) {
             if (!confirm('Remove this IP from the whitelist?')) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/ips/${id}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/ips/${id}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (res.ok) { this.fetchIps(); }
@@ -3505,7 +3505,7 @@ function dashboard() {
         async fetchApiKeys() {
             this.apiKeysLoading = true;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/api-keys`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/api-keys`, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) {
                     const data = await res.json();
@@ -3522,7 +3522,7 @@ function dashboard() {
             this.newApiSecret = '';
             this.newApiKey = '';
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/api-keys`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/api-keys`, {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({ label: this.apiKeyLabel.trim() })
                 });
@@ -3548,7 +3548,7 @@ function dashboard() {
         async revokeApiKey(id) {
             if (!confirm('Revoke this API key? It will stop working immediately.')) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/api-keys/${id}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/api-keys/${id}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (res.ok) {
@@ -4059,7 +4059,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async fetchBankAccounts() {
             this.bankAccountsLoading = true;
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/bank-accounts', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/bank-accounts', { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.bankAccounts = data.bank_accounts || [];
@@ -4075,7 +4075,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async addBankAccount() {
             this.bankFormLoading = true; this.bankMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/bank-accounts', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/bank-accounts', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(this.bankForm)
                 });
@@ -4094,7 +4094,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async deleteBankAccount(id) {
             if (!confirm('Remove this bank account?')) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/bank-accounts/${id}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/bank-accounts/${id}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchBankAccounts();
@@ -4102,7 +4102,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         },
         async setDefaultBank(id) {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/bank-accounts/${id}/default`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/bank-accounts/${id}/default`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchBankAccounts();
@@ -4113,7 +4113,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async fetchCryptoWallets() {
             this.cryptoWalletsLoading = true;
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/crypto-wallets', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/crypto-wallets', { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.cryptoWallets = data.crypto_wallets || [];
@@ -4124,7 +4124,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async addCryptoWallet() {
             this.cryptoFormLoading = true; this.cryptoMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/crypto-wallets', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/crypto-wallets', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(this.cryptoForm)
                 });
@@ -4143,7 +4143,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async deleteCryptoWallet(id) {
             if (!confirm('Remove this crypto wallet?')) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/crypto-wallets/${id}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/crypto-wallets/${id}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchCryptoWallets();
@@ -4151,7 +4151,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         },
         async setDefaultCrypto(id) {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/crypto-wallets/${id}/default`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/crypto-wallets/${id}/default`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchCryptoWallets();
@@ -4703,14 +4703,14 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         formatDate(d) { if (!d) return '-'; return new Date(d).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }); },
 
         async logout() {
-            try { await fetch('{{ config("services.auth_service.url") }}/api/logout', { method: 'POST', headers: this.getHeaders() }); } catch (e) {}
+            try { await fetch('{{ config("services.auth_service.public_url") }}/api/logout', { method: 'POST', headers: this.getHeaders() }); } catch (e) {}
             localStorage.removeItem('auth_token'); localStorage.removeItem('auth_user'); window.location.href = '/login';
         },
 
         async changePassword() {
             this.pwError = ''; this.pwSuccess = ''; this.pwLoading = true;
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/change-password', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/change-password', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({ current_password: this.currentPassword, password: this.newPassword, password_confirmation: this.confirmPassword })
                 });
@@ -4727,7 +4727,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async fetchAccountUsers() {
             this.accUsersLoading = true;
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/users', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/users', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) { const data = await res.json(); this.accountUsers = data.users || []; }
             } catch (e) { console.error(e); }
@@ -4736,7 +4736,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async addUser() {
             this.addUserLoading = true; this.addUserMsg = '';
             try {
-                const res = await fetch('{{ config("services.auth_service.url") }}/api/account/users', {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/account/users', {
                     method: 'POST', headers: this.getHeaders(), body: JSON.stringify(this.newUserForm)
                 });
                 const data = await res.json();
@@ -4752,7 +4752,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         },
         async changeUserRole(id, role) {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/users/${id}/role`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/users/${id}/role`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ role })
                 });
                 if (res.ok) this.fetchAccountUsers();
@@ -4762,7 +4762,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async removeUser(id, name) {
             if (!confirm(`Remove user "${name}" from this account?`)) return;
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/users/${id}`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/users/${id}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchAccountUsers();
@@ -4771,7 +4771,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         },
         async saveUserPermissions(userId) {
             try {
-                const res = await fetch(`{{ config("services.auth_service.url") }}/api/account/users/${userId}/permissions`, {
+                const res = await fetch(`{{ config("services.auth_service.public_url") }}/api/account/users/${userId}/permissions`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ permissions: this.editingPerms })
                 });
                 if (res.ok) {
