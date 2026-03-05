@@ -48,7 +48,7 @@ class PaymentController extends Controller
         $charges = $this->calculateCharges($accountId, $request->amount, $operator->code, 'collection');
 
         // Create payment request record
-        $requestRef = 'PAY-' . strtoupper(Str::random(12));
+        $requestRef = 'PAY' . strtoupper(Str::random(12));
         $paymentRequest = PaymentRequest::create([
             'account_id'      => $accountId,
             'request_ref'     => $requestRef,
@@ -156,7 +156,7 @@ class PaymentController extends Controller
         $requiresApproval = $this->payoutRequiresApproval($user);
 
         // Create payment request record
-        $requestRef = 'PAY-' . strtoupper(Str::random(12));
+        $requestRef = 'PAY' . strtoupper(Str::random(12));
         $paymentRequest = PaymentRequest::create([
             'account_id'      => $accountId,
             'request_ref'     => $requestRef,
@@ -468,7 +468,7 @@ class PaymentController extends Controller
             }
 
             // Create payment request
-            $requestRef = 'PAY-' . strtoupper(Str::random(12));
+            $requestRef = 'PAY' . strtoupper(Str::random(12));
             $paymentRequest = PaymentRequest::create([
                 'account_id'      => $accountId,
                 'request_ref'     => $requestRef,
