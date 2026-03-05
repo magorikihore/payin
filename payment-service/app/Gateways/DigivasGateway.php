@@ -33,11 +33,15 @@ class DigivasGateway implements GatewayInterface
         $command = ($type === 'collection') ? 'UssdPush' : 'Disbursement';
 
         // Build DIGIVAS header with spPassword
+        // Formula: Base64(SHA-256(spId + secret + timestamp + amount + msisdn))
+        // Amount: remove decimal points and commas (e.g. 1,000.00 → 100000)
         $timestamp = now()->format('YmdHis');
+        $cleanAmount = str_replace([',', '.'], '', number_format($paymentRequest->amount, 2, '.', ''));
+        $msisdn = $paymentRequest->phone;
         $apiHeader = [
             'spId'         => $operator->sp_id,
             'merchantCode' => $operator->merchant_code,
-            'spPassword'   => $this->generateSpPassword($operator, $timestamp),
+            'spPassword'   => $this->generateSpPassword($operator, $timestamp, $cleanAmount, $msisdn),
             'timestamp'    => $timestamp,
             'apiVersion'   => $operator->api_version ?? '5.0',
         ];
@@ -183,8 +187,19 @@ class DigivasGateway implements GatewayInterface
             return true; // No auth header sent — allow (some operators skip it on callbacks)
         }
 
-        $expectedPassword = $this->generateSpPassword($operator, $headerData['timestamp']);
-        return $headerData['spPassword'] === $expectedPassword;
+        // For callbacks, extract amount and msisdn from the body
+        $bodyData = data_get($payload, 'body.request') ?? data_get($payload, 'body.result') ?? data_get($payload, 'body') ?? [];
+        $amount = str_replace([',', '.'], '', number_format((float) ($bodyData['amount'] ?? 0), 2, '.', ''));
+        $msisdn = $bodyData['msisdn'] ?? '';
+
+        $expectedPassword = $this->generateSpPassword($operator, $headerData['timestamp'], $amount, $msisdn);
+        if ($headerData['spPassword'] === $expectedPassword) {
+            return true;
+        }
+
+        // Fallback: try without amount/msisdn (some operators may use simpler signature on callbacks)
+        $fallback = $this->generateSpPassword($operator, $headerData['timestamp']);
+        return $headerData['spPassword'] === $fallback;
     }
 
     public function normalizePhone(string $phone, string $countryCode): string
@@ -209,9 +224,14 @@ class DigivasGateway implements GatewayInterface
         return ['collection' => true, 'disbursement' => true, 'status_check' => true];
     }
 
-    private function generateSpPassword(Operator $operator, string $timestamp): string
+    /**
+     * Generate spPassword per Digivas spec.
+     * Formula: Base64(SHA-256(spId + secret + timestamp + amount + msisdn))
+     * Amount should have no decimal points or commas (e.g. 1,000.00 → 100000).
+     */
+    private function generateSpPassword(Operator $operator, string $timestamp, string $amount = '', string $msisdn = ''): string
     {
-        $raw = $operator->sp_id . $operator->sp_password . $timestamp;
+        $raw = $operator->sp_id . $operator->sp_password . $timestamp . $amount . $msisdn;
         return base64_encode(hash('sha256', $raw, true));
     }
 }
