@@ -4126,9 +4126,9 @@ function adminPanel() {
         logServiceUrls: {
             auth: '{{ config("services.auth_service.public_url") }}/api/admin/logs',
             payment: '/api/admin/logs',
-            transaction: '{{ config("services.transaction_service.url") }}/api/admin/logs',
-            wallet: '{{ config("services.wallet_service.url") }}/api/admin/logs',
-            settlement: '{{ config("services.settlement_service.url") }}/api/admin/logs',
+            transaction: '{{ config("services.transaction_service.public_url") }}/api/admin/logs',
+            wallet: '{{ config("services.wallet_service.public_url") }}/api/admin/logs',
+            settlement: '{{ config("services.settlement_service.public_url") }}/api/admin/logs',
         },
 
         appReady: false,
@@ -4249,7 +4249,7 @@ function adminPanel() {
 
         async fetchChargeRevenue() {
             try {
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/admin/charge-revenue', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/admin/charge-revenue', { headers: this.getHeaders() });
                 if (res.ok) this.chargeRevenue = await res.json();
             } catch (e) { console.error(e); }
         },
@@ -4257,7 +4257,7 @@ function adminPanel() {
         // Platform Profit Withdrawal methods
         async fetchProfitSummary() {
             try {
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals/summary', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/admin/platform-withdrawals/summary', { headers: this.getHeaders() });
                 if (res.ok) this.profitSummary = await res.json();
             } catch (e) { console.error(e); }
         },
@@ -4265,7 +4265,7 @@ function adminPanel() {
         async fetchProfitWithdrawals() {
             this.profitWdLoading = true;
             try {
-                let url = `{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals?page=${this.profitWdPage}`;
+                let url = `{{ config("services.transaction_service.public_url") }}/api/admin/platform-withdrawals?page=${this.profitWdPage}`;
                 if (this.profitWdSearch) url += `&search=${encodeURIComponent(this.profitWdSearch)}`;
                 if (this.profitWdStatusFilter) url += `&status=${this.profitWdStatusFilter}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
@@ -4282,7 +4282,7 @@ function adminPanel() {
             this.profitWdSubmitting = true;
             this.profitWdMsg = '';
             try {
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals', {
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/admin/platform-withdrawals', {
                     method: 'POST', headers: this.getHeaders(), body: JSON.stringify(this.profitWdForm)
                 });
                 const data = await res.json();
@@ -4307,7 +4307,7 @@ function adminPanel() {
         async completeProfitWithdrawal(id) {
             if (!confirm('Confirm this withdrawal has been sent to the bank?')) return;
             try {
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals/${id}/complete`, {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/admin/platform-withdrawals/${id}/complete`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 const data = await res.json();
@@ -4320,7 +4320,7 @@ function adminPanel() {
         async cancelProfitWithdrawal(id) {
             if (!confirm('Cancel this withdrawal? Funds will be returned to available balance.')) return;
             try {
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/platform-withdrawals/${id}/cancel`, {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/admin/platform-withdrawals/${id}/cancel`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 const data = await res.json();
@@ -4345,7 +4345,7 @@ function adminPanel() {
                 // Wallet fetch is optional — don't let it break the accounts list
                 let walletMap = {};
                 try {
-                    const walRes = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/wallets`, { headers: this.getHeaders() });
+                    const walRes = await fetch(`{{ config("services.wallet_service.public_url") }}/api/admin/wallets`, { headers: this.getHeaders() });
                     if (walRes.ok) {
                         const walData = await walRes.json();
                         (walData.accounts || []).forEach(w => {
@@ -4496,7 +4496,7 @@ function adminPanel() {
             this.txnExportLoading = format;
             try {
                 const endpoint = format === 'excel' ? 'export/excel' : 'export/pdf';
-                const url = `{{ config("services.transaction_service.url") }}/api/admin/transactions/${endpoint}${this.buildTxnExportParams()}`;
+                const url = `{{ config("services.transaction_service.public_url") }}/api/admin/transactions/${endpoint}${this.buildTxnExportParams()}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (!res.ok) { alert('Export failed. Please try again.'); return; }
@@ -4515,7 +4515,7 @@ function adminPanel() {
         async fetchAdminTransactions() {
             this.txnLoading = true;
             try {
-                let url = `{{ config("services.transaction_service.url") }}/api/admin/transactions?page=${this.txnPage}`;
+                let url = `{{ config("services.transaction_service.public_url") }}/api/admin/transactions?page=${this.txnPage}`;
                 if (this.txnSearch) url += `&search=${encodeURIComponent(this.txnSearch)}`;
                 if (this.txnStatusFilter) url += `&status=${this.txnStatusFilter}`;
                 if (this.txnTypeFilter) url += `&type=${this.txnTypeFilter}`;
@@ -4535,7 +4535,7 @@ function adminPanel() {
         async fetchAdminWallets() {
             this.wltLoading = true;
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/wallets', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/admin/wallets', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) {
                     this.walletData = await res.json();
@@ -4572,7 +4572,7 @@ function adminPanel() {
             if (!confirm(`Fund ${this.fundForm.operator} disbursement wallet for ${this.accountName(this.fundForm.account_id)} with ${this.formatAmount(this.fundForm.amount)} TZS?`)) return;
             this.fundLoading = true; this.fundMsg = '';
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/wallet/fund', {
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/admin/wallet/fund', {
                     method: 'POST', headers: this.getHeaders(), body: JSON.stringify(this.fundForm)
                 });
                 const data = await res.json();
@@ -4594,7 +4594,7 @@ function adminPanel() {
         async fetchAdminSettlements() {
             this.stlLoading = true;
             try {
-                let url = `{{ config("services.settlement_service.url") }}/api/admin/settlements?page=${this.stlPage}`;
+                let url = `{{ config("services.settlement_service.public_url") }}/api/admin/settlements?page=${this.stlPage}`;
                 if (this.stlSearch) url += `&search=${encodeURIComponent(this.stlSearch)}`;
                 if (this.stlStatusFilter) url += `&status=${this.stlStatusFilter}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
@@ -4608,7 +4608,7 @@ function adminPanel() {
 
         async fetchPendingSettlementsCount() {
             try {
-                const res = await fetch('{{ config("services.settlement_service.url") }}/api/admin/settlements?status=pending&page=1', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.settlement_service.public_url") }}/api/admin/settlements?status=pending&page=1', { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.pendingSettlementsCount = data.total || 0;
@@ -4620,7 +4620,7 @@ function adminPanel() {
             if (!confirm('Approve this settlement for bank transfer?')) return;
             this.stlActionLoading = true; this.stlMsg = '';
             try {
-                const res = await fetch(`{{ config("services.settlement_service.url") }}/api/admin/settlements/${id}/approve`, {
+                const res = await fetch(`{{ config("services.settlement_service.public_url") }}/api/admin/settlements/${id}/approve`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 const data = await res.json();
@@ -4640,7 +4640,7 @@ function adminPanel() {
             if (!confirm('Reject this settlement? The wallet will be refunded.')) return;
             this.stlActionLoading = true; this.stlMsg = '';
             try {
-                const res = await fetch(`{{ config("services.settlement_service.url") }}/api/admin/settlements/${id}/reject`, {
+                const res = await fetch(`{{ config("services.settlement_service.public_url") }}/api/admin/settlements/${id}/reject`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 const data = await res.json();
@@ -4986,7 +4986,7 @@ function adminPanel() {
         async fetchCharges() {
             this.chargesLoading = true;
             try {
-                let url = '{{ config("services.transaction_service.url") }}/api/charges';
+                let url = '{{ config("services.transaction_service.public_url") }}/api/charges';
                 const params = [];
                 if (this.chargeOperatorFilter) params.push(`operator=${encodeURIComponent(this.chargeOperatorFilter)}`);
                 if (this.chargeStatusFilter) params.push(`status=${this.chargeStatusFilter}`);
@@ -5021,7 +5021,7 @@ function adminPanel() {
                 if (payload.charge_type !== 'dynamic') {
                     delete payload.tiers;
                 }
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges', {
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/charges', {
                     method: 'POST', headers: this.getHeaders(), body: JSON.stringify(payload)
                 });
                 const data = await res.json();
@@ -5040,7 +5040,7 @@ function adminPanel() {
         async toggleChargeStatus(ch) {
             const newStatus = ch.status === 'active' ? 'inactive' : 'active';
             try {
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/charges/${ch.id}`, {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/charges/${ch.id}`, {
                     method: 'PUT', headers: this.getHeaders(), body: JSON.stringify({ status: newStatus })
                 });
                 if (res.ok) this.fetchCharges();
@@ -5050,7 +5050,7 @@ function adminPanel() {
         async deleteCharge(id) {
             if (!confirm('Delete this charge configuration?')) return;
             try {
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/charges/${id}`, {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/charges/${id}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (res.ok) this.fetchCharges();
@@ -5140,7 +5140,7 @@ function adminPanel() {
         async fetchAdminInternalTransfers() {
             this.trfLoading = true;
             try {
-                let url = '{{ config("services.wallet_service.url") }}/api/admin/internal-transfers?';
+                let url = '{{ config("services.wallet_service.public_url") }}/api/admin/internal-transfers?';
                 if (this.trfStatusFilter) url += `status=${this.trfStatusFilter}&`;
                 if (this.trfAccountFilter) url += `account_id=${encodeURIComponent(this.trfAccountFilter)}&`;
                 const res = await fetch(url, { headers: this.getHeaders() });
@@ -5154,7 +5154,7 @@ function adminPanel() {
 
         async fetchPendingTransferCount() {
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/internal-transfers?status=pending', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/admin/internal-transfers?status=pending', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();
                 this.pendingTransferCount = data.pending_count ?? 0;
@@ -5165,7 +5165,7 @@ function adminPanel() {
             if (!confirm('Approve this transfer? Funds will be moved from collection to disbursement.')) return;
             this.trfActionLoading = true; this.trfMsg = '';
             try {
-                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/internal-transfers/${id}/approve`, {
+                const res = await fetch(`{{ config("services.wallet_service.public_url") }}/api/admin/internal-transfers/${id}/approve`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 const data = await res.json();
@@ -5184,7 +5184,7 @@ function adminPanel() {
             if (notes === null) return;
             this.trfActionLoading = true; this.trfMsg = '';
             try {
-                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/internal-transfers/${id}/reject`, {
+                const res = await fetch(`{{ config("services.wallet_service.public_url") }}/api/admin/internal-transfers/${id}/reject`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ admin_notes: notes || '' })
                 });
@@ -5215,7 +5215,7 @@ function adminPanel() {
         async fetchAdminReversals() {
             this.revLoading = true;
             try {
-                let url = `{{ config("services.transaction_service.url") }}/api/admin/reversals?page=${this.revPage}`;
+                let url = `{{ config("services.transaction_service.public_url") }}/api/admin/reversals?page=${this.revPage}`;
                 if (this.revStatusFilter) url += `&status=${this.revStatusFilter}`;
                 if (this.revSearch) url += `&search=${encodeURIComponent(this.revSearch)}`;
                 if (this.revTypeFilter) url += `&type=${this.revTypeFilter}`;
@@ -5233,7 +5233,7 @@ function adminPanel() {
 
         async fetchPendingReversalCount() {
             try {
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/reversals?status=pending`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/admin/reversals?status=pending`, { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.pendingReversalCount = data.total || (data.data || []).length || 0;
@@ -5246,7 +5246,7 @@ function adminPanel() {
             this.revActionLoading = true;
             try {
                 // 1. Approve in transaction-service
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/reversals/${rev.id}/approve`, {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/admin/reversals/${rev.id}/approve`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ admin_notes: 'Approved' })
                 });
@@ -5256,7 +5256,7 @@ function adminPanel() {
 
                 // 2. Reverse wallet balance in wallet-service
                 try {
-                    const walletRes = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/wallet/reverse`, {
+                    const walletRes = await fetch(`{{ config("services.wallet_service.public_url") }}/api/admin/wallet/reverse`, {
                         method: 'POST', headers: this.getHeaders(),
                         body: JSON.stringify({
                             amount: rev.amount,
@@ -5288,7 +5288,7 @@ function adminPanel() {
             if (notes === null) return;
             this.revActionLoading = true;
             try {
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/reversals/${id}/reject`, {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/admin/reversals/${id}/reject`, {
                     method: 'PUT', headers: this.getHeaders(),
                     body: JSON.stringify({ admin_notes: notes || 'Rejected' })
                 });
@@ -5315,7 +5315,7 @@ function adminPanel() {
             this.directRevSuccess = '';
             try {
                 // 1. Create reversal record (auto-approved)
-                const res = await fetch(`{{ config("services.transaction_service.url") }}/api/admin/reversals/direct`, {
+                const res = await fetch(`{{ config("services.transaction_service.public_url") }}/api/admin/reversals/direct`, {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({
                         transaction_id: this.directRevTxn.id,
@@ -5332,7 +5332,7 @@ function adminPanel() {
                 // 2. Adjust wallet balance
                 const rev = data.reversal;
                 try {
-                    const walletRes = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/wallet/reverse`, {
+                    const walletRes = await fetch(`{{ config("services.wallet_service.public_url") }}/api/admin/wallet/reverse`, {
                         method: 'POST', headers: this.getHeaders(),
                         body: JSON.stringify({
                             amount: rev.amount,
@@ -5975,7 +5975,7 @@ function adminPanel() {
         async fetchExchangeRates() {
             this.fxLoading = true;
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/exchange-rates', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/admin/exchange-rates', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) {
                     const data = await res.json();
@@ -5990,7 +5990,7 @@ function adminPanel() {
             this.fxSaving = true;
             this.fxMsg = '';
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/admin/exchange-rates', {
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/admin/exchange-rates', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(this.fxForm)
                 });
@@ -6022,7 +6022,7 @@ function adminPanel() {
 
         async toggleFxRate(id) {
             try {
-                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/exchange-rates/${id}/toggle`, {
+                const res = await fetch(`{{ config("services.wallet_service.public_url") }}/api/admin/exchange-rates/${id}/toggle`, {
                     method: 'PUT', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -6033,7 +6033,7 @@ function adminPanel() {
         async deleteFxRate(id) {
             if (!confirm('Delete this exchange rate?')) return;
             try {
-                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/admin/exchange-rates/${id}`, {
+                const res = await fetch(`{{ config("services.wallet_service.public_url") }}/api/admin/exchange-rates/${id}`, {
                     method: 'DELETE', headers: this.getHeaders()
                 });
                 if (this.handleUnauth(res)) return;
@@ -6044,7 +6044,7 @@ function adminPanel() {
         async fetchExchangeHistory() {
             this.fxHistoryLoading = true;
             try {
-                let url = '{{ config("services.wallet_service.url") }}/api/admin/exchange-history?page=' + this.fxHistoryPage;
+                let url = '{{ config("services.wallet_service.public_url") }}/api/admin/exchange-history?page=' + this.fxHistoryPage;
                 if (this.fxHistoryFrom) url += '&from_currency=' + this.fxHistoryFrom;
                 if (this.fxHistoryTo) url += '&to_currency=' + this.fxHistoryTo;
                 if (this.fxHistoryDateFrom) url += '&from_date=' + this.fxHistoryDateFrom;

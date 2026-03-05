@@ -3302,7 +3302,7 @@ function dashboard() {
 
         async fetchStats() {
             try {
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/transactions/stats', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/transactions/stats', { headers: this.getHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     this.stats = data;
@@ -3584,7 +3584,7 @@ function dashboard() {
             this.txnExportLoading = format;
             try {
                 const endpoint = format === 'excel' ? 'export/excel' : 'export/pdf';
-                const url = `{{ config("services.transaction_service.url") }}/api/transactions/${endpoint}${this.buildTxnExportParams()}`;
+                const url = `{{ config("services.transaction_service.public_url") }}/api/transactions/${endpoint}${this.buildTxnExportParams()}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (!res.ok) { alert('Export failed. Please try again.'); return; }
@@ -3603,7 +3603,7 @@ function dashboard() {
         async fetchTransactions() {
             this.loadingTxns = true; this.txnError = '';
             try {
-                let url = `{{ config("services.transaction_service.url") }}/api/transactions?page=${this.currentPage}`;
+                let url = `{{ config("services.transaction_service.public_url") }}/api/transactions?page=${this.currentPage}`;
                 if (this.searchQuery) url += `&search=${encodeURIComponent(this.searchQuery)}`;
                 if (this.filterStatus) url += `&status=${this.filterStatus}`;
                 if (this.filterType) url += `&type=${this.filterType}`;
@@ -3627,7 +3627,7 @@ function dashboard() {
         // ---- My Charges ----
         async fetchMyCharges() {
             try {
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/my-charges', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/my-charges', { headers: this.getHeaders() });
                 if (res.ok) this.myCharges = await res.json();
             } catch (e) { /* silent */ }
         },
@@ -3635,7 +3635,7 @@ function dashboard() {
         // ---- Wallet ----
         async fetchWallet() {
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/wallet', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/wallet', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (!res.ok) throw new Error();
                 const data = await res.json();
@@ -3672,7 +3672,7 @@ function dashboard() {
         async fetchWalletTransactions() {
             this.walletLoading.txns = true;
             try {
-                let url = `{{ config("services.wallet_service.url") }}/api/wallet/transactions?page=${this.wtPage}`;
+                let url = `{{ config("services.wallet_service.public_url") }}/api/wallet/transactions?page=${this.wtPage}`;
                 if (this.walletTxnOperatorFilter) url += `&operator=${encodeURIComponent(this.walletTxnOperatorFilter)}`;
                 if (this.walletTxnTypeFilter) url += `&wallet_type=${this.walletTxnTypeFilter}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
@@ -3688,7 +3688,7 @@ function dashboard() {
             this.walletCreditLoading[operator] = true;
             this.walletMsg[key] = '';
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/wallet/credit', {
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/wallet/credit', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({ amount: this.creditAmounts[operator], operator: operator, description: this.creditDescs[operator] })
                 });
@@ -3716,7 +3716,7 @@ function dashboard() {
             this.walletTransferLoading[operator] = true;
             this.walletMsg[key] = '';
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/wallet/transfer', {
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/wallet/transfer', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({ amount: this.transferAmounts[operator], operator: operator })
                 });
@@ -3763,7 +3763,7 @@ function dashboard() {
         async fetchMyTransfers() {
             this.myTransfersLoading = true;
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/wallet/transfers', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/wallet/transfers', { headers: this.getHeaders() });
                 if (!res.ok) throw new Error();
                 const data = await res.json();
                 this.myTransfers = data.transfers || data.data || [];
@@ -3775,7 +3775,7 @@ function dashboard() {
         async fetchSettlements() {
             this.stlLoadingList = true;
             try {
-                let url = `{{ config("services.settlement_service.url") }}/api/settlements?page=${this.stlPage}`;
+                let url = `{{ config("services.settlement_service.public_url") }}/api/settlements?page=${this.stlPage}`;
                 if (this.stlFilterStatus) url += `&status=${this.stlFilterStatus}`;
                 if (this.stlSearch.trim()) url += `&search=${encodeURIComponent(this.stlSearch.trim())}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
@@ -3798,7 +3798,7 @@ function dashboard() {
             let platformCharge = 0, operatorCharge = 0, totalCharge = 0;
 
             try {
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges/calculate', {
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/charges/calculate', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({ amount: amount, operator: this.stlForm.operator, transaction_type: 'settlement' })
                 });
@@ -3835,7 +3835,7 @@ function dashboard() {
             this.stlLoading = true;
             this.settlementMsg = '';
             try {
-                const res = await fetch('{{ config("services.settlement_service.url") }}/api/settlements', {
+                const res = await fetch('{{ config("services.settlement_service.public_url") }}/api/settlements', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify(this.stlForm)
                 });
@@ -4219,7 +4219,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             }
             this.payoutChargesLoading = true;
             try {
-                const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges/calculate', {
+                const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/charges/calculate', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({
                         amount: Number(this.payoutForm.amount),
@@ -4463,7 +4463,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 }
 
                 try {
-                    const res = await fetch('{{ config("services.transaction_service.url") }}/api/charges/calculate', {
+                    const res = await fetch('{{ config("services.transaction_service.public_url") }}/api/charges/calculate', {
                         method: 'POST', headers: this.getHeaders(),
                         body: JSON.stringify({
                             amount: amount,
@@ -4795,7 +4795,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async fetchExchangeRates() {
             this.fxLoading = true;
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/exchange/rates', { headers: this.getHeaders() });
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/exchange/rates', { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) {
                     const data = await res.json();
@@ -4818,7 +4818,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             this.fxPreview = null;
             this.fxResult = null;
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/exchange/preview', {
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/exchange/preview', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({
                         from_currency: this.fxForm.from_currency,
@@ -4850,7 +4850,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             this.fxMsg = '';
             this.fxResult = null;
             try {
-                const res = await fetch('{{ config("services.wallet_service.url") }}/api/exchange/execute', {
+                const res = await fetch('{{ config("services.wallet_service.public_url") }}/api/exchange/execute', {
                     method: 'POST', headers: this.getHeaders(),
                     body: JSON.stringify({
                         from_currency: this.fxForm.from_currency,
@@ -4888,7 +4888,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         async fetchExchangeHistory() {
             this.fxHistoryLoading = true;
             try {
-                const res = await fetch(`{{ config("services.wallet_service.url") }}/api/exchange/history?page=${this.fxHistoryPage}`, { headers: this.getHeaders() });
+                const res = await fetch(`{{ config("services.wallet_service.public_url") }}/api/exchange/history?page=${this.fxHistoryPage}`, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 if (res.ok) {
                     const data = await res.json();

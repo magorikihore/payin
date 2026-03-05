@@ -41,15 +41,18 @@ return [
     ],
 
     'transaction_service' => [
-        'url' => env('TRANSACTION_SERVICE_URL', 'http://127.0.0.1:8003'),  // prod: https://tx.yourdomain.com
+        'url' => env('TRANSACTION_SERVICE_URL', 'http://127.0.0.1:8003'),
+        'public_url' => env('TRANSACTION_SERVICE_PUBLIC_URL', env('TRANSACTION_SERVICE_URL', 'http://127.0.0.1:8003')),
     ],
 
     'wallet_service' => [
-        'url' => env('WALLET_SERVICE_URL', 'http://127.0.0.1:8004'),  // prod: https://wallet.yourdomain.com
+        'url' => env('WALLET_SERVICE_URL', 'http://127.0.0.1:8004'),
+        'public_url' => env('WALLET_SERVICE_PUBLIC_URL', env('WALLET_SERVICE_URL', 'http://127.0.0.1:8004')),
     ],
 
     'settlement_service' => [
-        'url' => env('SETTLEMENT_SERVICE_URL', 'http://127.0.0.1:8005'),  // prod: https://settle.yourdomain.com
+        'url' => env('SETTLEMENT_SERVICE_URL', 'http://127.0.0.1:8005'),
+        'public_url' => env('SETTLEMENT_SERVICE_PUBLIC_URL', env('SETTLEMENT_SERVICE_URL', 'http://127.0.0.1:8005')),
     ],
 
     'internal_service_key' => env('INTERNAL_SERVICE_KEY', 'payin-internal-service-key-2025'),
