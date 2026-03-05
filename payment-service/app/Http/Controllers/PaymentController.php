@@ -653,17 +653,6 @@ class PaymentController extends Controller
      */
     private function pushToOperator(Operator $operator, PaymentRequest $paymentRequest, string $type): array
     {
-        $path = ($type === 'collection') ? $operator->collection_path : $operator->disbursement_path;
-
-        if (!$path) {
-            return [
-                'success' => false,
-                'error' => "Operator [{$operator->name}] has no {$type} path configured.",
-                'request_payload' => null,
-                'response' => null,
-            ];
-        }
-
         try {
             $gateway = GatewayFactory::make($operator->gateway_type ?? 'digivas');
             return $gateway->push($operator, $paymentRequest, $type);
