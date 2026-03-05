@@ -43,9 +43,6 @@ class SimulatorController extends Controller
         $spPassword   = $header['spPassword'] ?? '';
         $timestamp    = $header['timestamp'] ?? '';
 
-        // Validate spPassword
-        $authValid = $this->validateSpPassword($spId, $spPassword, $timestamp, (string) $amount, $msisdn);
-
         // Extract request fields
         $command       = $body['command'] ?? ($type === 'collection' ? 'UssdPush' : 'Disbursement');
         $reference     = $body['reference'] ?? $body['transactionID'] ?? '';
@@ -54,6 +51,9 @@ class SimulatorController extends Controller
         $amount        = $body['amount'] ?? 0;
         $currency      = $body['currency'] ?? 'TZS';
         $callbackUrl   = $body['callbackUrl'] ?? '';
+
+        // Validate spPassword
+        $authValid = $this->validateSpPassword($spId, $spPassword, $timestamp, (string) $amount, $msisdn);
 
         // Generate a unique gateway ID
         $gatewayId = rand(1000000000, 9999999999);
