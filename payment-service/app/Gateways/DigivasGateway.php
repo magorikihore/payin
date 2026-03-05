@@ -43,7 +43,7 @@ class DigivasGateway implements GatewayInterface
                     'command'            => $command,
                     'command1'           => $command,
                     'reference'          => $paymentRequest->request_ref,
-                    'transactionID'      => $paymentRequest->request_ref,
+                    'transactionID'      => (string) $paymentRequest->id,
                     'msisdn'             => $paymentRequest->phone,
                     'amount'             => (string) $paymentRequest->amount,
                     'currency'           => $paymentRequest->currency,
