@@ -65,6 +65,23 @@ class DigivasGateway implements GatewayInterface
                 ->post($url, $payload);
 
             $responseData = $response->json() ?? [];
+
+            // Handle HTTP-level errors (401, 403, 500, etc.) before parsing body
+            if ($response->status() >= 400) {
+                $httpError = $responseData['error'] ?? $responseData['message'] ?? ('HTTP ' . $response->status());
+                Log::error("DIGIVAS push HTTP error [{$operator->code}]: {$response->status()} - {$httpError}", [
+                    'url' => $url, 'response' => $responseData,
+                ]);
+                return [
+                    'success' => false,
+                    'error' => "Gateway error ({$response->status()}): {$httpError}",
+                    'request_payload' => $payload,
+                    'response' => $responseData,
+                    'operator_ref' => null,
+                    'gateway_id' => null,
+                ];
+            }
+
             $body = $responseData['body']['response'] ?? $responseData['body'] ?? $responseData;
             $responseCode = (string) ($body['responseCode'] ?? '');
             $gatewayId = $body['gatewayId'] ?? null;
@@ -86,9 +103,13 @@ class DigivasGateway implements GatewayInterface
                 ];
             }
 
+            Log::warning("DIGIVAS push rejected [{$operator->code}]", [
+                'responseCode' => $responseCode, 'responseStatus' => $responseStatus, 'response' => $responseData,
+            ]);
+
             return [
                 'success' => false,
-                'error' => $responseStatus ?: ('Operator error code: ' . $responseCode),
+                'error' => $responseStatus ?: ($responseCode ? 'Operator error code: ' . $responseCode : 'Unknown operator error'),
                 'request_payload' => $payload,
                 'response' => $responseData,
                 'operator_ref' => null,
