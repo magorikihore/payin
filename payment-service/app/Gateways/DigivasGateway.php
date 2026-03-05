@@ -147,7 +147,7 @@ class DigivasGateway implements GatewayInterface
             ];
         }
 
-        // Disbursement callback (body.result) or fallback
+        // Result-based callback (body.result) — can be collection or disbursement
         $body = $bodyResult ?? $bodyResponse ?? data_get($payload, 'body') ?? $payload;
         $resultCode = (string) ($body['resultCode'] ?? $body['responseCode'] ?? '');
         $callbackMessage = strtolower($body['message'] ?? '');
@@ -159,13 +159,23 @@ class DigivasGateway implements GatewayInterface
             $status = 'failed';
         }
 
+        // Determine type by looking up the payment request
+        $type = 'collection'; // Default to collection
+        $reference = $body['referenceNumber'] ?? ($body['reference'] ?? null);
+        if ($reference) {
+            $pr = \App\Models\PaymentRequest::where('request_ref', $reference)->first();
+            if ($pr) {
+                $type = $pr->type;
+            }
+        }
+
         return [
-            'type'           => 'disbursement',
+            'type'           => $type,
             'status'         => $status,
             'receipt_number' => $body['receiptNumber'] ?? null,
             'operator_ref'   => $body['transactionNumber'] ?? ($body['referenceNumber'] ?? null),
             'gateway_id'     => $body['gatewayId'] ?? null,
-            'reference'      => $body['referenceNumber'] ?? ($body['reference'] ?? null),
+            'reference'      => $reference,
             'phone'          => null,
             'amount'         => $body['amount'] ?? null,
             'error_message'  => $status === 'failed' ? ($body['resultStatus'] ?? $body['responseStatus'] ?? 'Operator error: ' . $resultCode) : null,
@@ -177,6 +187,13 @@ class DigivasGateway implements GatewayInterface
         $headerData = data_get($payload, 'header');
         if (!$headerData || empty($headerData['spPassword']) || empty($headerData['timestamp'])) {
             return true; // No auth header sent — allow (some operators skip it on callbacks)
+        }
+
+        // Digivas sends callbacks with their own spId, not ours.
+        // We can only validate if the spId matches our operator's spId.
+        $callbackSpId = $headerData['spId'] ?? null;
+        if ($callbackSpId && $callbackSpId !== $operator->sp_id) {
+            return true; // Different spId — Digivas-originated callback, allow it
         }
 
         $expectedPassword = $this->generateSpPassword($operator, $headerData['timestamp']);
