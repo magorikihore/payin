@@ -44,7 +44,7 @@ class SimulatorController extends Controller
         $timestamp    = $header['timestamp'] ?? '';
 
         // Validate spPassword
-        $authValid = $this->validateSpPassword($spId, $spPassword, $timestamp);
+        $authValid = $this->validateSpPassword($spId, $spPassword, $timestamp, (string) $amount, $msisdn);
 
         // Extract request fields
         $command       = $body['command'] ?? ($type === 'collection' ? 'UssdPush' : 'Disbursement');
@@ -107,9 +107,10 @@ class SimulatorController extends Controller
     }
 
     /**
-     * Validate spPassword: base64(sha256(spId + password + timestamp))
+     * Validate spPassword: base64(sha256(spId + secret + timestamp + amount + msisdn))
+     * Amount: no decimal points or commas (e.g. 1,000.00 → 100000)
      */
-    private function validateSpPassword(string $spId, string $receivedPassword, string $timestamp): bool
+    private function validateSpPassword(string $spId, string $receivedPassword, string $timestamp, string $amount = '', string $msisdn = ''): bool
     {
         $configSpId = config('operator.sp_id');
         $configPassword = config('operator.sp_password');
@@ -120,19 +121,31 @@ class SimulatorController extends Controller
             return false;
         }
 
-        // Compute expected password
-        $raw = $spId . $configPassword . $timestamp;
+        // Clean amount: remove decimals and commas
+        $cleanAmount = str_replace([',', '.'], '', $amount);
+
+        // Compute expected password with full formula
+        $raw = $spId . $configPassword . $timestamp . $cleanAmount . $msisdn;
         $expected = base64_encode(hash('sha256', $raw, true));
 
-        if ($receivedPassword !== $expected) {
-            Log::warning("Test Operator: spPassword mismatch", [
-                'expected' => $expected,
-                'received' => $receivedPassword,
-            ]);
-            return false;
+        if ($receivedPassword === $expected) {
+            return true;
         }
 
-        return true;
+        // Fallback: try without amount/msisdn (simpler formula)
+        $rawSimple = $spId . $configPassword . $timestamp;
+        $expectedSimple = base64_encode(hash('sha256', $rawSimple, true));
+
+        if ($receivedPassword === $expectedSimple) {
+            return true;
+        }
+
+        Log::warning("Test Operator: spPassword mismatch", [
+            'expected_full'   => $expected,
+            'expected_simple' => $expectedSimple,
+            'received'        => $receivedPassword,
+        ]);
+        return false;
     }
 
     /**
