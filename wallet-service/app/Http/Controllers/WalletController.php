@@ -1013,6 +1013,25 @@ class WalletController extends Controller
     // ──────────────────────────────────────────────
 
     /**
+     * Internal: Get wallet summary for an account (called from payment-service for balance checks).
+     */
+    public function internalSummary(Request $request): JsonResponse
+    {
+        $request->validate(['account_id' => 'required']);
+        $accountId = $request->account_id;
+
+        $wallets = Wallet::where('account_id', $accountId)->get();
+        $collectionTotal = $wallets->where('wallet_type', 'collection')->sum('balance');
+        $disbursementTotal = $wallets->where('wallet_type', 'disbursement')->sum('balance');
+
+        return response()->json([
+            'collection_total' => number_format($collectionTotal, 2, '.', ''),
+            'disbursement_total' => number_format($disbursementTotal, 2, '.', ''),
+            'overall_balance' => number_format($collectionTotal + $disbursementTotal, 2, '.', ''),
+        ]);
+    }
+
+    /**
      * Internal: Credit a wallet (called from payment-service callbacks).
      * Accepts account_id + operator directly, no user auth needed.
      */

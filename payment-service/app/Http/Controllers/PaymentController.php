@@ -720,6 +720,26 @@ class PaymentController extends Controller
                     'balance' => $overallBalance,
                 ];
             }
+
+            Log::warning("Wallet balance check: non-successful response", [
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'account_id' => $accountId,
+            ]);
+
+            // Fallback: try internal API with service key
+            $serviceKey = config('services.internal_service_key');
+            $internalRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->get("{$walletServiceUrl}/api/internal/wallet/summary", ['account_id' => $accountId]);
+
+            if ($internalRes->successful()) {
+                $data = $internalRes->json();
+                $overallBalance = (float) ($data['overall_balance'] ?? 0);
+                return [
+                    'sufficient' => $overallBalance >= $totalAmount,
+                    'balance' => $overallBalance,
+                ];
+            }
         } catch (\Exception $e) {
             Log::warning("Wallet balance check failed: " . $e->getMessage());
         }

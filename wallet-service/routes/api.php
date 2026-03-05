@@ -44,4 +44,5 @@ Route::middleware('auth.service')->group(function () {
 Route::middleware('internal.service')->group(function () {
     Route::post('/internal/wallet/credit', [WalletController::class, 'internalCredit']);
     Route::post('/internal/wallet/debit', [WalletController::class, 'internalDebit']);
+    Route::get('/internal/wallet/summary', [WalletController::class, 'internalSummary']);
 });
