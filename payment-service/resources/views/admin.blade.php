@@ -853,6 +853,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Charges</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -875,6 +876,7 @@
                                             <span x-show="txn.operator_charge > 0" x-text="' O:' + formatAmount(txn.operator_charge)"></span>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-600" x-text="txn.phone_number || '-'"></td>
+                                        <td class="px-4 py-3 text-xs font-mono text-gray-600" x-text="txn.operator_receipt || '-'"></td>
                                         <td class="px-4 py-3">
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
                                                 :class="{'bg-green-100 text-green-800': txn.status==='completed','bg-yellow-100 text-yellow-800': txn.status==='pending','bg-red-100 text-red-800': txn.status==='failed','bg-gray-100 text-gray-800': txn.status==='cancelled','bg-purple-100 text-purple-800': txn.status==='reversed'}"
@@ -2460,6 +2462,7 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gateway ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Callback</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -2482,6 +2485,7 @@
                                     <td class="px-4 py-3 font-semibold text-gray-800" x-text="Number(pr.amount).toLocaleString() + ' ' + (pr.currency || 'TZS')"></td>
                                     <td class="px-4 py-3 text-gray-600" x-text="pr.operator_name"></td>
                                     <td class="px-4 py-3 font-mono text-xs text-gray-500" x-text="pr.gateway_id || '—'"></td>
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-600" x-text="pr.receipt_number || '—'"></td>
                                     <td class="px-4 py-3">
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
                                             :class="{
