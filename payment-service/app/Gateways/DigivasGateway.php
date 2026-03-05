@@ -26,14 +26,16 @@ class DigivasGateway implements GatewayInterface
         $command = ($type === 'collection') ? 'UssdPush' : 'Disbursement';
 
         // Build DIGIVAS header with spPassword
-        // Formula: Base64(SHA-256(spId + secret + timestamp + amount))
+        // Formula: Base64(SHA-256(spId + secret + timestamp + amount + msisdn))
         // Timestamp: Unix epoch seconds
+        // Amount: stripped of commas and dots (e.g. 500.00 → 50000)
         $timestamp = (string) time();
-        $amount = str_replace(',', '', (string) $paymentRequest->amount);
+        $amount = str_replace([',', '.'], '', (string) $paymentRequest->amount);
+        $msisdn = (string) $paymentRequest->phone;
         $apiHeader = [
             'spId'         => $operator->sp_id,
             'merchantCode' => $operator->merchant_code,
-            'spPassword'   => $this->generateSpPassword($operator, $timestamp, $amount),
+            'spPassword'   => $this->generateSpPassword($operator, $timestamp, $amount, $msisdn),
             'timestamp'    => $timestamp,
             'apiVersion'   => '5.0',
         ];
@@ -217,12 +219,13 @@ class DigivasGateway implements GatewayInterface
 
     /**
      * Generate spPassword per Digivas spec.
-     * Formula: Base64(SHA-256(spId + secret + timestamp + amount))
+     * Formula: Base64(SHA-256(spId + secret + timestamp + amount + msisdn))
      * Timestamp: Unix epoch seconds.
+     * Amount: no commas or dots (e.g. 50000 not 500.00).
      */
-    private function generateSpPassword(Operator $operator, string $timestamp, string $amount): string
+    private function generateSpPassword(Operator $operator, string $timestamp, string $amount, string $msisdn): string
     {
-        $raw = $operator->sp_id . $operator->sp_password . $timestamp . $amount;
+        $raw = $operator->sp_id . $operator->sp_password . $timestamp . $amount . $msisdn;
         return base64_encode(hash('sha256', $raw, true));
     }
 
