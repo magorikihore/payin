@@ -712,10 +712,12 @@ class PaymentController extends Controller
 
             if ($response->successful()) {
                 $data = $response->json();
-                $disbursementBalance = (float) ($data['disbursement_total'] ?? 0);
+                // Check overall balance (collection + disbursement) so users can disburse
+                // from any available funds. The actual debit happens from disbursement wallet.
+                $overallBalance = (float) ($data['overall_balance'] ?? 0);
                 return [
-                    'sufficient' => $disbursementBalance >= $totalAmount,
-                    'balance' => $disbursementBalance,
+                    'sufficient' => $overallBalance >= $totalAmount,
+                    'balance' => $overallBalance,
                 ];
             }
         } catch (\Exception $e) {
