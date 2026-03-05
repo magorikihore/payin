@@ -84,7 +84,6 @@ class PaymentController extends Controller
                 'message'           => 'Failed to push collection to operator.',
                 'error'             => $pushResult['error'] ?? 'Operator rejected the request.',
                 'request_ref'       => $requestRef,
-                'operator_response' => $pushResult['response'] ?? null,
             ], 422);
         }
 
@@ -98,7 +97,6 @@ class PaymentController extends Controller
             'phone'             => $paymentRequest->phone,
             'amount'            => $paymentRequest->amount,
             'operator'          => $operator->name,
-            'operator_response' => $pushResult['response'] ?? null,
         ], 201);
     }
 
@@ -207,7 +205,6 @@ class PaymentController extends Controller
                 'message'           => 'Failed to push disbursement to operator.',
                 'error'             => $pushResult['error'] ?? 'Operator rejected the request.',
                 'request_ref'       => $requestRef,
-                'operator_response' => $pushResult['response'] ?? null,
             ], 422);
         }
 
@@ -221,7 +218,6 @@ class PaymentController extends Controller
             'phone'             => $paymentRequest->phone,
             'amount'            => $paymentRequest->amount,
             'operator'          => $operator->name,
-            'operator_response' => $pushResult['response'] ?? null,
         ], 201);
     }
 
