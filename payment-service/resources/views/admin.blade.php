@@ -2466,6 +2466,7 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Callback</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -2508,6 +2509,9 @@
                                             x-text="pr.callback_status"></span>
                                     </td>
                                     <td class="px-4 py-3 text-xs text-gray-500" x-text="formatDate(pr.created_at)"></td>
+                                    <td class="px-4 py-3">
+                                        <button @click="payDetailPr = pr; showPayDetailModal = true" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">View</button>
+                                    </td>
                                 </tr>
                             </template>
                         </tbody>
@@ -2518,6 +2522,61 @@
                         <div class="space-x-2">
                             <button @click="payPage--; fetchPaymentRequests()" :disabled="!payPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Previous</button>
                             <button @click="payPage++; fetchPaymentRequests()" :disabled="!payPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Request Detail Modal -->
+        <div x-show="showPayDetailModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" @keydown.escape.window="showPayDetailModal = false">
+            <div class="fixed inset-0 bg-black/50" @click="showPayDetailModal = false"></div>
+            <div class="relative min-h-screen flex items-center justify-center p-4">
+                <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
+                    <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-xl">
+                        <h3 class="text-lg font-bold text-gray-800">Payment Request Details</h3>
+                        <button @click="showPayDetailModal = false" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+                    </div>
+                    <div class="p-6 space-y-4" x-show="payDetailPr">
+                        <!-- Summary -->
+                        <div class="grid grid-cols-2 gap-3 text-sm">
+                            <div><span class="text-gray-500">Ref:</span> <span class="font-mono font-medium" x-text="payDetailPr?.request_ref"></span></div>
+                            <div><span class="text-gray-500">Status:</span> <span class="font-medium capitalize" x-text="payDetailPr?.status"></span></div>
+                            <div><span class="text-gray-500">Phone:</span> <span class="font-mono" x-text="payDetailPr?.phone"></span></div>
+                            <div><span class="text-gray-500">Amount:</span> <span class="font-semibold" x-text="Number(payDetailPr?.amount || 0).toLocaleString() + ' ' + (payDetailPr?.currency || 'TZS')"></span></div>
+                            <div><span class="text-gray-500">Operator:</span> <span x-text="payDetailPr?.operator_name"></span></div>
+                            <div><span class="text-gray-500">Gateway ID:</span> <span class="font-mono" x-text="payDetailPr?.gateway_id || '—'"></span></div>
+                            <div><span class="text-gray-500">Receipt:</span> <span class="font-mono" x-text="payDetailPr?.receipt_number || '—'"></span></div>
+                            <div><span class="text-gray-500">Type:</span> <span class="capitalize" x-text="payDetailPr?.type"></span></div>
+                        </div>
+
+                        <!-- Error Message -->
+                        <div x-show="payDetailPr?.error_message">
+                            <h4 class="text-sm font-semibold text-red-600 mb-1">Error Message</h4>
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-800" x-text="payDetailPr?.error_message"></div>
+                        </div>
+
+                        <!-- Operator Request -->
+                        <div x-show="payDetailPr?.operator_request">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Operator Request (Sent)</h4>
+                            <pre class="bg-gray-50 border rounded-lg p-3 text-xs text-gray-700 overflow-x-auto max-h-48 whitespace-pre-wrap" x-text="JSON.stringify(payDetailPr?.operator_request, null, 2)"></pre>
+                        </div>
+
+                        <!-- Operator Response -->
+                        <div x-show="payDetailPr?.operator_response">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Operator Response (Received)</h4>
+                            <pre class="bg-gray-50 border rounded-lg p-3 text-xs text-gray-700 overflow-x-auto max-h-48 whitespace-pre-wrap" :class="payDetailPr?.status === 'failed' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-green-50 border-green-200 text-green-800'" x-text="JSON.stringify(payDetailPr?.operator_response, null, 2)"></pre>
+                        </div>
+
+                        <!-- Callback Data -->
+                        <div x-show="payDetailPr?.callback_data">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-1">Callback Data</h4>
+                            <pre class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 overflow-x-auto max-h-48 whitespace-pre-wrap" x-text="JSON.stringify(payDetailPr?.callback_data, null, 2)"></pre>
+                        </div>
+
+                        <!-- No data fallback -->
+                        <div x-show="!payDetailPr?.operator_request && !payDetailPr?.operator_response && !payDetailPr?.callback_data && !payDetailPr?.error_message" class="text-center text-gray-400 py-4 text-sm">
+                            No operator data available yet.
                         </div>
                     </div>
                 </div>
@@ -4005,6 +4064,7 @@ function adminPanel() {
 
         // Payment Requests (admin)
         paymentRequests: [], payLoading: false, paySearch: '', payStatusFilter: '', payTypeFilter: '', payOperatorFilter: '', payPage: 1, payPagination: {},
+        showPayDetailModal: false, payDetailPr: null,
 
         // Admin Users management (super_admin only)
         adminUsersList: [], adminUsersLoading: false,
