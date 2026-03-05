@@ -80,23 +80,25 @@ class PaymentController extends Controller
 
         if (!$pushResult['success']) {
             return response()->json([
-                'success'     => false,
-                'message'     => 'Failed to push collection to operator.',
-                'error'       => $pushResult['error'] ?? 'Operator rejected the request.',
-                'request_ref' => $requestRef,
+                'success'           => false,
+                'message'           => 'Failed to push collection to operator.',
+                'error'             => $pushResult['error'] ?? 'Operator rejected the request.',
+                'request_ref'       => $requestRef,
+                'operator_response' => $pushResult['response'] ?? null,
             ], 422);
         }
 
         return response()->json([
-            'success'      => true,
-            'message'      => 'Collection request sent to operator. Waiting for customer confirmation.',
-            'request_ref'  => $requestRef,
-            'operator_ref' => $pushResult['operator_ref'] ?? null,
-            'gateway_id'   => $pushResult['gateway_id'] ?? null,
-            'status'       => 'processing',
-            'phone'        => $paymentRequest->phone,
-            'amount'       => $paymentRequest->amount,
-            'operator'     => $operator->name,
+            'success'           => true,
+            'message'           => 'Collection request sent to operator. Waiting for customer confirmation.',
+            'request_ref'       => $requestRef,
+            'operator_ref'      => $pushResult['operator_ref'] ?? null,
+            'gateway_id'        => $pushResult['gateway_id'] ?? null,
+            'status'            => 'processing',
+            'phone'             => $paymentRequest->phone,
+            'amount'            => $paymentRequest->amount,
+            'operator'          => $operator->name,
+            'operator_response' => $pushResult['response'] ?? null,
         ], 201);
     }
 
@@ -201,23 +203,25 @@ class PaymentController extends Controller
 
         if (!$pushResult['success']) {
             return response()->json([
-                'success'     => false,
-                'message'     => 'Failed to push disbursement to operator.',
-                'error'       => $pushResult['error'] ?? 'Operator rejected the request.',
-                'request_ref' => $requestRef,
+                'success'           => false,
+                'message'           => 'Failed to push disbursement to operator.',
+                'error'             => $pushResult['error'] ?? 'Operator rejected the request.',
+                'request_ref'       => $requestRef,
+                'operator_response' => $pushResult['response'] ?? null,
             ], 422);
         }
 
         return response()->json([
-            'success'      => true,
-            'message'      => 'Disbursement request sent to operator.',
-            'request_ref'  => $requestRef,
-            'operator_ref' => $pushResult['operator_ref'] ?? null,
-            'gateway_id'   => $pushResult['gateway_id'] ?? null,
-            'status'       => 'processing',
-            'phone'        => $paymentRequest->phone,
-            'amount'       => $paymentRequest->amount,
-            'operator'     => $operator->name,
+            'success'           => true,
+            'message'           => 'Disbursement request sent to operator.',
+            'request_ref'       => $requestRef,
+            'operator_ref'      => $pushResult['operator_ref'] ?? null,
+            'gateway_id'        => $pushResult['gateway_id'] ?? null,
+            'status'            => 'processing',
+            'phone'             => $paymentRequest->phone,
+            'amount'            => $paymentRequest->amount,
+            'operator'          => $operator->name,
+            'operator_response' => $pushResult['response'] ?? null,
         ], 201);
     }
 
