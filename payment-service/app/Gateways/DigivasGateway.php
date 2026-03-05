@@ -56,7 +56,11 @@ class DigivasGateway implements GatewayInterface
                 ->withHeaders(['Content-Type' => 'application/json', 'Accept' => 'application/json'])
                 ->post($url, $payload);
 
-            $responseData = $response->json() ?? [];
+            // Digivas may respond with JSON or XML — parse accordingly
+            $responseData = $response->json();
+            if (empty($responseData)) {
+                $responseData = $this->parseXmlResponse($response->body());
+            }
 
             // Handle HTTP-level errors (401, 403, 500, etc.) before parsing body
             if ($response->status() >= 400) {
@@ -210,5 +214,25 @@ class DigivasGateway implements GatewayInterface
     {
         $raw = $operator->sp_id . $operator->sp_password . $timestamp;
         return base64_encode(hash('sha256', $raw, true));
+    }
+
+    /**
+     * Parse XML response from Digivas into an associative array.
+     * Converts XML like <body><response><responseCode>0</responseCode>...</response></body>
+     * into ['body' => ['response' => ['responseCode' => '0', ...]]].
+     */
+    private function parseXmlResponse(string $xml): array
+    {
+        try {
+            $xml = trim($xml);
+            if (empty($xml) || $xml[0] !== '<') {
+                return [];
+            }
+            $element = new \SimpleXMLElement($xml);
+            return json_decode(json_encode($element), true) ?? [];
+        } catch (\Exception $e) {
+            Log::warning('DIGIVAS: Failed to parse XML response', ['error' => $e->getMessage(), 'body' => $xml]);
+            return [];
+        }
     }
 }
