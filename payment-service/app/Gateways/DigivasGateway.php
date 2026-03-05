@@ -18,24 +18,18 @@ class DigivasGateway implements GatewayInterface
     {
         $path = ($type === 'collection') ? $operator->collection_path : $operator->disbursement_path;
 
-        if (!$path) {
-            return [
-                'success' => false,
-                'error' => "Operator [{$operator->name}] has no {$type} path configured.",
-                'request_payload' => null,
-                'response' => null,
-                'operator_ref' => null,
-                'gateway_id' => null,
-            ];
+        // Build URL: api_url + optional path suffix
+        $url = rtrim($operator->api_url, '/');
+        if ($path) {
+            $url .= '/' . ltrim($path, '/');
         }
-
-        $url = rtrim($operator->api_url, '/') . '/' . ltrim($path, '/');
         $command = ($type === 'collection') ? 'UssdPush' : 'Disbursement';
 
         // Build DIGIVAS header with spPassword
         // Formula: Base64(SHA-256(spId + secret + timestamp + amount + msisdn))
+        // Timestamp: Unix epoch seconds
         // Amount: remove decimal points and commas (e.g. 1,000.00 → 100000)
-        $timestamp = now()->format('YmdHis');
+        $timestamp = (string) time();
         $cleanAmount = str_replace([',', '.'], '', number_format($paymentRequest->amount, 2, '.', ''));
         $msisdn = $paymentRequest->phone;
         $apiHeader = [
@@ -43,7 +37,6 @@ class DigivasGateway implements GatewayInterface
             'merchantCode' => $operator->merchant_code,
             'spPassword'   => $this->generateSpPassword($operator, $timestamp, $cleanAmount, $msisdn),
             'timestamp'    => $timestamp,
-            'apiVersion'   => $operator->api_version ?? '5.0',
         ];
 
         $payload = [
@@ -57,8 +50,6 @@ class DigivasGateway implements GatewayInterface
                     'msisdn'             => $paymentRequest->phone,
                     'amount'             => (string) $paymentRequest->amount,
                     'currency'           => $paymentRequest->currency,
-                    'transactionChannel' => 'MOBAPP',
-                    'callbackUrl'        => $operator->callback_url,
                 ],
             ],
         ];
@@ -227,6 +218,7 @@ class DigivasGateway implements GatewayInterface
     /**
      * Generate spPassword per Digivas spec.
      * Formula: Base64(SHA-256(spId + secret + timestamp + amount + msisdn))
+     * Timestamp: Unix epoch seconds.
      * Amount should have no decimal points or commas (e.g. 1,000.00 → 100000).
      */
     private function generateSpPassword(Operator $operator, string $timestamp, string $amount = '', string $msisdn = ''): string
