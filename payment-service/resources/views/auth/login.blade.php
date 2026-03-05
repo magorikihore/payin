@@ -3,12 +3,13 @@
 @section('title', 'Login - Payin')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center py-8" x-data="loginForm()" style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#084dc7 100%)">
+<div class="min-h-screen flex items-center justify-center py-8" x-data="loginForm()" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#7f1d1d 100%)">
     <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg">
         <!-- PayIn brand color strip -->
         <div class="flex h-1.5 rounded-t-xl overflow-hidden mb-6 -mx-8 -mt-8">
-            <div class="flex-1 bg-gblue-500"></div>
+            <div class="flex-1 bg-gred-500"></div>
             <div class="flex-1 bg-gyellow-500"></div>
+            <div class="flex-1 bg-gred-700"></div>
         </div>
 
         <div class="text-center mb-8" x-show="!showRegister">
@@ -28,15 +29,15 @@
             <p class="text-gray-500 text-sm mb-3">To accelerate your application, you will need:</p>
             <div class="space-y-2 text-sm text-gray-600">
                 <div class="flex items-start gap-2">
-                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gblue-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gred-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">1</span>
                     <span>Your Company information</span>
                 </div>
                 <div class="flex items-start gap-2">
-                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gblue-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">2</span>
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gred-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">2</span>
                     <span>Directors' Documents</span>
                 </div>
                 <div class="flex items-start gap-2">
-                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gblue-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">3</span>
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gred-500 text-white text-xs font-bold flex-shrink-0 mt-0.5">3</span>
                     <span>Basic Compliance documents</span>
                 </div>
             </div>
@@ -53,26 +54,26 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input type="email" x-model="email" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="you@example.com">
             </div>
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <input type="password" x-model="password" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="••••••••">
                 <div class="text-right mt-1">
-                    <a href="/forgot-password" class="text-sm text-gblue-500 hover:underline">Forgot your password?</a>
+                    <a href="/forgot-password" class="text-sm text-gred-500 hover:underline">Forgot your password?</a>
                 </div>
             </div>
             <button type="submit" :disabled="loading"
-                class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                class="w-full bg-gred-500 text-white py-2 px-4 rounded-lg hover:bg-gred-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 <span x-show="!loading">Login</span>
                 <span x-show="loading">Logging in...</span>
             </button>
             <p class="text-center text-sm text-gray-500 mt-4">
                 Don't have an account?
-                <a href="#" @click.prevent="showRegister = true; error = ''" class="text-gblue-500 hover:underline">Sign Up</a>
+                <a href="#" @click.prevent="showRegister = true; error = ''" class="text-gred-500 hover:underline">Sign Up</a>
             </p>
         </form>
 
@@ -82,26 +83,26 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
                     <input type="text" x-model="firstname" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                         placeholder="John">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
                     <input type="text" x-model="lastname" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                         placeholder="Doe">
                 </div>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
                 <input type="text" x-model="business_name" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="Your company or business name">
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Country</label>
                 <select x-model="country"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition bg-white">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition bg-white">
                     <option value="Tanzania">Tanzania</option>
                     <option value="Kenya">Kenya</option>
                     <option value="Uganda">Uganda</option>
@@ -120,19 +121,19 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input type="email" x-model="email" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="you@example.com">
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <input type="password" x-model="password" required minlength="6"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="••••••••">
             </div>
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
                 <input type="password" x-model="password_confirmation" required minlength="6"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="••••••••">
             </div>
 
@@ -142,19 +143,19 @@
             </div>
 
             <button type="submit" :disabled="loading"
-                class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                class="w-full bg-gred-500 text-white py-2 px-4 rounded-lg hover:bg-gred-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 <span x-show="!loading">Get Started</span>
                 <span x-show="loading">Creating...</span>
             </button>
             <p class="text-center text-xs text-gray-400 mt-4 leading-relaxed">
                 By clicking "Get Started" I agree to Payin's
-                <a href="#" class="text-gblue-500 hover:underline">Terms of Use</a> and
-                <a href="#" class="text-gblue-500 hover:underline">Privacy Policy</a>
+                <a href="#" class="text-gred-500 hover:underline">Terms of Use</a> and
+                <a href="#" class="text-gred-500 hover:underline">Privacy Policy</a>
                 and to receive electronic communication about your accounts and services.
             </p>
             <p class="text-center text-sm text-gray-500 mt-3">
                 Already have an account?
-                <a href="#" @click.prevent="showRegister = false; error = ''" class="text-gblue-500 hover:underline">Login</a>
+                <a href="#" @click.prevent="showRegister = false; error = ''" class="text-gred-500 hover:underline">Login</a>
             </p>
         </form>
 

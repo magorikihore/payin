@@ -6,11 +6,10 @@
 <div class="min-h-screen flex items-center justify-center py-8" x-data="resetForm()">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg">
         <!-- Google-style color strip -->
-        <div class="flex h-1 rounded-t-xl overflow-hidden mb-6 -mx-8 -mt-8">
-            <div class="flex-1 bg-gblue-500"></div>
+        <div class="flex h-1.5 rounded-t-xl overflow-hidden mb-6 -mx-8 -mt-8">
             <div class="flex-1 bg-gred-500"></div>
             <div class="flex-1 bg-gyellow-500"></div>
-            <div class="flex-1 bg-ggreen-500"></div>
+            <div class="flex-1 bg-gred-700"></div>
         </div>
 
         <div class="text-center mb-8">
@@ -34,11 +33,11 @@
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                 <input type="email" x-model="email" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="you@example.com">
             </div>
             <button type="submit" :disabled="loading"
-                class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                class="w-full bg-gred-500 text-white py-2 px-4 rounded-lg hover:bg-gred-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 <span x-show="!loading">Send Reset Code</span>
                 <span x-show="loading">Sending...</span>
             </button>
@@ -54,17 +53,17 @@
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1">6-Digit Code</label>
                 <input type="text" x-model="code" required maxlength="6" pattern="[0-9]{6}"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition text-center text-2xl tracking-widest font-mono"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition text-center text-2xl tracking-widest font-mono"
                     placeholder="000000">
                 <p class="text-xs text-gray-400 mt-1">Check your email for the 6-digit verification code.</p>
             </div>
             <button type="submit" :disabled="loading"
-                class="w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                class="w-full bg-gred-500 text-white py-2 px-4 rounded-lg hover:bg-gred-600 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 <span x-show="!loading">Verify Code</span>
                 <span x-show="loading">Verifying...</span>
             </button>
             <p class="text-center text-sm text-gray-500 mt-3">
-                <a href="#" @click.prevent="step = 1; error = ''; success = ''" class="text-gblue-500 hover:underline">Resend code</a>
+                <a href="#" @click.prevent="step = 1; error = ''; success = ''" class="text-gred-500 hover:underline">Resend code</a>
             </p>
         </form>
 
@@ -73,13 +72,13 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
                 <input type="password" x-model="password" required minlength="6"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="••••••••">
             </div>
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
                 <input type="password" x-model="password_confirmation" required minlength="6"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 focus:border-gblue-500 outline-none transition"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gred-500 focus:border-gred-500 outline-none transition"
                     placeholder="••••••••">
             </div>
             <button type="submit" :disabled="loading"
@@ -98,14 +97,14 @@
             </div>
             <p class="text-gray-700 font-medium mb-4">Your password has been reset successfully!</p>
             <a href="/login"
-                class="inline-block w-full bg-gblue-500 text-white py-2 px-4 rounded-lg hover:bg-gblue-600 transition font-medium text-center">
+                class="inline-block w-full bg-gred-500 text-white py-2 px-4 rounded-lg hover:bg-gred-600 transition font-medium text-center">
                 Back to Sign In
             </a>
         </div>
 
         <!-- Back to login link -->
         <p x-show="step < 4" class="text-center text-sm text-gray-500 mt-4">
-            <a href="/login" class="text-gblue-500 hover:underline">← Back to Sign In</a>
+            <a href="/login" class="text-gred-500 hover:underline">← Back to Sign In</a>
         </p>
     </div>
 </div>
