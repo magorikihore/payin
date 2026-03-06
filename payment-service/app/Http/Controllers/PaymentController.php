@@ -54,7 +54,7 @@ class PaymentController extends Controller
             'request_ref'     => $requestRef,
             'external_ref'    => $request->reference,
             'type'            => 'collection',
-            'phone'           => $this->normalizePhone($request->phone),
+            'phone'           => $this->normalizePhone($request->phone, $request->currency ?? 'TZS'),
             'amount'          => $request->amount,
             'platform_charge' => $charges['platform_charge'] ?? 0,
             'operator_charge' => $charges['operator_charge'] ?? 0,
@@ -160,7 +160,7 @@ class PaymentController extends Controller
             'request_ref'     => $requestRef,
             'external_ref'    => $request->reference,
             'type'            => 'disbursement',
-            'phone'           => $this->normalizePhone($request->phone),
+            'phone'           => $this->normalizePhone($request->phone, $request->currency ?? 'TZS'),
             'amount'          => $request->amount,
             'platform_charge' => $charges['platform_charge'] ?? 0,
             'operator_charge' => $charges['operator_charge'] ?? 0,
@@ -471,7 +471,7 @@ class PaymentController extends Controller
                 'request_ref'     => $requestRef,
                 'external_ref'    => $item['reference'] ?? null,
                 'type'            => 'disbursement',
-                'phone'           => $this->normalizePhone($item['phone']),
+                'phone'           => $this->normalizePhone($item['phone'], 'TZS'),
                 'amount'          => $item['amount'],
                 'platform_charge' => $charges['platform_charge'] ?? 0,
                 'operator_charge' => $charges['operator_charge'] ?? 0,
@@ -985,14 +985,35 @@ class PaymentController extends Controller
     }
 
     /**
-     * Normalize phone number to standard format.
+     * Currency to country calling code mapping.
      */
-    private function normalizePhone(string $phone): string
+    private const CURRENCY_PHONE_MAP = [
+        'TZS' => '255',
+        'KES' => '254',
+        'UGX' => '256',
+        'RWF' => '250',
+        'BIF' => '257',
+        'CDF' => '243',
+        'MZN' => '258',
+        'MWK' => '265',
+        'ZMW' => '260',
+        'ZAR' => '27',
+        'ETB' => '251',
+        'NGN' => '234',
+        'GHS' => '233',
+    ];
+
+    /**
+     * Normalize phone number to international format based on currency.
+     */
+    private function normalizePhone(string $phone, string $currency = 'TZS'): string
     {
         $phone = preg_replace('/[\s\-\.]/', '', $phone);
 
+        $code = self::CURRENCY_PHONE_MAP[$currency] ?? '255';
+
         if (str_starts_with($phone, '0')) {
-            $phone = '255' . substr($phone, 1);
+            $phone = $code . substr($phone, 1);
         }
 
         $phone = ltrim($phone, '+');
