@@ -708,13 +708,14 @@ class PaymentController extends Controller
     {
         try {
             $walletServiceUrl = config('services.wallet_service.url');
-            $response = Http::withToken($token)
-                ->get("{$walletServiceUrl}/api/wallet");
+            $serviceKey = config('services.internal_service_key');
+
+            // Use internal API with service key (reliable, no user token needed)
+            $response = Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->get("{$walletServiceUrl}/api/internal/wallet/summary", ['account_id' => $accountId]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                // Check overall balance (collection + disbursement) so users can disburse
-                // from any available funds. The actual debit happens from disbursement wallet.
                 $overallBalance = (float) ($data['overall_balance'] ?? 0);
                 return [
                     'sufficient' => $overallBalance >= $totalAmount,
@@ -728,18 +729,19 @@ class PaymentController extends Controller
                 'account_id' => $accountId,
             ]);
 
-            // Fallback: try internal API with service key
-            $serviceKey = config('services.internal_service_key');
-            $internalRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
-                ->get("{$walletServiceUrl}/api/internal/wallet/summary", ['account_id' => $accountId]);
+            // Fallback: try user token against wallet API
+            if ($token) {
+                $userRes = Http::withToken($token)
+                    ->get("{$walletServiceUrl}/api/wallet");
 
-            if ($internalRes->successful()) {
-                $data = $internalRes->json();
-                $overallBalance = (float) ($data['overall_balance'] ?? 0);
-                return [
-                    'sufficient' => $overallBalance >= $totalAmount,
-                    'balance' => $overallBalance,
-                ];
+                if ($userRes->successful()) {
+                    $data = $userRes->json();
+                    $overallBalance = (float) ($data['overall_balance'] ?? 0);
+                    return [
+                        'sufficient' => $overallBalance >= $totalAmount,
+                        'balance' => $overallBalance,
+                    ];
+                }
             }
         } catch (\Exception $e) {
             Log::warning("Wallet balance check failed: " . $e->getMessage());

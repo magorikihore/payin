@@ -43,15 +43,16 @@ class DigivasGateway implements GatewayInterface
         $payload = [
             'header' => $apiHeader,
             'body' => [
-                'request' => [
+                'request' => array_filter([
                     'command'            => $command,
                     'command1'           => $command,
+                    'transactionType'    => ($type === 'disbursement') ? 'B2C' : null,
                     'reference'          => $paymentRequest->request_ref,
                     'transactionID'      => str_pad((string) $paymentRequest->id, 12, '0', STR_PAD_LEFT),
                     'msisdn'             => $paymentRequest->phone,
                     'amount'             => (string) $paymentRequest->amount,
                     'currency'           => $paymentRequest->currency,
-                ],
+                ], fn ($v) => $v !== null),
             ],
         ];
 
