@@ -592,7 +592,6 @@
                                     <div class="w-3 h-3 rounded-full" :class="operatorColor(w.operator)"></div>
                                     <h4 class="text-sm font-semibold text-gray-700" x-text="w.operator"></h4>
                                 </div>
-                                <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Collection</span>
                             </div>
                             <p class="text-base font-semibold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
                         </div>
@@ -661,7 +660,6 @@
                                     <div class="w-3 h-3 rounded-full" :class="operatorColor(w.operator)"></div>
                                     <h4 class="text-sm font-semibold text-gray-700" x-text="w.operator"></h4>
                                 </div>
-                                <span class="text-xs px-2 py-0.5 rounded-full bg-gblue-50 text-gblue-700">Disbursement</span>
                             </div>
                             <p class="text-base font-semibold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
                             <p class="text-xs text-gray-500 mt-2">Funds available for payout / settlement</p>
