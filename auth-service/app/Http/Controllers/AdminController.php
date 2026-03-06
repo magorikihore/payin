@@ -1217,8 +1217,10 @@ class AdminController extends Controller
         if ($denied = $this->checkAdminAccess($request, 'admin_accounts')) return $denied;
 
         $request->validate([
-            'referral_code' => 'nullable|string|max:20',
-            'referred_by'   => 'nullable|integer|exists:accounts,id',
+            'referral_code'    => 'nullable|string|max:20',
+            'referred_by'      => 'nullable|integer|exists:accounts,id',
+            'commission_type'  => 'nullable|in:fixed,percentage',
+            'commission_value' => 'nullable|numeric|min:0',
         ]);
 
         $account = Account::find($id);
@@ -1248,6 +1250,14 @@ class AdminController extends Controller
         if ($request->has('referred_by')) {
             $updateData['referred_by'] = $request->referred_by;
             $updateData['referred_at'] = $request->referred_by ? now() : null;
+        }
+
+        if ($request->has('commission_type')) {
+            $updateData['commission_type'] = $request->commission_type;
+        }
+
+        if ($request->has('commission_value')) {
+            $updateData['commission_value'] = $request->commission_value ?? 0;
         }
 
         $account->update($updateData);

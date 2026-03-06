@@ -53,6 +53,8 @@ class Account extends Model
         'referral_code',
         'referred_by',
         'referred_at',
+        'commission_type',
+        'commission_value',
     ];
 
     protected $casts = [
@@ -62,6 +64,7 @@ class Account extends Model
         'multi_currency_enabled' => 'boolean',
         'allowed_currencies' => 'array',
         'referred_at' => 'datetime',
+        'commission_value' => 'decimal:4',
     ];
 
     public function users(): HasMany

@@ -826,7 +826,7 @@ class PaymentController extends Controller
 
     /**
      * Process referral commission: if the transacting account was referred by another,
-     * calculate and credit the referrer's wallet with the commission.
+     * read the referrer's commission settings and credit their wallet.
      */
     private function processReferralCommission(PaymentRequest $paymentRequest): void
     {
@@ -847,23 +847,29 @@ class PaymentController extends Controller
 
             if (!$referrerAccountId) return; // No referrer, nothing to do
 
-            // 2. Calculate the commission via transaction-service
-            $commissionRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
-                ->post("{$txnServiceUrl}/api/internal/referral-commission/calculate", [
-                    'amount' => $paymentRequest->amount,
-                    'operator' => $paymentRequest->operator_name,
-                    'transaction_type' => $paymentRequest->type,
-                    'referrer_account_id' => $referrerAccountId,
-                ]);
+            // 2. Get the referrer account to read commission settings
+            $referrerRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
+                ->get("{$authServiceUrl}/api/admin/accounts/{$referrerAccountId}");
 
-            if (!$commissionRes->successful()) return;
+            if (!$referrerRes->successful()) return;
 
-            $commission = $commissionRes->json();
-            $commissionAmount = (float) ($commission['commission_amount'] ?? 0);
+            $referrer = $referrerRes->json()['account'] ?? null;
+            $commissionType = $referrer['commission_type'] ?? null;
+            $commissionValue = (float) ($referrer['commission_value'] ?? 0);
 
-            if ($commissionAmount <= 0) return; // No commission configured
+            if (!$commissionType || $commissionValue <= 0) return; // No commission configured
 
-            // 3. Credit the referrer's wallet
+            // 3. Calculate the commission amount
+            $commissionAmount = 0;
+            if ($commissionType === 'fixed') {
+                $commissionAmount = $commissionValue;
+            } elseif ($commissionType === 'percentage') {
+                $commissionAmount = round(($commissionValue / 100) * $paymentRequest->amount, 2);
+            }
+
+            if ($commissionAmount <= 0) return;
+
+            // 4. Credit the referrer's wallet
             $walletRef = 'COMM-' . $paymentRequest->request_ref;
             $walletRes = Http::withHeaders(['X-Service-Key' => $serviceKey])
                 ->post("{$walletServiceUrl}/api/internal/wallet/credit", [
@@ -877,7 +883,7 @@ class PaymentController extends Controller
 
             $walletStatus = $walletRes->successful() ? 'credited' : 'failed';
 
-            // 4. Record the earning in transaction-service
+            // 5. Record the earning in transaction-service
             Http::withHeaders(['X-Service-Key' => $serviceKey])
                 ->post("{$txnServiceUrl}/api/internal/referral-commission/record", [
                     'referrer_account_id' => $referrerAccountId,
@@ -886,8 +892,8 @@ class PaymentController extends Controller
                     'transaction_amount' => $paymentRequest->amount,
                     'operator' => $paymentRequest->operator_name,
                     'transaction_type' => $paymentRequest->type,
-                    'commission_type' => $commission['commission_type'],
-                    'commission_rate' => $commission['commission_rate'],
+                    'commission_type' => $commissionType,
+                    'commission_rate' => $commissionValue,
                     'commission_amount' => $commissionAmount,
                     'status' => $walletStatus,
                     'wallet_reference' => $walletRef,
