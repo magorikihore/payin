@@ -606,11 +606,11 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <template x-for="w in collectionWallets" :key="'trf_'+w.id">
                             <div class="border rounded-lg p-4">
-                                <div class="flex items-center space-x-2 mb-2">
+                                <div class="flex items-center space-x-2 mb-1">
                                     <div class="w-2.5 h-2.5 rounded-full" :class="operatorColor(w.operator)"></div>
                                     <span class="text-sm font-semibold text-gray-700" x-text="w.operator"></span>
-                                    <span class="text-xs text-gray-400" x-text="'(' + formatAmount(w.balance) + ' ' + walletCurrency + ')'"></span>
                                 </div>
+                                <p class="text-xs text-gray-500 mb-2" x-text="'Balance: ' + formatAmount(w.balance) + ' ' + walletCurrency"></p>
                                 <div x-show="walletMsg['trf_'+w.operator]" x-cloak class="mb-2 p-2 rounded text-xs"
                                     :class="walletMsgType['trf_'+w.operator] === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'"
                                     x-text="walletMsg['trf_'+w.operator]"></div>
