@@ -1767,7 +1767,7 @@
                     <form @submit.prevent="sendSinglePayout()" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                            <input type="text" x-model="payoutForm.phone" @input.debounce.400ms="detectOperator(payoutForm.phone)" required placeholder="e.g. 0712345678 or 255712345678" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <input type="text" x-model="payoutForm.phone" @input.debounce.400ms="detectOperator(payoutForm.phone)" @blur="autoFormatPhone('payout')" required placeholder="e.g. 255712345678" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <!-- Detected Operator Badge -->
                             <div class="mt-2" x-show="detectedOperator.name" x-cloak>
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700 border border-green-200">
@@ -1899,7 +1899,7 @@
                     <!-- Or Paste CSV -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Or Paste CSV Data</label>
-                        <textarea x-model="batchCsvText" rows="6" placeholder="phone,amount,reference,description&#10;0712345678,5000,REF001,Salary" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-gblue-500 outline-none"></textarea>
+                        <textarea x-model="batchCsvText" rows="6" placeholder="phone,amount,reference,description&#10;255712345678,5000,REF001,Salary" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-gblue-500 outline-none"></textarea>
                     </div>
 
                     <div class="flex items-center space-x-3 mb-4">
@@ -2038,7 +2038,7 @@
                         <h4 class="text-sm font-semibold text-gray-700 mb-3">Add Recipient Manually</h4>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                             <div>
-                                <input type="text" x-model="manualRow.phone" placeholder="Phone (e.g. 0712345678)" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" :class="manualRow.phone && !validatePhone(manualRow.phone).valid ? 'border-red-400 bg-red-50' : 'border-gray-300'">
+                                <input type="text" x-model="manualRow.phone" placeholder="Phone (e.g. 255712345678)" @blur="autoFormatPhone('manual')" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" :class="manualRow.phone && !validatePhone(manualRow.phone).valid ? 'border-red-400 bg-red-50' : 'border-gray-300'">
                                 <template x-if="manualRow.phone && manualRow.phone.replace(/[\s\-\.+]/g, '').length >= 9">
                                     <p class="text-xs mt-1" :class="validatePhone(manualRow.phone).valid ? 'text-green-600' : 'text-red-500'" x-text="validatePhone(manualRow.phone).valid ? 'Operator: ' + validatePhone(manualRow.phone).operator : validatePhone(manualRow.phone).error"></p>
                                 </template>
@@ -4243,9 +4243,10 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 return;
             }
             try {
+                const normalizedPhone = this.normalizePhoneTo255(this.payoutForm.phone);
                 const res = await fetch('/api/disbursement', {
                     method: 'POST', headers: this.getHeaders(),
-                    body: JSON.stringify({ ...this.payoutForm, operator: this.detectedOperator.code })
+                    body: JSON.stringify({ ...this.payoutForm, phone: normalizedPhone, operator: this.detectedOperator.code })
                 });
                 const data = await res.json();
                 if (!res.ok) {
@@ -4399,16 +4400,41 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             return cleaned;
         },
 
+        normalizePhoneTo255(phone) {
+            if (!phone) return '';
+            let cleaned = phone.replace(/[\s\-\.+]/g, '');
+            if (cleaned.startsWith('0') && cleaned.length === 10) {
+                cleaned = '255' + cleaned.substring(1);
+            } else if (cleaned.length === 9 && !cleaned.startsWith('0') && !cleaned.startsWith('255')) {
+                cleaned = '255' + cleaned;
+            }
+            return cleaned;
+        },
+
+        autoFormatPhone(field) {
+            if (field === 'payout') {
+                const formatted = this.normalizePhoneTo255(this.payoutForm.phone);
+                if (formatted && /^255\d{9}$/.test(formatted)) {
+                    this.payoutForm.phone = formatted;
+                }
+            } else if (field === 'manual') {
+                const formatted = this.normalizePhoneTo255(this.manualRow.phone);
+                if (formatted && /^255\d{9}$/.test(formatted)) {
+                    this.manualRow.phone = formatted;
+                }
+            }
+        },
+
         validatePhone(phone) {
             const cleaned = this.normalizePhone(phone);
             if (!/^0\d{9}$/.test(cleaned)) {
-                return { valid: false, error: 'Phone must be 10 digits (e.g. 0712345678) or 12 digits with country code (255712345678)' };
+                return { valid: false, error: 'Phone must be 12 digits starting with 255 (e.g. 255712345678)' };
             }
             const operator = this.detectOperatorFromPhone(phone);
             if (!operator) {
                 return { valid: false, error: 'Unrecognized operator. Supported prefixes: 074/075/076 (M-Pesa), 065/067/071 (Tigo Pesa), 078 (Airtel), 068/069 (Halotel)' };
             }
-            return { valid: true, operator: operator, normalized: cleaned };
+            return { valid: true, operator: operator, normalized: this.normalizePhoneTo255(phone) };
         },
 
         detectOperatorFromPhone(phone) {
