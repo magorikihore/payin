@@ -662,7 +662,7 @@
                                 </div>
                             </div>
                             <p class="text-base font-semibold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
-                            <p class="text-xs text-gray-500 mt-2">Funds available for payout / settlement</p>
+                            <p class="text-xs text-gray-500 mt-2">Funds available for payouts</p>
                         </div>
                     </template>
                 </div>
