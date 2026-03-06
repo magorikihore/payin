@@ -1807,13 +1807,9 @@
                                     <span class="text-gray-600">Send Amount</span>
                                     <span class="font-medium text-gray-800" x-text="formatAmount(payoutForm.amount) + ' ' + walletCurrency"></span>
                                 </div>
-                                <div class="flex justify-between" x-show="payoutCharges.platform_charge > 0">
-                                    <span class="text-gray-600">Platform Fee</span>
-                                    <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.platform_charge) + ' ' + walletCurrency"></span>
-                                </div>
-                                <div class="flex justify-between" x-show="payoutCharges.operator_charge > 0">
-                                    <span class="text-gray-600">Operator Fee</span>
-                                    <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.operator_charge) + ' ' + walletCurrency"></span>
+                                <div class="flex justify-between" x-show="(payoutCharges.platform_charge || 0) + (payoutCharges.operator_charge || 0) > 0">
+                                    <span class="text-gray-600">Service Fee</span>
+                                    <span class="font-medium text-amber-700" x-text="formatAmount((payoutCharges.platform_charge || 0) + (payoutCharges.operator_charge || 0)) + ' ' + walletCurrency"></span>
                                 </div>
                                 <div class="border-t border-gray-300 pt-1.5 flex justify-between font-semibold">
                                     <span class="text-gray-700">Total Debit</span>
@@ -2268,13 +2264,9 @@
                             <span class="text-gray-500">Send Amount</span>
                             <span class="font-semibold text-gray-800" x-text="formatAmount(payoutReceipt?.amount) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
                         </div>
-                        <div class="flex justify-between py-2 border-b border-gray-100" x-show="payoutReceipt?.platform_charge > 0">
-                            <span class="text-gray-500">Platform Fee</span>
-                            <span class="font-semibold text-amber-700" x-text="formatAmount(payoutReceipt?.platform_charge) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
-                        </div>
-                        <div class="flex justify-between py-2 border-b border-gray-100" x-show="payoutReceipt?.operator_charge > 0">
-                            <span class="text-gray-500">Operator Fee</span>
-                            <span class="font-semibold text-amber-700" x-text="formatAmount(payoutReceipt?.operator_charge) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
+                        <div class="flex justify-between py-2 border-b border-gray-100" x-show="(payoutReceipt?.platform_charge || 0) + (payoutReceipt?.operator_charge || 0) > 0">
+                            <span class="text-gray-500">Service Fee</span>
+                            <span class="font-semibold text-amber-700" x-text="formatAmount((payoutReceipt?.platform_charge || 0) + (payoutReceipt?.operator_charge || 0)) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
                         </div>
                         <div class="flex justify-between py-2 bg-blue-50 -mx-6 px-6 rounded">
                             <span class="font-bold text-blue-800">Total Debited</span>
