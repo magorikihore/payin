@@ -557,17 +557,17 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div class="bg-gradient-to-br from-gblue-500 to-gblue-600 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Overall Balance</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(overallBalance) + ' ' + walletCurrency"></p>
+                    <p class="text-lg font-semibold mt-1" x-text="formatAmount(overallBalance) + ' ' + walletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Collection + Disbursement</p>
                 </div>
                 <div class="bg-gradient-to-br from-ggreen-500 to-ggreen-600 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Collection (Payin)</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></p>
+                    <p class="text-lg font-semibold mt-1" x-text="formatAmount(collectionTotal) + ' ' + walletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Money received from customers</p>
                 </div>
                 <div class="bg-gradient-to-br from-gred-400 to-gred-500 rounded-xl shadow-lg p-5 text-white">
                     <p class="text-xs font-medium opacity-80 uppercase tracking-wide">Disbursement (Payout)</p>
-                    <p class="text-3xl font-bold mt-1" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></p>
+                    <p class="text-lg font-semibold mt-1" x-text="formatAmount(disbursementTotal) + ' ' + walletCurrency"></p>
                     <p class="text-xs mt-1 opacity-60">Available for payouts</p>
                 </div>
             </div>
@@ -594,7 +594,7 @@
                                 </div>
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">Collection</span>
                             </div>
-                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
+                            <p class="text-base font-semibold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
                         </div>
                     </template>
                 </div>
@@ -663,7 +663,7 @@
                                 </div>
                                 <span class="text-xs px-2 py-0.5 rounded-full bg-gblue-50 text-gblue-700">Disbursement</span>
                             </div>
-                            <p class="text-2xl font-bold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
+                            <p class="text-base font-semibold text-gray-800" x-text="formatAmount(w.balance) + ' ' + walletCurrency"></p>
                             <p class="text-xs text-gray-500 mt-2">Funds available for payout / settlement</p>
                         </div>
                     </template>
