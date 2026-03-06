@@ -42,8 +42,6 @@
                 </button>
                 <button x-show="hasPerm('admin_charges')" @click="goToTab('charges')" :class="activeTab === 'charges' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Charges</button>
-                <button x-show="hasPerm('admin_charges')" @click="goToTab('referrals')" :class="activeTab === 'referrals' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
-                    class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">Referrals</button>
                 <button x-show="hasPerm('admin_ip_whitelist')" @click="goToTab('ipwhitelist')" :class="activeTab === 'ipwhitelist' ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                     class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap">
                     IP Whitelist
@@ -64,9 +62,9 @@
                      x-show="hasPerm('admin_users') || hasPerm('admin_operators') || hasPerm('admin_payments') || user?.role === 'super_admin'"
                      >
                     <button @click="moreOpen = !moreOpen"
-                        :class="['users','operators','payments','admin_users','logs','mail_config','exchange_rates'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                        :class="['users','operators','payments','admin_users','logs','mail_config','exchange_rates','referrals'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                         class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap inline-flex items-center">
-                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : activeTab === 'exchange_rates' ? 'Exchange Rates' : 'More'"></span>
+                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : activeTab === 'exchange_rates' ? 'Exchange Rates' : activeTab === 'referrals' ? 'Referrals' : 'More'"></span>
                         <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="moreOpen" x-transition class="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border z-50">
@@ -91,6 +89,9 @@
                         <button x-show="user?.role === 'super_admin'" @click="goToTab('exchange_rates'); moreOpen = false"
                             :class="activeTab === 'exchange_rates' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Exchange Rates</button>
+                        <button x-show="hasPerm('admin_charges')" @click="goToTab('referrals'); moreOpen = false"
+                            :class="activeTab === 'referrals' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
+                            class="block w-full text-left px-4 py-2 text-sm">Referrals</button>
                     </div>
                 </div>
             </nav>
