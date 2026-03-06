@@ -1808,14 +1808,18 @@
                                     <span class="font-medium text-gray-800" x-text="formatAmount(payoutForm.amount) + ' ' + walletCurrency"></span>
                                 </div>
                                 <div class="flex justify-between" x-show="payoutCharges.platform_charge > 0">
-                                    <span class="text-gray-600">Service Fee</span>
+                                    <span class="text-gray-600">Platform Fee</span>
                                     <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.platform_charge) + ' ' + walletCurrency"></span>
+                                </div>
+                                <div class="flex justify-between" x-show="payoutCharges.operator_charge > 0">
+                                    <span class="text-gray-600">Operator Fee</span>
+                                    <span class="font-medium text-amber-700" x-text="formatAmount(payoutCharges.operator_charge) + ' ' + walletCurrency"></span>
                                 </div>
                                 <div class="border-t border-gray-300 pt-1.5 flex justify-between font-semibold">
                                     <span class="text-gray-700">Total Debit</span>
-                                    <span class="text-gray-900" x-text="formatAmount(Number(payoutForm.amount) + (payoutCharges.platform_charge || 0)) + ' ' + walletCurrency"></span>
+                                    <span class="text-gray-900" x-text="formatAmount(Number(payoutForm.amount) + (payoutCharges.platform_charge || 0) + (payoutCharges.operator_charge || 0)) + ' ' + walletCurrency"></span>
                                 </div>
-                                <div x-show="payoutCharges.platform_charge === 0" class="text-xs text-green-600 mt-1">No charges apply to this transaction.</div>
+                                <div x-show="payoutCharges.platform_charge === 0 && payoutCharges.operator_charge === 0" class="text-xs text-green-600 mt-1">No charges apply to this transaction.</div>
                             </div>
                         </div>
 
@@ -2265,8 +2269,12 @@
                             <span class="font-semibold text-gray-800" x-text="formatAmount(payoutReceipt?.amount) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
                         </div>
                         <div class="flex justify-between py-2 border-b border-gray-100" x-show="payoutReceipt?.platform_charge > 0">
-                            <span class="text-gray-500">Service Charge</span>
+                            <span class="text-gray-500">Platform Fee</span>
                             <span class="font-semibold text-amber-700" x-text="formatAmount(payoutReceipt?.platform_charge) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-100" x-show="payoutReceipt?.operator_charge > 0">
+                            <span class="text-gray-500">Operator Fee</span>
+                            <span class="font-semibold text-amber-700" x-text="formatAmount(payoutReceipt?.operator_charge) + ' ' + (payoutReceipt?.currency || 'TZS')"></span>
                         </div>
                         <div class="flex justify-between py-2 bg-blue-50 -mx-6 px-6 rounded">
                             <span class="font-bold text-blue-800">Total Debited</span>
@@ -4284,7 +4292,8 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                             operator: data.operator || this.detectedOperator.name,
                             status: data.status || 'processing',
                             platform_charge: this.payoutCharges?.platform_charge || 0,
-                            total_debit: Number(data.amount || this.payoutForm.amount) + Number(this.payoutCharges?.platform_charge || 0),
+                            operator_charge: this.payoutCharges?.operator_charge || 0,
+                            total_debit: Number(data.amount || this.payoutForm.amount) + Number(this.payoutCharges?.platform_charge || 0) + Number(this.payoutCharges?.operator_charge || 0),
                             currency: this.walletCurrency || 'TZS',
                             reference: this.payoutForm.reference || '',
                             description: this.payoutForm.description || '',
