@@ -1342,6 +1342,10 @@ class PaymentController extends Controller
             return response()->json(['message' => 'Only failed or timed-out requests can be re-pushed.'], 422);
         }
 
+        if ($paymentRequest->receipt_number) {
+            return response()->json(['message' => 'This transaction already has an operator receipt. It may have been processed. Re-push is not allowed.'], 422);
+        }
+
         $operator = Operator::where('code', $paymentRequest->operator_code)
             ->where('status', 'active')
             ->first();

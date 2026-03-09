@@ -2615,7 +2615,7 @@
                                     <td class="px-4 py-3">
                                         <div class="flex items-center space-x-2">
                                             <button @click="payDetailPr = pr; showPayDetailModal = true" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">View</button>
-                                            <button x-show="pr.status === 'failed' || pr.status === 'timeout'" @click="repushPayment(pr)" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 font-medium">Re-push</button>
+                                            <button x-show="(pr.status === 'failed' || pr.status === 'timeout') && !pr.receipt_number" @click="repushPayment(pr)" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 font-medium">Re-push</button>
                                             <button x-show="(pr.status === 'completed' || pr.status === 'failed') && pr.callback_status !== 'sent'" @click="retryPaymentCallback(pr)" class="text-xs bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600 font-medium">Retry CB</button>
                                         </div>
                                     </td>
@@ -2688,7 +2688,7 @@
 
                         <!-- Action buttons -->
                         <div class="flex items-center space-x-3 pt-2 border-t">
-                            <button x-show="payDetailPr?.status === 'failed' || payDetailPr?.status === 'timeout'"
+                            <button x-show="(payDetailPr?.status === 'failed' || payDetailPr?.status === 'timeout') && !payDetailPr?.receipt_number"
                                 @click="showPayDetailModal = false; repushPayment(payDetailPr)"
                                 class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600">
                                 Re-push to Operator
