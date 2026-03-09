@@ -585,6 +585,7 @@
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Collection Balance</th>
                                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Disbursement Balance</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Users</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Callback URL</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -599,6 +600,7 @@
                                         <td class="px-6 py-4 text-sm text-right font-semibold text-green-700" x-text="formatAmount(acc.collection_balance || 0) + ' ' + (acc.currency || 'TZS')"></td>
                                         <td class="px-6 py-4 text-sm text-right font-semibold text-blue-700" x-text="formatAmount(acc.disbursement_balance || 0) + ' ' + (acc.currency || 'TZS')"></td>
                                         <td class="px-6 py-4 text-sm text-gray-600" x-text="acc.users_count"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" x-text="acc.callback_url || '—'" :title="acc.callback_url"></td>
                                         <td class="px-6 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
                                                 :class="{'bg-green-100 text-green-800': acc.status==='active','bg-red-100 text-red-800': acc.status==='suspended','bg-gray-100 text-gray-800': acc.status==='closed','bg-orange-100 text-orange-800': acc.status==='pending'}"
