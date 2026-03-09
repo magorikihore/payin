@@ -375,6 +375,7 @@ class PaymentController extends Controller
                 $q->where('request_ref', 'like', "%{$search}%")
                   ->orWhere('external_ref', 'like', "%{$search}%")
                   ->orWhere('operator_ref', 'like', "%{$search}%")
+                  ->orWhere('receipt_number', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
         }
