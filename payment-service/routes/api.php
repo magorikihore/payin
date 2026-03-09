@@ -56,6 +56,8 @@ Route::middleware('auth.service')->group(function () {
 
     // Admin: payment requests
     Route::get('/admin/payment-requests', [PaymentController::class, 'adminIndex']);
+    Route::post('/admin/payment-requests/{id}/repush', [PaymentController::class, 'repush']);
+    Route::post('/admin/payment-requests/{id}/retry-callback', [PaymentController::class, 'retryCallback']);
 
     // Admin: operator management (super_admin only)
     Route::get('/admin/operators', [OperatorController::class, 'index']);

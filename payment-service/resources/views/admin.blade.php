@@ -2613,7 +2613,11 @@
                                     </td>
                                     <td class="px-4 py-3 text-xs text-gray-500" x-text="formatDate(pr.created_at)"></td>
                                     <td class="px-4 py-3">
-                                        <button @click="payDetailPr = pr; showPayDetailModal = true" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">View</button>
+                                        <div class="flex items-center space-x-2">
+                                            <button @click="payDetailPr = pr; showPayDetailModal = true" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">View</button>
+                                            <button x-show="pr.status === 'failed' || pr.status === 'timeout'" @click="repushPayment(pr)" class="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 font-medium">Re-push</button>
+                                            <button x-show="(pr.status === 'completed' || pr.status === 'failed') && pr.callback_status !== 'sent'" @click="retryPaymentCallback(pr)" class="text-xs bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600 font-medium">Retry CB</button>
+                                        </div>
                                     </td>
                                 </tr>
                             </template>
@@ -2680,6 +2684,20 @@
                         <!-- No data fallback -->
                         <div x-show="!payDetailPr?.operator_request && !payDetailPr?.operator_response && !payDetailPr?.callback_data && !payDetailPr?.error_message" class="text-center text-gray-400 py-4 text-sm">
                             No operator data available yet.
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="flex items-center space-x-3 pt-2 border-t">
+                            <button x-show="payDetailPr?.status === 'failed' || payDetailPr?.status === 'timeout'"
+                                @click="showPayDetailModal = false; repushPayment(payDetailPr)"
+                                class="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600">
+                                Re-push to Operator
+                            </button>
+                            <button x-show="(payDetailPr?.status === 'completed' || payDetailPr?.status === 'failed') && payDetailPr?.callback_status !== 'sent'"
+                                @click="showPayDetailModal = false; retryPaymentCallback(payDetailPr)"
+                                class="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600">
+                                Retry Merchant Callback
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -5660,6 +5678,32 @@ function adminPanel() {
 
         payPrevPage() { if (this.payPage > 1) { this.payPage--; this.fetchPaymentRequests(); } },
         payNextPage() { if (this.payPage < (this.payPagination.last_page || 1)) { this.payPage++; this.fetchPaymentRequests(); } },
+
+        async repushPayment(pr) {
+            if (!confirm(`Re-push ${pr.type} ${pr.request_ref} (${Number(pr.amount).toLocaleString()} ${pr.currency || 'TZS'}) to operator?`)) return;
+            try {
+                const res = await fetch(`/api/admin/payment-requests/${pr.id}/repush`, {
+                    method: 'POST', headers: { ...this.getHeaders(), 'Content-Type': 'application/json' },
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                alert(data.message || (res.ok ? 'Re-pushed successfully.' : 'Re-push failed.'));
+                this.fetchPaymentRequests();
+            } catch (e) { console.error(e); alert('Re-push failed: ' + e.message); }
+        },
+
+        async retryPaymentCallback(pr) {
+            if (!confirm(`Retry merchant callback for ${pr.request_ref}?`)) return;
+            try {
+                const res = await fetch(`/api/admin/payment-requests/${pr.id}/retry-callback`, {
+                    method: 'POST', headers: { ...this.getHeaders(), 'Content-Type': 'application/json' },
+                });
+                if (this.handleUnauth(res)) return;
+                const data = await res.json();
+                alert(data.message || (res.ok ? 'Callback retried.' : 'Retry failed.'));
+                this.fetchPaymentRequests();
+            } catch (e) { console.error(e); alert('Retry failed: ' + e.message); }
+        },
 
         payStatusColor(s) {
             const c = { completed: 'bg-green-100 text-green-800', pending: 'bg-yellow-100 text-yellow-800', processing: 'bg-blue-100 text-blue-800', failed: 'bg-red-100 text-red-800', cancelled: 'bg-gray-100 text-gray-800', timeout: 'bg-orange-100 text-orange-800' };

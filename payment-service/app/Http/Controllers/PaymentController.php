@@ -1322,6 +1322,114 @@ class PaymentController extends Controller
     /**
      * Bulk reject multiple pending payouts.
      */
+    /**
+     * Admin: Re-push a failed payment request to the operator.
+     * Only super_admin can do this. Only failed requests can be re-pushed.
+     */
+    public function repush(Request $request, $id): JsonResponse
+    {
+        $user = $request->user();
+        if (!in_array($user->role ?? null, ['super_admin', 'admin_user'])) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $paymentRequest = PaymentRequest::find($id);
+        if (!$paymentRequest) {
+            return response()->json(['message' => 'Payment request not found.'], 404);
+        }
+
+        if (!in_array($paymentRequest->status, ['failed', 'timeout'])) {
+            return response()->json(['message' => 'Only failed or timed-out requests can be re-pushed.'], 422);
+        }
+
+        $operator = Operator::where('code', $paymentRequest->operator_code)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$operator) {
+            return response()->json(['message' => 'Operator is no longer active.'], 422);
+        }
+
+        // For disbursements, re-check wallet balance
+        if ($paymentRequest->type === 'disbursement') {
+            $totalDebit = $paymentRequest->amount + $paymentRequest->platform_charge;
+            $balanceCheck = $this->checkWalletBalance($paymentRequest->account_id, $totalDebit, $request->bearerToken());
+            if (!$balanceCheck['sufficient']) {
+                return response()->json([
+                    'message' => 'Insufficient wallet balance.',
+                    'required' => $totalDebit,
+                    'available' => $balanceCheck['balance'] ?? 0,
+                ], 422);
+            }
+        }
+
+        // Reset status and re-push
+        $paymentRequest->update([
+            'status' => 'pending',
+            'error_message' => null,
+        ]);
+
+        $pushResult = $this->pushToOperator($operator, $paymentRequest, $paymentRequest->type);
+
+        $paymentRequest->update([
+            'operator_request'  => $pushResult['request_payload'],
+            'operator_response' => $pushResult['response'],
+            'operator_ref'      => $pushResult['operator_ref'] ?? $paymentRequest->operator_ref,
+            'gateway_id'        => $pushResult['gateway_id'] ?? $paymentRequest->gateway_id,
+            'status'            => $pushResult['success'] ? 'processing' : 'failed',
+            'error_message'     => $pushResult['error'] ?? null,
+        ]);
+
+        Log::info("Admin re-push [{$paymentRequest->request_ref}] by [{$user->email}] => " . ($pushResult['success'] ? 'processing' : 'failed'));
+
+        if (!$pushResult['success']) {
+            return response()->json([
+                'message' => 'Re-push failed. Operator rejected the request.',
+                'error' => $pushResult['error'] ?? 'Unknown error.',
+                'payment_request' => $paymentRequest->fresh(),
+            ], 422);
+        }
+
+        return response()->json([
+            'message' => 'Payment request re-pushed to operator successfully.',
+            'payment_request' => $paymentRequest->fresh(),
+        ]);
+    }
+
+    /**
+     * Admin: Retry sending the merchant callback for a payment request.
+     */
+    public function retryCallback(Request $request, $id): JsonResponse
+    {
+        $user = $request->user();
+        if (!in_array($user->role ?? null, ['super_admin', 'admin_user'])) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $paymentRequest = PaymentRequest::find($id);
+        if (!$paymentRequest) {
+            return response()->json(['message' => 'Payment request not found.'], 404);
+        }
+
+        if (!in_array($paymentRequest->status, ['completed', 'failed'])) {
+            return response()->json(['message' => 'Callback can only be retried for completed or failed requests.'], 422);
+        }
+
+        $this->sendMerchantCallback($paymentRequest);
+
+        $paymentRequest->refresh();
+
+        Log::info("Admin retry callback [{$paymentRequest->request_ref}] by [{$user->email}] => {$paymentRequest->callback_status}");
+
+        return response()->json([
+            'message' => $paymentRequest->callback_status === 'sent'
+                ? 'Merchant callback sent successfully.'
+                : 'Callback retry attempted but delivery failed.',
+            'callback_status' => $paymentRequest->callback_status,
+            'callback_attempts' => $paymentRequest->callback_attempts,
+        ]);
+    }
+
     public function bulkRejectPayout(Request $request): JsonResponse
     {
         $request->validate([
