@@ -2549,6 +2549,12 @@
                         <option :value="op.code" x-text="op.name"></option>
                     </template>
                 </select>
+                <select x-model="payCallbackFilter" @change="payPage=1; fetchPaymentRequests()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <option value="">All Callbacks</option>
+                    <option value="pending">CB Pending</option>
+                    <option value="sent">CB Sent</option>
+                    <option value="failed">CB Failed</option>
+                </select>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -4187,7 +4193,7 @@ function adminPanel() {
         opSaving: false, opError: '', opSuccess: '',
 
         // Payment Requests (admin)
-        paymentRequests: [], payLoading: false, paySearch: '', payStatusFilter: '', payTypeFilter: '', payOperatorFilter: '', payPage: 1, payPagination: {},
+        paymentRequests: [], payLoading: false, paySearch: '', payStatusFilter: '', payTypeFilter: '', payOperatorFilter: '', payCallbackFilter: '', payPage: 1, payPagination: {},
         showPayDetailModal: false, payDetailPr: null,
 
         // Admin Users management (super_admin only)
@@ -5667,6 +5673,7 @@ function adminPanel() {
                 if (this.payStatusFilter) url += `&status=${this.payStatusFilter}`;
                 if (this.payTypeFilter) url += `&type=${this.payTypeFilter}`;
                 if (this.payOperatorFilter) url += `&operator=${encodeURIComponent(this.payOperatorFilter)}`;
+                if (this.payCallbackFilter) url += `&callback_status=${this.payCallbackFilter}`;
                 const res = await fetch(url, { headers: this.getHeaders() });
                 if (this.handleUnauth(res)) return;
                 const data = await res.json();

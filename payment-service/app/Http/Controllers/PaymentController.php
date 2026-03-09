@@ -382,6 +382,7 @@ class PaymentController extends Controller
         if ($request->filled('status')) { $query->where('status', $request->status); }
         if ($request->filled('type')) { $query->where('type', $request->type); }
         if ($request->filled('operator')) { $query->where('operator_code', $request->operator); }
+        if ($request->filled('callback_status')) { $query->where('callback_status', $request->callback_status); }
         if ($request->filled('account_id')) { $query->where('account_id', $request->account_id); }
 
         $requests = $query->orderBy('created_at', 'desc')->paginate(20);
