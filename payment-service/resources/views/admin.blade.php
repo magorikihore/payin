@@ -27,7 +27,7 @@
                                 <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
                             </div>
                             <div class="py-1">
-                                <button @click="showPwModal = true; settingsOpen = false" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                <button @click="$root.showPwModal = true; settingsOpen = false" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
                                     <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                                     Change Password
                                 </button>
@@ -37,10 +37,10 @@
                                         Two-Factor Auth
                                     </div>
                                     <div class="relative">
-                                        <button @click="toggleTwoFactor()" :disabled="twoFactorToggling"
-                                            :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'"
+                                        <button @click="$root.toggleTwoFactor()" :disabled="$root.twoFactorToggling"
+                                            :class="$root.twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'"
                                             class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50">
-                                            <span :class="twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"
+                                            <span :class="$root.twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"
                                                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                         </button>
                                     </div>
