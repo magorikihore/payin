@@ -10,6 +10,9 @@ use App\Notifications\WelcomeNotification;
 use App\Notifications\AdminKycSubmittedNotification;
 use App\Notifications\AdminNewRegistrationNotification;
 use App\Notifications\TwoFactorCodeNotification;
+use App\Notifications\AccountLockedNotification;
+use App\Notifications\NewIpLoginNotification;
+use App\Notifications\FailedTwoFactorNotification;
 use App\Models\AdminSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -135,6 +138,8 @@ class AuthController extends Controller
                 $user->recordFailedLogin();
                 $remaining = User::MAX_LOGIN_ATTEMPTS - ($user->failed_login_attempts + 1);
                 if ($user->isLockedOut()) {
+                    // Alert: account locked
+                    $this->sendAccountLockedAlerts($user, $request->ip());
                     return response()->json([
                         'message' => 'Account locked due to too many failed attempts. Try again in ' . User::LOCKOUT_MINUTES . ' minute(s).',
                         'locked_until' => $user->locked_until->toIso8601String(),
@@ -206,8 +211,16 @@ class AuthController extends Controller
             }
         }
 
-        // Record login IP
+        // Record login IP and check for new IP
+        $previousIp = $user->last_login_ip;
         $user->recordLoginIp($request->ip());
+        if ($previousIp && $previousIp !== $request->ip()) {
+            try {
+                $user->notify(new NewIpLoginNotification($request->ip(), $previousIp));
+            } catch (\Throwable $e) {
+                \Log::warning('New IP alert failed for ' . $user->email . ': ' . $e->getMessage());
+            }
+        }
 
         $token = $user->createToken('authToken')->accessToken;
         $user->load('account');
@@ -249,8 +262,20 @@ class AuthController extends Controller
         // Verify the code
         if (!Hash::check($request->code, $user->two_factor_code)) {
             $user->recordFailedLogin();
+            $attempts = $user->failed_login_attempts;
+
+            // Alert user on 3+ failed 2FA attempts
+            if ($attempts >= 3) {
+                try {
+                    $user->notify(new FailedTwoFactorNotification($request->ip(), $attempts));
+                } catch (\Throwable $e) {
+                    \Log::warning('Failed 2FA alert failed for ' . $user->email . ': ' . $e->getMessage());
+                }
+            }
+
             if ($user->isLockedOut()) {
                 $user->clearTwoFactorCode();
+                $this->sendAccountLockedAlerts($user, $request->ip());
                 return response()->json([
                     'message' => 'Account locked due to too many failed attempts. Try again in ' . User::LOCKOUT_MINUTES . ' minute(s).',
                     'locked_until' => $user->locked_until->toIso8601String(),
@@ -295,8 +320,16 @@ class AuthController extends Controller
             }
         }
 
-        // Record login IP
+        // Record login IP and check for new IP
+        $previousIp = $user->last_login_ip;
         $user->recordLoginIp($request->ip());
+        if ($previousIp && $previousIp !== $request->ip()) {
+            try {
+                $user->notify(new NewIpLoginNotification($request->ip(), $previousIp));
+            } catch (\Throwable $e) {
+                \Log::warning('New IP alert failed for ' . $user->email . ': ' . $e->getMessage());
+            }
+        }
 
         $token = $user->createToken('authToken')->accessToken;
         $user->load('account');
@@ -655,5 +688,33 @@ class AuthController extends Controller
             'message' => 'Callback URL updated successfully.',
             'callback_url' => $account->callback_url,
         ]);
+    }
+
+    /**
+     * Send account locked alerts to the user and admins.
+     */
+    private function sendAccountLockedAlerts(User $user, string $ip): void
+    {
+        // Alert the locked user
+        try {
+            $user->notify(new AccountLockedNotification($ip));
+        } catch (\Throwable $e) {
+            \Log::warning('Account locked alert failed for ' . $user->email . ': ' . $e->getMessage());
+        }
+
+        // Alert admins
+        try {
+            $admins = User::whereIn('role', ['super_admin', 'admin_user'])->get();
+            foreach ($admins as $admin) {
+                try {
+                    Notification::route('mail', $admin->email)
+                        ->notify(new AccountLockedNotification($ip, true));
+                } catch (\Throwable $e) {
+                    \Log::warning('Admin lockout alert failed for ' . $admin->email . ': ' . $e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Admin lockout alerts failed: ' . $e->getMessage());
+        }
     }
 }
