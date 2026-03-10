@@ -13,10 +13,48 @@
                     <span class="ml-2 text-xs bg-amber-400/20 text-amber-400 px-2 py-0.5 rounded-full font-semibold">Admin</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-300">Super Admin: <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
-                    <button @click="showPwModal = true" class="text-sm text-amber-400 hover:text-amber-300 font-medium" title="Change Password">
-                        <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                    </button>
+                    <span class="text-sm text-gray-300">Welcome, <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
+                    <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin'"></span>
+                    <!-- Settings Dropdown -->
+                    <div class="relative" x-data="{ settingsOpen: false }" @click.away="settingsOpen = false">
+                        <button @click="settingsOpen = !settingsOpen" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            Settings
+                        </button>
+                        <div x-show="settingsOpen" x-transition class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border z-50 overflow-hidden">
+                            <div class="px-4 py-3 bg-gray-50 border-b">
+                                <p class="text-sm font-semibold text-gray-800" x-text="(user?.firstname || '') + ' ' + (user?.lastname || '')"></p>
+                                <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
+                            </div>
+                            <div class="py-1">
+                                <button @click="showPwModal = true; settingsOpen = false" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                                    Change Password
+                                </button>
+                                <div class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                        Two-Factor Auth
+                                    </div>
+                                    <div class="relative">
+                                        <button @click="toggleTwoFactor()" :disabled="twoFactorToggling"
+                                            :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'"
+                                            class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50">
+                                            <span :class="twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"
+                                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-t py-1">
+                                <div class="px-4 py-2 text-xs text-gray-400">
+                                    <p>Role: <span class="font-medium text-gray-600" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin User'"></span></p>
+                                    <p class="mt-1">Last login: <span class="font-medium text-gray-600" x-text="user?.last_login_at ? new Date(user.last_login_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'N/A'"></span></p>
+                                    <p class="mt-1" x-show="user?.last_login_ip">IP: <span class="font-medium text-gray-600 font-mono" x-text="user?.last_login_ip"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button @click="logout()" class="text-sm text-red-400 hover:text-red-300 font-medium">Logout</button>
                 </div>
             </div>
@@ -4201,6 +4239,42 @@
 
     </div>
 
+    <!-- Change Password Modal -->
+    <div x-show="showPwModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closePwModal()">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+            <div class="flex items-center mb-4">
+                <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                <h3 class="text-lg font-bold text-gray-800">Change Password</h3>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Min 8 characters with mixed case, numbers, and symbols.</p>
+
+            <div x-show="pwSuccess" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
+            <div x-show="pwError" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
+
+            <form @submit.prevent="changePassword()">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                    <input type="password" x-model="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Current password">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="New password">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                    <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Confirm password">
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" @click="closePwModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">Cancel</button>
+                    <button type="submit" :disabled="pwLoading" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
+                        <span x-show="!pwLoading">Update Password</span>
+                        <span x-show="pwLoading">Updating...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -4306,6 +4380,9 @@ function adminPanel() {
         // Change Password
         showPwModal: false, currentPassword: '', newPassword: '', confirmPassword: '',
         pwLoading: false, pwError: '', pwSuccess: '',
+
+        // Two-Factor Auth
+        twoFactorEnabled: false, twoFactorToggling: false,
 
         // Operators (admin)
         operatorsList: [], opLoading: false,
@@ -4417,6 +4494,7 @@ function adminPanel() {
             if (this.hasPerm('admin_ip_whitelist')) this.fetchPendingIpCount();
             if (this.hasPerm('admin_transfers')) this.fetchPendingTransferCount();
             if (this.hasPerm('admin_reversals')) this.fetchPendingReversalCount();
+            this.fetchTwoFactorStatus();
 
             // Sync hash on tab change
             this.$watch('activeTab', (tab) => {
@@ -5953,6 +6031,30 @@ function adminPanel() {
             } catch (e) { alert('Service unavailable.'); }
         },
 
+        async fetchTwoFactorStatus() {
+            try {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/two-factor/status', { headers: this.getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.twoFactorEnabled = data.two_factor_enabled;
+                }
+            } catch (e) { console.error('2FA status fetch error', e); }
+        },
+
+        async toggleTwoFactor() {
+            this.twoFactorToggling = true;
+            try {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/two-factor/toggle', {
+                    method: 'POST', headers: this.getHeaders()
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.twoFactorEnabled = data.two_factor_enabled;
+                }
+            } catch (e) { console.error('2FA toggle error', e); }
+            this.twoFactorToggling = false;
+        },
+
         async changePassword() {
             this.pwError = ''; this.pwSuccess = ''; this.pwLoading = true;
             try {
@@ -6497,40 +6599,4 @@ function adminPanel() {
     }
 }
 </script>
-
-<!-- Change Password Modal -->
-<div x-show="showPwModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closePwModal()">
-    <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
-        <div class="flex items-center mb-4">
-            <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-            <h3 class="text-lg font-bold text-gray-800">Change Password</h3>
-        </div>
-        <p class="text-sm text-gray-500 mb-4">Min 8 characters with mixed case, numbers, and symbols.</p>
-
-        <div x-show="pwSuccess" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
-        <div x-show="pwError" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
-
-        <form @submit.prevent="changePassword()">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                <input type="password" x-model="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Current password">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="New password">
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Confirm password">
-            </div>
-            <div class="flex space-x-3">
-                <button type="button" @click="closePwModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">Cancel</button>
-                <button type="submit" :disabled="pwLoading" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
-                    <span x-show="!pwLoading">Update Password</span>
-                    <span x-show="pwLoading">Updating...</span>
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 @endsection
