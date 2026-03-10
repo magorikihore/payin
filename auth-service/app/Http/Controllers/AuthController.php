@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\WelcomeNotification;
 use App\Notifications\AdminKycSubmittedNotification;
 use App\Notifications\AdminNewRegistrationNotification;
+use App\Notifications\TwoFactorCodeNotification;
 use App\Models\AdminSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -130,6 +131,25 @@ class AuthController extends Controller
             return response()->json(['message' => 'Your account has been suspended. Contact support for more information.'], 403);
         }
 
+        // If 2FA is enabled, generate code and require verification
+        if ($user->two_factor_enabled) {
+            $code = $user->generateTwoFactorCode();
+
+            try {
+                $user->notify(new TwoFactorCodeNotification($code));
+            } catch (\Throwable $e) {
+                \Log::warning('2FA email failed for ' . $user->email . ': ' . $e->getMessage());
+            }
+
+            Auth::logout();
+
+            return response()->json([
+                'two_factor_required' => true,
+                'email' => $user->email,
+                'message' => 'A verification code has been sent to your email.',
+            ], 200);
+        }
+
         // Check account status (skip for super_admin)
         if (!$user->isSuperAdmin() && $user->account) {
             // If account is already active, skip KYC checks
@@ -171,6 +191,100 @@ class AuthController extends Controller
         return response()->json(['user' => $userData, 'token' => $token], 200);
     }
 
+    public function verifyTwoFactor(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required|string|size:6',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !$user->two_factor_code) {
+            return response()->json(['message' => 'Invalid or expired verification code.'], 422);
+        }
+
+        // Check if code is expired
+        if ($user->two_factor_expires_at && $user->two_factor_expires_at->isPast()) {
+            $user->clearTwoFactorCode();
+            return response()->json(['message' => 'Verification code has expired. Please login again.'], 422);
+        }
+
+        // Verify the code
+        if (!Hash::check($request->code, $user->two_factor_code)) {
+            return response()->json(['message' => 'Invalid verification code.'], 422);
+        }
+
+        // Clear the 2FA code
+        $user->clearTwoFactorCode();
+
+        // Check if user is banned (re-check in case status changed)
+        if ($user->is_banned) {
+            return response()->json(['message' => 'Your account has been suspended. Contact support for more information.'], 403);
+        }
+
+        // Check account status (skip for super_admin)
+        if (!$user->isSuperAdmin() && $user->account) {
+            if ($user->account->status === 'active') {
+                // proceed
+            } elseif (is_null($user->account->kyc_submitted_at)) {
+                $token = $user->createToken('authToken')->accessToken;
+                $user->load('account');
+                return response()->json([
+                    'user' => $user,
+                    'token' => $token,
+                    'kyc_required' => true,
+                    'message' => 'Please complete your KYC information to activate your account.'
+                ], 200);
+            } elseif ($user->account->status === 'pending') {
+                $token = $user->createToken('authToken')->accessToken;
+                $user->load('account');
+                return response()->json([
+                    'user' => $user,
+                    'token' => $token,
+                    'pending' => true,
+                    'message' => 'Your account is pending KYC approval. Please wait for admin verification.'
+                ], 200);
+            } else {
+                return response()->json(['message' => 'Your account has been suspended. Contact support.'], 403);
+            }
+        }
+
+        $token = $user->createToken('authToken')->accessToken;
+        $user->load('account');
+
+        $userData = $user->toArray();
+        $userData['admin_permissions'] = $user->getEffectiveAdminPermissions();
+
+        return response()->json(['user' => $userData, 'token' => $token], 200);
+    }
+
+    public function resendTwoFactorCode(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)
+            ->where('two_factor_enabled', true)
+            ->first();
+
+        if (!$user) {
+            // Don't reveal whether the user exists
+            return response()->json(['message' => 'If 2FA is enabled, a new code has been sent.']);
+        }
+
+        $code = $user->generateTwoFactorCode();
+
+        try {
+            $user->notify(new TwoFactorCodeNotification($code));
+        } catch (\Throwable $e) {
+            \Log::warning('2FA resend email failed for ' . $user->email . ': ' . $e->getMessage());
+        }
+
+        return response()->json(['message' => 'If 2FA is enabled, a new code has been sent.']);
+    }
+
     public function user(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -204,6 +318,38 @@ class AuthController extends Controller
         $user->update(['password' => Hash::make($request->password)]);
 
         return response()->json(['message' => 'Password changed successfully.']);
+    }
+
+    public function toggleTwoFactor(Request $request): JsonResponse
+    {
+        $request->validate([
+            'enabled' => 'required|boolean',
+            'password' => 'required|string',
+        ]);
+
+        $user = $request->user();
+
+        // Require password confirmation to change 2FA setting
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Password is incorrect.'], 422);
+        }
+
+        $user->update(['two_factor_enabled' => $request->enabled]);
+        $user->clearTwoFactorCode();
+
+        $status = $request->enabled ? 'enabled' : 'disabled';
+
+        return response()->json([
+            'message' => "Two-factor authentication has been {$status}.",
+            'two_factor_enabled' => (bool) $request->enabled,
+        ]);
+    }
+
+    public function getTwoFactorStatus(Request $request): JsonResponse
+    {
+        return response()->json([
+            'two_factor_enabled' => (bool) $request->user()->two_factor_enabled,
+        ]);
     }
 
     /**

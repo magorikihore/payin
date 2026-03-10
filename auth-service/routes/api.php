@@ -17,6 +17,12 @@ Route::middleware('throttle:5,1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
 
+// Two-factor authentication verification (throttled — 5 attempts per minute)
+Route::middleware('throttle:5,1')->group(function () {
+    Route::post('/verify-two-factor', [AuthController::class, 'verifyTwoFactor']);
+    Route::post('/resend-two-factor', [AuthController::class, 'resendTwoFactorCode']);
+});
+
 // Password reset (throttled separately — 5 attempts per minute)
 Route::middleware('throttle:5,1')->group(function () {
     Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
@@ -46,6 +52,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
+    Route::get('/two-factor/status', [AuthController::class, 'getTwoFactorStatus']);
+    Route::post('/two-factor/toggle', [AuthController::class, 'toggleTwoFactor']);
     Route::get('/account/callback', [AuthController::class, 'getCallback']);
     Route::put('/account/callback', [AuthController::class, 'updateCallback']);
     Route::get('/account/kyc', [AuthController::class, 'getKyc']);

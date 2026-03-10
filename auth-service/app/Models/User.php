@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
@@ -65,6 +66,9 @@ class User extends Authenticatable
         'is_banned',
         'banned_at',
         'ban_reason',
+        'two_factor_enabled',
+        'two_factor_code',
+        'two_factor_expires_at',
     ];
 
     protected $appends = ['full_name'];
@@ -82,6 +86,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_code',
     ];
 
     /**
@@ -97,6 +102,8 @@ class User extends Authenticatable
             'permissions' => 'array',
             'is_banned' => 'boolean',
             'banned_at' => 'datetime',
+            'two_factor_enabled' => 'boolean',
+            'two_factor_expires_at' => 'datetime',
         ];
     }
 
@@ -180,5 +187,31 @@ class User extends Authenticatable
     public function isAdminLevel(): bool
     {
         return in_array($this->role, ['super_admin', 'admin_user']);
+    }
+
+    /**
+     * Generate a 2FA code and set expiry (10 minutes).
+     */
+    public function generateTwoFactorCode(): string
+    {
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $this->update([
+            'two_factor_code' => Hash::make($code),
+            'two_factor_expires_at' => now()->addMinutes(10),
+        ]);
+
+        return $code;
+    }
+
+    /**
+     * Clear the 2FA code after successful verification.
+     */
+    public function clearTwoFactorCode(): void
+    {
+        $this->update([
+            'two_factor_code' => null,
+            'two_factor_expires_at' => null,
+        ]);
     }
 }
