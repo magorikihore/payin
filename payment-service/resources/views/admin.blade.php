@@ -16,7 +16,7 @@
                     <span class="text-sm text-gray-300">Welcome, <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin'"></span>
                     <!-- Settings Dropdown -->
-                    <div class="relative" x-data="{ settingsOpen: false }" @click.away="settingsOpen = false">
+                    <div class="relative" @click.away="settingsOpen = false">
                         <button @click="settingsOpen = !settingsOpen" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             Settings
@@ -27,7 +27,7 @@
                                 <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
                             </div>
                             <div class="py-1">
-                                <button @click="$root.showPwModal = true; settingsOpen = false" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                <button @click="showPwModal = true; settingsOpen = false" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
                                     <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                                     Change Password
                                 </button>
@@ -37,10 +37,10 @@
                                         Two-Factor Auth
                                     </div>
                                     <div class="relative">
-                                        <button @click="$root.toggleTwoFactor()" :disabled="$root.twoFactorToggling"
-                                            :class="$root.twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'"
+                                        <button @click="toggleTwoFactor()" :disabled="twoFactorToggling"
+                                            :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'"
                                             class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50">
-                                            <span :class="$root.twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"
+                                            <span :class="twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"
                                                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                                         </button>
                                     </div>
@@ -4383,6 +4383,9 @@ function adminPanel() {
 
         // Two-Factor Auth
         twoFactorEnabled: false, twoFactorToggling: false,
+
+        // Settings dropdown
+        settingsOpen: false,
 
         // Operators (admin)
         operatorsList: [], opLoading: false,
