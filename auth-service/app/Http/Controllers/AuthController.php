@@ -744,7 +744,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'No account found.'], 404);
         }
 
-        $account->update(['callback_url' => $request->callback_url]);\n\n        // Log callback URL change\n        ActivityLog::log($request, 'callback_update', 'Callback URL updated', ['url' => $request->callback_url]);
+        $account->update(['callback_url' => $request->callback_url]);
+
+        // Log callback URL change
+        ActivityLog::log($request, 'callback_update', 'Callback URL updated', ['url' => $request->callback_url]);
 
         return response()->json([
             'message' => 'Callback URL updated successfully.',
