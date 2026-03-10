@@ -5,7 +5,7 @@
 @section('content')
 <div x-data="adminPanel()" x-init="init()" x-cloak>
     <!-- Navigation -->
-    <nav class="shadow-sm border-b border-gray-700 relative z-50" style="background:rgba(15,23,42,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
+    <nav class="shadow-sm border-b border-gray-700 relative" style="background:rgba(15,23,42,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -15,8 +15,8 @@
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-300">Welcome, <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin'"></span>
-                    <!-- Settings Button -->
-                    <button id="settings-btn" @click="settingsOpen = !settingsOpen" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
+                    <!-- Settings Button (vanilla JS) -->
+                    <button id="settings-btn" type="button" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Settings
                     </button>
@@ -26,18 +26,16 @@
         </div>
     </nav>
 
-    <!-- Settings: invisible backdrop to catch outside clicks -->
-    <div x-show="settingsOpen" @click="settingsOpen = false" class="fixed inset-0" style="z-index:9998" x-cloak></div>
-    <!-- Settings Dropdown Panel (OUTSIDE nav to escape backdrop-filter stacking context) -->
-    <div x-show="settingsOpen" x-transition x-cloak
-         class="fixed top-16 right-4 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden"
-         style="z-index:9999">
+    <!-- Settings backdrop (vanilla JS controlled) -->
+    <div id="settings-backdrop" class="fixed inset-0 hidden" style="z-index:9998"></div>
+    <!-- Settings Panel (vanilla JS controlled, outside nav) -->
+    <div id="settings-panel" class="fixed top-16 right-4 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden hidden" style="z-index:9999">
         <div class="px-4 py-3 bg-gray-50 border-b">
-            <p class="text-sm font-semibold text-gray-800" x-text="(user?.firstname || '') + ' ' + (user?.lastname || '')"></p>
-            <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
+            <p id="settings-user-name" class="text-sm font-semibold text-gray-800"></p>
+            <p id="settings-user-email" class="text-xs text-gray-500"></p>
         </div>
         <div class="py-1">
-            <button @click="showPwModal = true; settingsOpen = false" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+            <button id="settings-change-pw" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
                 <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                 Change Password
             </button>
@@ -47,20 +45,17 @@
                     Two-Factor Auth
                 </div>
                 <div class="relative">
-                    <button @click="toggleTwoFactor()" :disabled="twoFactorToggling"
-                        :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'"
-                        class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50">
-                        <span :class="twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"
-                            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                    <button id="settings-2fa-toggle" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full bg-gray-300 transition-colors duration-200 ease-in-out">
+                        <span id="settings-2fa-dot" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
                     </button>
                 </div>
             </div>
         </div>
         <div class="border-t py-1">
             <div class="px-4 py-2 text-xs text-gray-400">
-                <p>Role: <span class="font-medium text-gray-600" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin User'"></span></p>
-                <p class="mt-1">Last login: <span class="font-medium text-gray-600" x-text="user?.last_login_at ? new Date(user.last_login_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'N/A'"></span></p>
-                <p class="mt-1" x-show="user?.last_login_ip">IP: <span class="font-medium text-gray-600 font-mono" x-text="user?.last_login_ip"></span></p>
+                <p>Role: <span id="settings-role" class="font-medium text-gray-600"></span></p>
+                <p class="mt-1">Last login: <span id="settings-last-login" class="font-medium text-gray-600"></span></p>
+                <p class="mt-1" id="settings-ip-row">IP: <span id="settings-ip" class="font-medium text-gray-600 font-mono"></span></p>
             </div>
         </div>
     </div>
@@ -4388,9 +4383,6 @@ function adminPanel() {
         // Two-Factor Auth
         twoFactorEnabled: false, twoFactorToggling: false,
 
-        // Settings dropdown
-        settingsOpen: false,
-
         // Operators (admin)
         operatorsList: [], opLoading: false,
         showOperatorModal: false, editingOperator: null,
@@ -4502,6 +4494,9 @@ function adminPanel() {
             if (this.hasPerm('admin_transfers')) this.fetchPendingTransferCount();
             if (this.hasPerm('admin_reversals')) this.fetchPendingReversalCount();
             this.fetchTwoFactorStatus();
+
+            // Settings dropdown - vanilla JS (CSP-safe, no eval)
+            this._initSettingsDropdown();
 
             // Sync hash on tab change
             this.$watch('activeTab', (tab) => {
@@ -6080,6 +6075,83 @@ function adminPanel() {
             finally { this.pwLoading = false; }
         },
         closePwModal() { this.showPwModal = false; this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.pwError = ''; this.pwSuccess = ''; },
+
+        _initSettingsDropdown() {
+            var self = this;
+            var btn = document.getElementById('settings-btn');
+            var panel = document.getElementById('settings-panel');
+            var backdrop = document.getElementById('settings-backdrop');
+            if (!btn || !panel || !backdrop) return;
+
+            function updateSettingsInfo() {
+                var u = self.user || {};
+                var nameEl = document.getElementById('settings-user-name');
+                var emailEl = document.getElementById('settings-user-email');
+                var roleEl = document.getElementById('settings-role');
+                var lastLoginEl = document.getElementById('settings-last-login');
+                var ipEl = document.getElementById('settings-ip');
+                var ipRow = document.getElementById('settings-ip-row');
+                if (nameEl) nameEl.textContent = (u.firstname || '') + ' ' + (u.lastname || '');
+                if (emailEl) emailEl.textContent = u.email || '';
+                if (roleEl) roleEl.textContent = u.role === 'super_admin' ? 'Super Admin' : 'Admin User';
+                if (lastLoginEl) lastLoginEl.textContent = u.last_login_at ? new Date(u.last_login_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'N/A';
+                if (ipEl) ipEl.textContent = u.last_login_ip || '';
+                if (ipRow) ipRow.style.display = u.last_login_ip ? '' : 'none';
+            }
+
+            function update2FAVisual() {
+                var toggle = document.getElementById('settings-2fa-toggle');
+                var dot = document.getElementById('settings-2fa-dot');
+                if (toggle) {
+                    toggle.className = 'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out' + (self.twoFactorEnabled ? ' bg-green-500' : ' bg-gray-300');
+                }
+                if (dot) {
+                    dot.className = 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out' + (self.twoFactorEnabled ? ' translate-x-4' : ' translate-x-0');
+                }
+            }
+
+            function openPanel() {
+                updateSettingsInfo();
+                update2FAVisual();
+                panel.classList.remove('hidden');
+                backdrop.classList.remove('hidden');
+            }
+
+            function closePanel() {
+                panel.classList.add('hidden');
+                backdrop.classList.add('hidden');
+            }
+
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (panel.classList.contains('hidden')) {
+                    openPanel();
+                } else {
+                    closePanel();
+                }
+            });
+
+            backdrop.addEventListener('click', function() {
+                closePanel();
+            });
+
+            // Change Password button
+            var pwBtn = document.getElementById('settings-change-pw');
+            if (pwBtn) {
+                pwBtn.addEventListener('click', function() {
+                    closePanel();
+                    self.showPwModal = true;
+                });
+            }
+
+            // 2FA toggle button
+            var tfaBtn = document.getElementById('settings-2fa-toggle');
+            if (tfaBtn) {
+                tfaBtn.addEventListener('click', function() {
+                    self.toggleTwoFactor().then(function() { update2FAVisual(); });
+                });
+            }
+        },
 
         logout() {
             fetch('{{ config("services.auth_service.public_url") }}/api/logout', { method: 'POST', headers: this.getHeaders() }).finally(() => {
