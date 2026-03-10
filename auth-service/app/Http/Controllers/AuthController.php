@@ -206,6 +206,9 @@ class AuthController extends Controller
             }
         }
 
+        // Record login IP
+        $user->recordLoginIp($request->ip());
+
         $token = $user->createToken('authToken')->accessToken;
         $user->load('account');
 
@@ -291,6 +294,9 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Your account has been suspended. Contact support.'], 403);
             }
         }
+
+        // Record login IP
+        $user->recordLoginIp($request->ip());
 
         $token = $user->createToken('authToken')->accessToken;
         $user->load('account');

@@ -71,6 +71,8 @@ class User extends Authenticatable
         'two_factor_expires_at',
         'failed_login_attempts',
         'locked_until',
+        'last_login_ip',
+        'last_login_at',
     ];
 
     protected $appends = ['full_name'];
@@ -108,6 +110,7 @@ class User extends Authenticatable
             'two_factor_expires_at' => 'datetime',
             'failed_login_attempts' => 'integer',
             'locked_until' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -249,6 +252,17 @@ class User extends Authenticatable
                 'locked_until' => null,
             ]);
         }
+    }
+
+    /**
+     * Record login IP and timestamp.
+     */
+    public function recordLoginIp(string $ip): void
+    {
+        $this->update([
+            'last_login_ip' => $ip,
+            'last_login_at' => now(),
+        ]);
     }
 
     /**
