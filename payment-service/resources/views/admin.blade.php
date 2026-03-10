@@ -30,9 +30,8 @@
     <div x-show="settingsOpen" @click="settingsOpen = false" class="fixed inset-0" style="z-index:9998" x-cloak></div>
     <!-- Settings Dropdown Panel (OUTSIDE nav to escape backdrop-filter stacking context) -->
     <div x-show="settingsOpen" x-transition x-cloak
-         class="fixed w-64 bg-white rounded-xl shadow-2xl border overflow-hidden"
-         style="z-index:9999"
-         :style="(() => { const btn = document.getElementById('settings-btn'); if (!btn) return ''; const r = btn.getBoundingClientRect(); return 'top:' + (r.bottom + 8) + 'px;right:' + (window.innerWidth - r.right) + 'px;'; })()">
+         class="fixed top-16 right-4 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden"
+         style="z-index:9999">
         <div class="px-4 py-3 bg-gray-50 border-b">
             <p class="text-sm font-semibold text-gray-800" x-text="(user?.firstname || '') + ' ' + (user?.lastname || '')"></p>
             <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
