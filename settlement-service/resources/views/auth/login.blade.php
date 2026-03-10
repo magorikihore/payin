@@ -15,6 +15,9 @@
             <p class="text-gray-500 mt-1">Sign in to your account</p>
         </div>
 
+        <!-- Session Expired Notice -->
+        <div x-init="if(new URLSearchParams(window.location.search).get('reason')==='idle'){$el.style.display='block'; history.replaceState(null,'','/login')}" style="display:none" class="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-sm">Your session expired due to inactivity. Please log in again.</div>
+
         <!-- Error Message -->
         <div x-show="error" x-cloak class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" x-text="error"></div>
 

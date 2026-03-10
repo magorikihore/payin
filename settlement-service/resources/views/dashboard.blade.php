@@ -309,6 +309,19 @@ function dashboard() {
             this.user = userData ? JSON.parse(userData) : null;
             this.fetchStats();
             this.fetchTransactions();
+
+            // Idle timeout: auto-logout after 15 minutes of inactivity
+            this._lastActivity = Date.now();
+            const resetActivity = () => { this._lastActivity = Date.now(); };
+            ['mousemove','keydown','click','scroll','touchstart'].forEach(e => document.addEventListener(e, resetActivity, { passive: true }));
+            this._idleTimer = setInterval(() => {
+                if (Date.now() - this._lastActivity > 15 * 60 * 1000) {
+                    clearInterval(this._idleTimer);
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('auth_user');
+                    window.location.href = '/login?reason=idle';
+                }
+            }, 60000);
         },
 
         async fetchStats() {
