@@ -65,9 +65,9 @@
                      x-show="hasPerm('admin_users') || hasPerm('admin_operators') || hasPerm('admin_payments') || user?.role === 'super_admin'"
                      >
                     <button @click="moreOpen = !moreOpen"
-                        :class="['users','operators','payments','admin_users','logs','mail_config','exchange_rates','referrals'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                        :class="['users','operators','payments','admin_users','audit_trail','logs','mail_config','exchange_rates','referrals'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                         class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap inline-flex items-center">
-                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : activeTab === 'exchange_rates' ? 'Exchange Rates' : activeTab === 'referrals' ? 'Referrals' : 'More'"></span>
+                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'audit_trail' ? 'Audit Trail' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : activeTab === 'exchange_rates' ? 'Exchange Rates' : activeTab === 'referrals' ? 'Referrals' : 'More'"></span>
                         <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="moreOpen" x-transition class="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border z-50">
@@ -83,6 +83,9 @@
                         <button x-show="user?.role === 'super_admin'" @click="goToTab('admin_users'); moreOpen = false"
                             :class="activeTab === 'admin_users' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Admin Users</button>
+                        <button x-show="user?.role === 'super_admin'" @click="goToTab('audit_trail'); moreOpen = false"
+                            :class="activeTab === 'audit_trail' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
+                            class="block w-full text-left px-4 py-2 text-sm">Audit Trail</button>
                         <button x-show="user?.role === 'super_admin'" @click="goToTab('logs'); moreOpen = false"
                             :class="activeTab === 'logs' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Error Logs</button>
@@ -3012,6 +3015,113 @@
         </div>
     </div>
 
+        <!-- ==================== AUDIT TRAIL TAB (super_admin only) ==================== -->
+        <div x-show="activeTab === 'audit_trail'" x-cloak class="mt-6">
+            <div class="bg-white rounded-xl shadow-sm p-4 border mb-6">
+                <div class="flex flex-wrap items-center gap-4">
+                    <select x-model="auditActionFilter" @change="auditPage=1; fetchAuditLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">All Actions</option>
+                        <template x-for="a in auditActions" :key="a">
+                            <option :value="a" x-text="a.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())"></option>
+                        </template>
+                    </select>
+                    <div class="flex-1 min-w-[200px]">
+                        <input type="text" x-model="auditSearch" @input.debounce.500ms="auditPage=1; fetchAuditLogs()"
+                            placeholder="Search by description, action, or IP..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <input type="date" x-model="auditDateFrom" @change="auditPage=1; fetchAuditLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <span class="text-gray-400 text-sm">to</span>
+                    <input type="date" x-model="auditDateTo" @change="auditPage=1; fetchAuditLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <button @click="fetchAuditLogs()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium inline-flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div x-show="auditLoading" class="text-center py-12"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>
+
+            <!-- Empty -->
+            <div x-show="!auditLoading && auditLogs.length === 0" x-cloak class="text-center py-12">
+                <svg class="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <p class="text-gray-500">No activity logs found.</p>
+            </div>
+
+            <!-- Table -->
+            <div x-show="!auditLoading && auditLogs.length > 0" x-cloak class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <template x-for="log in auditLogs" :key="log.id">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-xs text-gray-500 whitespace-nowrap" x-text="new Date(log.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})"></td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                            :class="{
+                                                'bg-green-100 text-green-700': log.action.includes('login') && !log.action.includes('failed'),
+                                                'bg-red-100 text-red-700': log.action.includes('failed') || log.action.includes('locked') || log.action.includes('ban'),
+                                                'bg-blue-100 text-blue-700': log.action.includes('password') || log.action.includes('two_factor'),
+                                                'bg-amber-100 text-amber-700': log.action.includes('callback') || log.action.includes('api_key') || log.action.includes('update'),
+                                                'bg-purple-100 text-purple-700': log.action.includes('admin'),
+                                                'bg-gray-100 text-gray-700': !log.action.includes('login') && !log.action.includes('failed') && !log.action.includes('password') && !log.action.includes('callback') && !log.action.includes('admin') && !log.action.includes('api_key') && !log.action.includes('update') && !log.action.includes('locked') && !log.action.includes('ban')
+                                            }"
+                                            x-text="log.action.replace(/_/g,' ')"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        <template x-if="log.user">
+                                            <div>
+                                                <span x-text="(log.user.firstname || log.user.name || 'Unknown')"></span>
+                                                <div class="text-xs text-gray-400" x-text="log.user.email"></div>
+                                            </div>
+                                        </template>
+                                        <template x-if="!log.user">
+                                            <span class="text-gray-400">System</span>
+                                        </template>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 max-w-xs truncate" :title="log.description" x-text="log.description"></td>
+                                    <td class="px-4 py-3 text-xs text-gray-500 font-mono" x-text="log.ip_address || '-'"></td>
+                                    <td class="px-4 py-3">
+                                        <template x-if="log.metadata">
+                                            <button @click="log._open = !log._open" class="text-xs text-blue-600 hover:text-blue-800 font-medium">Details</button>
+                                        </template>
+                                        <template x-if="!log.metadata">
+                                            <span class="text-xs text-gray-400">-</span>
+                                        </template>
+                                    </td>
+                                </tr>
+                                <tr x-show="log._open && log.metadata" x-cloak>
+                                    <td colspan="6" class="px-4 py-3 bg-gray-50">
+                                        <pre class="text-xs text-gray-600 whitespace-pre-wrap break-all max-h-40 overflow-y-auto" x-text="JSON.stringify(log.metadata, null, 2)"></pre>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div x-show="auditPagination.last_page > 1" class="px-4 py-3 bg-gray-50 border-t flex items-center justify-between">
+                    <p class="text-sm text-gray-500">Page <span x-text="auditPagination.current_page"></span> of <span x-text="auditPagination.last_page"></span> (<span x-text="auditPagination.total"></span> total)</p>
+                    <div class="flex gap-2">
+                        <button @click="auditPage--; fetchAuditLogs()" :disabled="auditPage <= 1" class="px-3 py-1 text-sm border rounded-lg disabled:opacity-50 hover:bg-gray-100">Prev</button>
+                        <button @click="auditPage++; fetchAuditLogs()" :disabled="auditPage >= auditPagination.last_page" class="px-3 py-1 text-sm border rounded-lg disabled:opacity-50 hover:bg-gray-100">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== ERROR LOGS TAB (super_admin only) ==================== -->
         <div x-show="activeTab === 'logs'" x-cloak class="mt-6">
             <!-- Controls -->
@@ -4241,6 +4351,10 @@ function adminPanel() {
         kycMultiCurrency: false, kycAllowedCurrencies: [], kycMultiSaving: false, kycMultiMsg: '', kycMultiMsgType: 'success',
         allCurrencies: ['TZS','KES','UGX','RWF','BIF','CDF','MZN','MWK','ZMW','ZAR','NGN','GHS','USD'],
 
+        // Audit Trail (super_admin only)
+        auditLogs: [], auditLoading: false, auditActions: [], auditActionFilter: '', auditSearch: '',
+        auditDateFrom: '', auditDateTo: '', auditPage: 1, auditPagination: {},
+
         // Error Logs (super_admin only)
         logEntries: [], logLoading: false, logService: 'auth', logLevel: '', logSearch: '', logLines: '200',
         logFileSize: '', logTotalEntries: 0, logError: '', logAutoRefresh: false, logAutoRefreshTimer: null,
@@ -4284,8 +4398,8 @@ function adminPanel() {
             }
             this.adminPerms = this.user.admin_permissions || [];
             // Set default tab to first permitted tab
-            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals', 'admin_users', 'logs', 'mail_config', 'exchange_rates'];
-            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals', admin_users: 'super_admin', logs: 'super_admin', mail_config: 'super_admin', exchange_rates: 'super_admin' };
+            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals', 'admin_users', 'audit_trail', 'logs', 'mail_config', 'exchange_rates'];
+            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals', admin_users: 'super_admin', audit_trail: 'super_admin', logs: 'super_admin', mail_config: 'super_admin', exchange_rates: 'super_admin' };
             const hash = window.location.hash.replace('#', '');
             if (hash && tabOrder.includes(hash) && this.hasPerm(permMap[hash])) {
                 this.activeTab = hash;
@@ -4361,6 +4475,7 @@ function adminPanel() {
                 case 'operators': this.fetchOperators(); break;
                 case 'payments': this.fetchPaymentRequests(); break;
                 case 'admin_users': this.fetchAdminUsers(); break;
+                case 'audit_trail': this.fetchAuditLogs(); break;
                 case 'logs': this.fetchLogs(); break;
                 case 'mail_config': this.fetchMailConfig(); break;
                 case 'exchange_rates': this.fetchExchangeRates(); break;
@@ -5915,6 +6030,27 @@ function adminPanel() {
                 if (this.logAutoRefreshTimer) clearInterval(this.logAutoRefreshTimer);
                 this.logAutoRefreshTimer = null;
             }
+        },
+
+        // ==================== AUDIT TRAIL ====================
+        async fetchAuditLogs() {
+            this.auditLoading = true;
+            try {
+                let url = `{{ config("services.auth_service.public_url") }}/api/admin/activity-logs?page=${this.auditPage}`;
+                if (this.auditActionFilter) url += `&action=${encodeURIComponent(this.auditActionFilter)}`;
+                if (this.auditSearch) url += `&search=${encodeURIComponent(this.auditSearch)}`;
+                if (this.auditDateFrom) url += `&date_from=${this.auditDateFrom}`;
+                if (this.auditDateTo) url += `&date_to=${this.auditDateTo}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.auditLogs = (data.logs?.data || []).map(l => ({ ...l, _open: false }));
+                    this.auditPagination = { current_page: data.logs.current_page, last_page: data.logs.last_page, total: data.logs.total };
+                    if (data.actions) this.auditActions = data.actions;
+                }
+            } catch (e) { console.error('Audit fetch error', e); }
+            this.auditLoading = false;
         },
 
         // ==================== MAIL CONFIG ====================

@@ -1342,9 +1342,29 @@ class AdminController extends Controller
         if ($request->filled('account_id')) {
             $query->where('account_id', $request->account_id);
         }
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(function ($q) use ($s) {
+                $q->where('description', 'like', "%{$s}%")
+                  ->orWhere('action', 'like', "%{$s}%")
+                  ->orWhere('ip_address', 'like', "%{$s}%");
+            });
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
 
-        $logs = $query->with('user:id,name,email')->paginate(50);
+        $logs = $query->with('user:id,name,email,firstname,lastname')->paginate($request->input('per_page', 50));
 
-        return response()->json($logs);
+        // Get distinct actions for filter dropdown
+        $actions = \App\Models\ActivityLog::select('action')->distinct()->orderBy('action')->pluck('action');
+
+        return response()->json([
+            'logs' => $logs,
+            'actions' => $actions,
+        ]);
     }
 }
