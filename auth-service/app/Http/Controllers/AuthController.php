@@ -119,11 +119,35 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
+        // Check if account is locked before attempting login
+        $user = User::where('email', $credentials['email'])->first();
+        if ($user && $user->isLockedOut()) {
+            $minutes = $user->lockoutMinutesRemaining();
+            return response()->json([
+                'message' => "Account locked due to too many failed attempts. Try again in {$minutes} minute(s).",
+                'locked_until' => $user->locked_until->toIso8601String(),
+            ], 423);
+        }
+
         if (!Auth::attempt($credentials)) {
+            // Record failed attempt if user exists
+            if ($user) {
+                $user->recordFailedLogin();
+                $remaining = User::MAX_LOGIN_ATTEMPTS - ($user->failed_login_attempts + 1);
+                if ($user->isLockedOut()) {
+                    return response()->json([
+                        'message' => 'Account locked due to too many failed attempts. Try again in ' . User::LOCKOUT_MINUTES . ' minute(s).',
+                        'locked_until' => $user->locked_until->toIso8601String(),
+                    ], 423);
+                }
+            }
             return response()->json(['message' => 'Please check your username or password'], 401);
         }
 
         $user = Auth::user();
+
+        // Reset failed attempts on successful password check
+        $user->resetFailedLogins();
 
         // Check if user is banned
         if ($user->is_banned) {
@@ -204,6 +228,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid or expired verification code.'], 422);
         }
 
+        // Check if account is locked
+        if ($user->isLockedOut()) {
+            $minutes = $user->lockoutMinutesRemaining();
+            return response()->json([
+                'message' => "Account locked due to too many failed attempts. Try again in {$minutes} minute(s).",
+                'locked_until' => $user->locked_until->toIso8601String(),
+            ], 423);
+        }
+
         // Check if code is expired
         if ($user->two_factor_expires_at && $user->two_factor_expires_at->isPast()) {
             $user->clearTwoFactorCode();
@@ -212,11 +245,20 @@ class AuthController extends Controller
 
         // Verify the code
         if (!Hash::check($request->code, $user->two_factor_code)) {
+            $user->recordFailedLogin();
+            if ($user->isLockedOut()) {
+                $user->clearTwoFactorCode();
+                return response()->json([
+                    'message' => 'Account locked due to too many failed attempts. Try again in ' . User::LOCKOUT_MINUTES . ' minute(s).',
+                    'locked_until' => $user->locked_until->toIso8601String(),
+                ], 423);
+            }
             return response()->json(['message' => 'Invalid verification code.'], 422);
         }
 
         // Clear the 2FA code
         $user->clearTwoFactorCode();
+        $user->resetFailedLogins();
 
         // Check if user is banned (re-check in case status changed)
         if ($user->is_banned) {

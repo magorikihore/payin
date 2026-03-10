@@ -69,6 +69,8 @@ class User extends Authenticatable
         'two_factor_enabled',
         'two_factor_code',
         'two_factor_expires_at',
+        'failed_login_attempts',
+        'locked_until',
     ];
 
     protected $appends = ['full_name'];
@@ -104,6 +106,8 @@ class User extends Authenticatable
             'banned_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'two_factor_expires_at' => 'datetime',
+            'failed_login_attempts' => 'integer',
+            'locked_until' => 'datetime',
         ];
     }
 
@@ -187,6 +191,64 @@ class User extends Authenticatable
     public function isAdminLevel(): bool
     {
         return in_array($this->role, ['super_admin', 'admin_user']);
+    }
+
+    /**
+     * Maximum failed login attempts before lockout.
+     */
+    public const MAX_LOGIN_ATTEMPTS = 5;
+
+    /**
+     * Lockout duration in minutes.
+     */
+    public const LOCKOUT_MINUTES = 30;
+
+    /**
+     * Check if the account is currently locked.
+     */
+    public function isLockedOut(): bool
+    {
+        return $this->locked_until && $this->locked_until->isFuture();
+    }
+
+    /**
+     * Get remaining lockout minutes.
+     */
+    public function lockoutMinutesRemaining(): int
+    {
+        if (!$this->isLockedOut()) {
+            return 0;
+        }
+        return (int) now()->diffInMinutes($this->locked_until, false);
+    }
+
+    /**
+     * Record a failed login attempt. Lock account if threshold reached.
+     */
+    public function recordFailedLogin(): void
+    {
+        $attempts = $this->failed_login_attempts + 1;
+
+        $data = ['failed_login_attempts' => $attempts];
+
+        if ($attempts >= self::MAX_LOGIN_ATTEMPTS) {
+            $data['locked_until'] = now()->addMinutes(self::LOCKOUT_MINUTES);
+        }
+
+        $this->update($data);
+    }
+
+    /**
+     * Reset failed login attempts on successful login.
+     */
+    public function resetFailedLogins(): void
+    {
+        if ($this->failed_login_attempts > 0 || $this->locked_until) {
+            $this->update([
+                'failed_login_attempts' => 0,
+                'locked_until' => null,
+            ]);
+        }
     }
 
     /**
