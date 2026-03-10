@@ -2528,6 +2528,59 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Two-Factor Authentication -->
+                <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-6 h-6 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-800">Two-Factor Authentication (2FA)</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">Add an extra layer of security to your account. When enabled, you'll receive a 6-digit verification code via email each time you log in after entering your password.</p>
+
+                    <div x-show="tfaMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm"
+                        :class="tfaMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'"
+                        x-text="tfaMsg"></div>
+
+                    <div class="flex items-center justify-between p-4 rounded-lg" :class="tfaEnabled ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3"
+                                :class="tfaEnabled ? 'bg-green-100' : 'bg-gray-200'">
+                                <svg class="w-5 h-5" :class="tfaEnabled ? 'text-green-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold" :class="tfaEnabled ? 'text-green-800' : 'text-gray-700'" x-text="tfaEnabled ? 'Two-Factor Authentication is ON' : 'Two-Factor Authentication is OFF'"></p>
+                                <p class="text-xs" :class="tfaEnabled ? 'text-green-600' : 'text-gray-500'" x-text="tfaEnabled ? 'A verification code will be sent to your email on every login.' : 'Your account is protected by password only.'"></p>
+                            </div>
+                        </div>
+                        <button @click="tfaShowConfirm = true"
+                            class="px-4 py-2 rounded-lg text-sm font-medium transition"
+                            :class="tfaEnabled ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'">
+                            <span x-text="tfaEnabled ? 'Disable' : 'Enable'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Confirm password modal for 2FA toggle -->
+                    <div x-show="tfaShowConfirm" x-cloak class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <p class="text-sm text-gray-700 mb-3" x-text="tfaEnabled ? 'Enter your password to disable two-factor authentication:' : 'Enter your password to enable two-factor authentication:'"></p>
+                        <form @submit.prevent="toggleTwoFactor()">
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <input type="password" x-model="tfaPassword" placeholder="Enter your password"
+                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                                <button type="submit" :disabled="tfaLoading"
+                                    class="px-6 py-2 rounded-lg text-sm font-medium text-white transition disabled:opacity-50"
+                                    :class="tfaEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'">
+                                    <span x-show="!tfaLoading" x-text="tfaEnabled ? 'Confirm Disable' : 'Confirm Enable'"></span>
+                                    <span x-show="tfaLoading">Processing...</span>
+                                </button>
+                                <button type="button" @click="tfaShowConfirm = false; tfaPassword = ''" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -3190,6 +3243,10 @@ function dashboard() {
         callbackUrl: '', callbackLoading: false,
         callbackMsg: '', callbackMsgType: '',
 
+        // Two-Factor Authentication
+        tfaEnabled: false, tfaLoading: false, tfaShowConfirm: false,
+        tfaPassword: '', tfaMsg: '', tfaMsgType: '',
+
         // IP Whitelist
         ipList: [], ipLoading: false, ipAddLoading: false,
         newIpAddress: '', newIpLabel: '',
@@ -3279,7 +3336,7 @@ function dashboard() {
                 case 'account': this.fetchKyc(); break;
                 case 'users': this.fetchAccountUsers(); break;
                 case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
-                case 'settings': this.fetchCallback(); break;
+                case 'settings': this.fetchCallback(); this.fetchTwoFactorStatus(); break;
             }
         },
 
@@ -4763,6 +4820,29 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             finally { this.pwLoading = false; }
         },
         closePasswordModal() { this.showPasswordModal = false; this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.pwError = ''; this.pwSuccess = ''; },
+
+        // ---- Two-Factor Authentication ----
+        async fetchTwoFactorStatus() {
+            try {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/two-factor/status', { headers: this.getHeaders() });
+                if (res.ok) { const data = await res.json(); this.tfaEnabled = data.two_factor_enabled; }
+            } catch (e) { console.error(e); }
+        },
+        async toggleTwoFactor() {
+            this.tfaMsg = ''; this.tfaLoading = true;
+            try {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/two-factor/toggle', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ enabled: !this.tfaEnabled, password: this.tfaPassword })
+                });
+                const data = await res.json();
+                if (!res.ok) { this.tfaMsg = data.errors ? Object.values(data.errors).flat().join(' ') : data.message; this.tfaMsgType = 'error'; return; }
+                this.tfaEnabled = data.two_factor_enabled;
+                this.tfaMsg = data.message; this.tfaMsgType = 'success';
+                this.tfaShowConfirm = false; this.tfaPassword = '';
+            } catch (e) { this.tfaMsg = 'Unable to connect to auth service.'; this.tfaMsgType = 'error'; }
+            finally { this.tfaLoading = false; }
+        },
 
         // ---- Account Users ----
         async fetchAccountUsers() {

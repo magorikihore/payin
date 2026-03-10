@@ -21,8 +21,41 @@
         <!-- Success Message -->
         <div x-show="success" x-cloak class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm" x-text="success"></div>
 
+        <!-- Two-Factor Verification Form -->
+        <form x-show="showTwoFactor && !showRegister" @submit.prevent="verifyTwoFactor" x-cloak>
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800">Two-Factor Verification</h3>
+                <p class="text-sm text-gray-500 mt-1">A 6-digit code has been sent to your email.</p>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Verification Code</label>
+                <input type="text" x-model="tfaCode" required maxlength="6" pattern="[0-9]{6}"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-center text-2xl tracking-[0.5em] font-mono"
+                    placeholder="000000" autocomplete="one-time-code">
+            </div>
+            <button type="submit" :disabled="loading"
+                class="w-full bg-indigo-600 text-white py-2.5 px-4 rounded-lg hover:bg-indigo-700 transition font-medium disabled:opacity-50">
+                <span x-show="!loading">Verify & Login</span>
+                <span x-show="loading">Verifying...</span>
+            </button>
+            <div class="flex items-center justify-between mt-4">
+                <button type="button" @click="resendTwoFactor()" :disabled="resendLoading || resendCooldown > 0"
+                    class="text-sm text-indigo-600 hover:underline disabled:text-gray-400 disabled:no-underline">
+                    <span x-show="resendCooldown > 0" x-text="'Resend in ' + resendCooldown + 's'"></span>
+                    <span x-show="resendCooldown <= 0 && !resendLoading">Resend Code</span>
+                    <span x-show="resendLoading">Sending...</span>
+                </button>
+                <button type="button" @click="showTwoFactor = false; tfaCode = ''; tfaEmail = ''; error = ''" class="text-sm text-gray-500 hover:underline">Back to Login</button>
+            </div>
+        </form>
+
         <!-- Login Form -->
-        <form x-show="!showRegister" @submit.prevent="login" x-cloak>
+        <form x-show="!showRegister && !showTwoFactor" @submit.prevent="login" x-cloak>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input type="email" x-model="email" required
@@ -96,6 +129,11 @@ function loginForm() {
         success: '',
         loading: false,
         showRegister: false,
+        showTwoFactor: false,
+        tfaEmail: '',
+        tfaCode: '',
+        resendLoading: false,
+        resendCooldown: 0,
 
         async login() {
             this.loading = true;
@@ -111,6 +149,14 @@ function loginForm() {
                     this.error = data.message || 'Login failed. Please check your credentials.';
                     return;
                 }
+                if (data.two_factor_required) {
+                    this.tfaEmail = data.email;
+                    this.showTwoFactor = true;
+                    this.success = data.message;
+                    this.error = '';
+                    this.startResendCooldown();
+                    return;
+                }
                 localStorage.setItem('auth_token', data.token);
                 localStorage.setItem('auth_user', JSON.stringify(data.user));
                 window.location.href = '/dashboard';
@@ -119,6 +165,43 @@ function loginForm() {
             } finally {
                 this.loading = false;
             }
+        },
+
+        async verifyTwoFactor() {
+            this.loading = true; this.error = ''; this.success = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/verify-two-factor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ email: this.tfaEmail, code: this.tfaCode })
+                });
+                const data = await res.json();
+                if (!res.ok) { this.error = data.message || 'Invalid verification code.'; return; }
+                localStorage.setItem('auth_token', data.token);
+                localStorage.setItem('auth_user', JSON.stringify(data.user));
+                window.location.href = '/dashboard';
+            } catch (e) { this.error = 'Unable to connect to authentication service.'; }
+            finally { this.loading = false; }
+        },
+
+        async resendTwoFactor() {
+            this.resendLoading = true; this.error = '';
+            try {
+                const res = await fetch('{{ config("services.auth_service.url") }}/api/resend-two-factor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ email: this.tfaEmail })
+                });
+                const data = await res.json();
+                this.success = data.message || 'A new code has been sent.';
+                this.startResendCooldown();
+            } catch (e) { this.error = 'Unable to resend code.'; }
+            finally { this.resendLoading = false; }
+        },
+
+        startResendCooldown() {
+            this.resendCooldown = 60;
+            const interval = setInterval(() => { this.resendCooldown--; if (this.resendCooldown <= 0) clearInterval(interval); }, 1000);
         },
 
         async register() {
