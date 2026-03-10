@@ -15,11 +15,11 @@
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-300">Welcome, <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin'"></span>
-                    <!-- Settings Dropdown (vanilla JS toggle to bypass Alpine scope issues) -->
+                    <!-- Settings Dropdown - DEBUG BUILD v7 -->
                     <div class="relative" id="settings-wrapper">
-                        <button onclick="event.stopPropagation();var d=document.getElementById('settings-panel');d.classList.toggle('hidden')" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
+                        <button onclick="alert('Settings clicked! Build v7');event.stopPropagation();var d=document.getElementById('settings-panel');if(d){d.classList.toggle('hidden')}else{alert('Panel not found!')}" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            Settings
+                            Settings ⚙
                         </button>
                         <div id="settings-panel" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden" style="z-index:9990">
                             <div class="px-4 py-3 bg-gray-50 border-b">
