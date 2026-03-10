@@ -3336,7 +3336,7 @@ function dashboard() {
                 case 'account': this.fetchKyc(); break;
                 case 'users': this.fetchAccountUsers(); break;
                 case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
-                case 'settings': this.fetchCallback(); this.fetchTwoFactorStatus(); break;
+                case 'settings': this.fetchCallback().then(() => this.fetchTwoFactorStatus()).then(() => this.fetchApiKeys()); break;
             }
         },
 
