@@ -14,6 +14,9 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-300">Super Admin: <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
+                    <button @click="showPwModal = true" class="text-sm text-amber-400 hover:text-amber-300 font-medium" title="Change Password">
+                        <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    </button>
                     <button @click="logout()" class="text-sm text-red-400 hover:text-red-300 font-medium">Logout</button>
                 </div>
             </div>
@@ -4190,6 +4193,10 @@ function adminPanel() {
         // Direct reversal
         showDirectRevModal: false, directRevTxn: null, directRevReason: '', directRevLoading: false, directRevError: '', directRevSuccess: '',
 
+        // Change Password
+        showPwModal: false, currentPassword: '', newPassword: '', confirmPassword: '',
+        pwLoading: false, pwError: '', pwSuccess: '',
+
         // Operators (admin)
         operatorsList: [], opLoading: false,
         showOperatorModal: false, editingOperator: null,
@@ -5818,6 +5825,25 @@ function adminPanel() {
             } catch (e) { alert('Service unavailable.'); }
         },
 
+        async changePassword() {
+            this.pwError = ''; this.pwSuccess = ''; this.pwLoading = true;
+            try {
+                const res = await fetch('{{ config("services.auth_service.public_url") }}/api/change-password', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ current_password: this.currentPassword, password: this.newPassword, password_confirmation: this.confirmPassword })
+                });
+                const data = await res.json();
+                if (!res.ok) { this.pwError = data.errors ? Object.values(data.errors).flat().join(' ') : data.message; return; }
+                this.pwSuccess = data.message || 'Password updated successfully.';
+                this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = '';
+                // Store new token if returned
+                if (data.token) { localStorage.setItem('auth_token', data.token); }
+                setTimeout(() => this.closePwModal(), 2000);
+            } catch (e) { this.pwError = 'Unable to connect to auth service.'; }
+            finally { this.pwLoading = false; }
+        },
+        closePwModal() { this.showPwModal = false; this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.pwError = ''; this.pwSuccess = ''; },
+
         logout() {
             fetch('{{ config("services.auth_service.public_url") }}/api/logout', { method: 'POST', headers: this.getHeaders() }).finally(() => {
                 localStorage.removeItem('auth_token');
@@ -6322,4 +6348,40 @@ function adminPanel() {
     }
 }
 </script>
+
+<!-- Change Password Modal -->
+<div x-show="showPwModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closePwModal()">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+        <div class="flex items-center mb-4">
+            <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+            <h3 class="text-lg font-bold text-gray-800">Change Password</h3>
+        </div>
+        <p class="text-sm text-gray-500 mb-4">Min 8 characters with mixed case, numbers, and symbols.</p>
+
+        <div x-show="pwSuccess" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
+        <div x-show="pwError" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
+
+        <form @submit.prevent="changePassword()">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                <input type="password" x-model="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Current password">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="New password">
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Confirm password">
+            </div>
+            <div class="flex space-x-3">
+                <button type="button" @click="closePwModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">Cancel</button>
+                <button type="submit" :disabled="pwLoading" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
+                    <span x-show="!pwLoading">Update Password</span>
+                    <span x-show="pwLoading">Updating...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

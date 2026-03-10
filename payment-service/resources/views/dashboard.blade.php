@@ -2529,6 +2529,43 @@
                     </div>
                 </div>
 
+                <!-- Change Password -->
+                <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-6 h-6 text-gred-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                        </svg>
+                        <h3 class="text-lg font-semibold text-gray-800">Change Password</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">Update your account password. Must be at least 8 characters with mixed case, numbers, and symbols.</p>
+
+                    <div x-show="pwSuccess" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
+                    <div x-show="pwError" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
+
+                    <form @submit.prevent="changePassword()">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                                <input type="password" x-model="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Enter current password">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Min 8 chars, mixed case, numbers & symbols">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Confirm new password">
+                            </div>
+                        </div>
+                        <div class="flex justify-end mt-4">
+                            <button type="submit" :disabled="pwLoading" class="px-6 py-2 bg-gred-500 text-white rounded-lg hover:bg-gred-600 text-sm font-medium disabled:opacity-50 transition">
+                                <span x-show="!pwLoading">Update Password</span>
+                                <span x-show="pwLoading">Updating...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Two-Factor Authentication -->
                 <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
                     <div class="flex items-center mb-4">
@@ -4814,8 +4851,11 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 });
                 const data = await res.json();
                 if (!res.ok) { this.pwError = data.errors ? Object.values(data.errors).flat().join(' ') : data.message; return; }
-                this.pwSuccess = data.message; this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = '';
-                setTimeout(() => this.closePasswordModal(), 2000);
+                this.pwSuccess = data.message || 'Password updated successfully.';
+                this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = '';
+                if (data.token) { localStorage.setItem('auth_token', data.token); }
+                if (this.showPasswordModal) { setTimeout(() => this.closePasswordModal(), 2000); }
+                else { setTimeout(() => { this.pwSuccess = ''; }, 5000); }
             } catch (e) { this.pwError = 'Unable to connect to auth service.'; }
             finally { this.pwLoading = false; }
         },
