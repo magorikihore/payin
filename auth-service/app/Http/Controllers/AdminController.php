@@ -680,7 +680,16 @@ class AdminController extends Controller
 
         // Generate a random 12-char password
         $newPassword = Str::random(12);
-        $user->update(['password' => Hash::make($newPassword)]);
+        $user->update([
+            'password' => Hash::make($newPassword),
+            'must_change_password' => true,
+        ]);
+
+        // Revoke all existing tokens
+        $user->tokens()->delete();
+
+        // Log admin action
+        \App\Models\ActivityLog::log($request, 'admin_reset_password', "Admin reset password for {$user->email}", ['target_user_id' => $user->id]);
 
         return response()->json([
             'message' => "Password reset successfully for {$user->name}.",
@@ -1313,5 +1322,29 @@ class AdminController extends Controller
                 'referral_code' => $account->referral_code,
             ],
         ]);
+    }
+
+    /**
+     * List activity logs (admin).
+     */
+    public function activityLogs(Request $request): JsonResponse
+    {
+        if ($denied = $this->checkAdminAccess($request, 'admin_overview')) return $denied;
+
+        $query = \App\Models\ActivityLog::query()->orderBy('created_at', 'desc');
+
+        if ($request->filled('action')) {
+            $query->where('action', $request->action);
+        }
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+
+        $logs = $query->with('user:id,name,email')->paginate(50);
+
+        return response()->json($logs);
     }
 }

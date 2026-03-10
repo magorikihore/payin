@@ -146,5 +146,8 @@ Route::middleware('auth:api')->group(function () {
         Route::put('/accounts/{id}/referral', [AdminController::class, 'updateAccountReferral']);
         Route::post('/accounts/{id}/generate-referral-code', [AdminController::class, 'generateReferralCode']);
         Route::get('/referral-code/{code}', [AdminController::class, 'lookupByReferralCode']);
+
+        // Activity logs (admin)
+        Route::get('/activity-logs', [AdminController::class, 'activityLogs']);
     });
 });

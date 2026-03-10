@@ -29,7 +29,7 @@ class RegisterRequest extends FormRequest
             'country' => ['nullable', 'string', 'max:100'],
             'currency' => ['nullable', 'string', 'max:10'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'confirmed', 'min:6'],
+            'password' => ['required', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             'referral_code' => ['nullable', 'string', 'max:20'],
             // Honeypot: must be empty (bots fill hidden fields)
             'website' => ['nullable', 'max:0'],

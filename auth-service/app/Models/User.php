@@ -73,6 +73,7 @@ class User extends Authenticatable
         'locked_until',
         'last_login_ip',
         'last_login_at',
+        'must_change_password',
     ];
 
     protected $appends = ['full_name'];
@@ -111,6 +112,7 @@ class User extends Authenticatable
             'failed_login_attempts' => 'integer',
             'locked_until' => 'datetime',
             'last_login_at' => 'datetime',
+            'must_change_password' => 'boolean',
         ];
     }
 

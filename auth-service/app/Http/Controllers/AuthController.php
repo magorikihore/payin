@@ -14,6 +14,7 @@ use App\Notifications\AccountLockedNotification;
 use App\Notifications\NewIpLoginNotification;
 use App\Notifications\FailedTwoFactorNotification;
 use App\Models\AdminSetting;
+use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -154,6 +155,9 @@ class AuthController extends Controller
         // Reset failed attempts on successful password check
         $user->resetFailedLogins();
 
+        // Log successful password authentication
+        ActivityLog::record('login', 'User authenticated successfully', $user->id, $user->account_id, $request->ip());
+
         // Check if user is banned
         if ($user->is_banned) {
             Auth::logout();
@@ -227,6 +231,7 @@ class AuthController extends Controller
 
         $userData = $user->toArray();
         $userData['admin_permissions'] = $user->getEffectiveAdminPermissions();
+        $userData['must_change_password'] = (bool) $user->must_change_password;
 
         return response()->json(['user' => $userData, 'token' => $token], 200);
     }
@@ -288,6 +293,9 @@ class AuthController extends Controller
         $user->clearTwoFactorCode();
         $user->resetFailedLogins();
 
+        // Log successful 2FA verification
+        ActivityLog::record('login_2fa', 'User verified 2FA and logged in', $user->id, $user->account_id, $request->ip());
+
         // Check if user is banned (re-check in case status changed)
         if ($user->is_banned) {
             return response()->json(['message' => 'Your account has been suspended. Contact support for more information.'], 403);
@@ -336,6 +344,7 @@ class AuthController extends Controller
 
         $userData = $user->toArray();
         $userData['admin_permissions'] = $user->getEffectiveAdminPermissions();
+        $userData['must_change_password'] = (bool) $user->must_change_password;
 
         return response()->json(['user' => $userData, 'token' => $token], 200);
     }
@@ -387,7 +396,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'current_password' => 'required|string',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ['required', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
         ]);
 
         $user = $request->user();
@@ -398,7 +407,24 @@ class AuthController extends Controller
 
         $user->update(['password' => Hash::make($request->password)]);
 
-        return response()->json(['message' => 'Password changed successfully.']);
+        // Revoke all existing tokens to invalidate old sessions
+        $user->tokens()->delete();
+
+        // Clear force password change flag
+        if ($user->must_change_password) {
+            $user->update(['must_change_password' => false]);
+        }
+
+        // Log password change
+        ActivityLog::log($request, 'password_change', 'User changed password');
+
+        // Issue a fresh token for the current session
+        $token = $user->createToken('authToken')->accessToken;
+
+        return response()->json([
+            'message' => 'Password changed successfully. All other sessions have been logged out.',
+            'token' => $token,
+        ]);
     }
 
     public function toggleTwoFactor(Request $request): JsonResponse
@@ -419,6 +445,9 @@ class AuthController extends Controller
         $user->clearTwoFactorCode();
 
         $status = $request->enabled ? 'enabled' : 'disabled';
+
+        // Log 2FA toggle
+        ActivityLog::log($request, '2fa_toggle', "User {$status} two-factor authentication");
 
         return response()->json([
             'message' => "Two-factor authentication has been {$status}.",
@@ -674,7 +703,40 @@ class AuthController extends Controller
         }
 
         $request->validate([
-            'callback_url' => 'nullable|url|max:500',
+            'callback_url' => ['nullable', 'url', 'max:500', function ($attribute, $value, $fail) {
+                if (!$value) return;
+
+                // Enforce HTTPS
+                if (!str_starts_with($value, 'https://')) {
+                    $fail('Callback URL must use HTTPS.');
+                    return;
+                }
+
+                // Block private/reserved IPs (SSRF protection)
+                $host = parse_url($value, PHP_URL_HOST);
+                if (!$host) {
+                    $fail('Invalid callback URL.');
+                    return;
+                }
+
+                $ip = gethostbyname($host);
+                if ($ip !== $host) {
+                    $long = ip2long($ip);
+                    $blocked = [
+                        [ip2long('10.0.0.0'), ip2long('10.255.255.255')],
+                        [ip2long('172.16.0.0'), ip2long('172.31.255.255')],
+                        [ip2long('192.168.0.0'), ip2long('192.168.255.255')],
+                        [ip2long('127.0.0.0'), ip2long('127.255.255.255')],
+                        [ip2long('169.254.0.0'), ip2long('169.254.255.255')],
+                    ];
+                    foreach ($blocked as [$start, $end]) {
+                        if ($long >= $start && $long <= $end) {
+                            $fail('Callback URL must not point to a private or internal address.');
+                            return;
+                        }
+                    }
+                }
+            }],
         ]);
 
         $account = $user->account;
@@ -682,7 +744,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'No account found.'], 404);
         }
 
-        $account->update(['callback_url' => $request->callback_url]);
+        $account->update(['callback_url' => $request->callback_url]);\n\n        // Log callback URL change\n        ActivityLog::log($request, 'callback_update', 'Callback URL updated', ['url' => $request->callback_url]);
 
         return response()->json([
             'message' => 'Callback URL updated successfully.',
