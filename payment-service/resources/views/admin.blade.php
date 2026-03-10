@@ -15,19 +15,19 @@
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-300">Welcome, <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin'"></span>
-                    <!-- Settings Dropdown (same pattern as More dropdown) -->
-                    <div class="relative" x-data="{ settingsOpen: false }" @click.away="settingsOpen = false">
-                        <button @click="settingsOpen = !settingsOpen" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
+                    <!-- Settings Dropdown (vanilla JS toggle to bypass Alpine scope issues) -->
+                    <div class="relative" id="settings-wrapper">
+                        <button onclick="event.stopPropagation();var d=document.getElementById('settings-panel');d.classList.toggle('hidden')" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             Settings
                         </button>
-                        <div x-show="settingsOpen" x-transition class="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border z-50 overflow-hidden">
+                        <div id="settings-panel" class="hidden absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden" style="z-index:9990">
                             <div class="px-4 py-3 bg-gray-50 border-b">
                                 <p class="text-sm font-semibold text-gray-800" x-text="(user?.firstname || '') + ' ' + (user?.lastname || '')"></p>
                                 <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
                             </div>
                             <div class="py-1">
-                                <button @click="showPwModal = true; settingsOpen = false" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                <button onclick="document.getElementById('settings-panel').classList.add('hidden')" @click="showPwModal = true" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
                                     <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
                                     Change Password
                                 </button>
@@ -4495,6 +4495,15 @@ function adminPanel() {
             if (this.hasPerm('admin_transfers')) this.fetchPendingTransferCount();
             if (this.hasPerm('admin_reversals')) this.fetchPendingReversalCount();
             this.fetchTwoFactorStatus();
+
+            // Close settings dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                var wrapper = document.getElementById('settings-wrapper');
+                var panel = document.getElementById('settings-panel');
+                if (wrapper && panel && !wrapper.contains(e.target)) {
+                    panel.classList.add('hidden');
+                }
+            });
 
             // Sync hash on tab change
             this.$watch('activeTab', (tab) => {
