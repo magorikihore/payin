@@ -1011,15 +1011,6 @@
                 <div x-show="invoiceMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="invoiceMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="invoiceMsg"></div>
                 <form @submit.prevent="createInvoice()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
-                        <select x-model="invoiceForm.operator" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                            <option value="">Select Operator</option>
-                            <template x-for="op in payoutOperators" :key="op.code">
-                                <option :value="op.code" x-text="op.name"></option>
-                            </template>
-                        </select>
-                    </div>
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (' + walletCurrency + ')'"></label>
                         <input type="text" inputmode="numeric" x-model="invoiceAmountDisplay" @input="formatAmountInput($event, 'invoice')" required placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                     </div>
@@ -1079,7 +1070,7 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="flex justify-between text-sm"><span class="text-gray-500">Operator</span><span class="font-medium text-gray-800" x-text="invoiceDetail.operator_name"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Network</span><span class="font-medium text-gray-800" x-text="invoiceDetail.operator_name || 'Pending payment'"></span></div>
                                 <div class="flex justify-between text-sm"><span class="text-gray-500">Amount</span><span class="font-medium text-gray-800" x-text="formatAmount(invoiceDetail.amount) + ' ' + (invoiceDetail.currency || walletCurrency)"></span></div>
                                 <div x-show="invoiceDetail.external_ref" class="flex justify-between text-sm"><span class="text-gray-500">Customer Reference</span><span class="font-medium text-gray-800" x-text="invoiceDetail.external_ref"></span></div>
                                 <div x-show="invoiceDetail.description" class="flex justify-between text-sm"><span class="text-gray-500">Description</span><span class="font-medium text-gray-800" x-text="invoiceDetail.description"></span></div>
@@ -1124,9 +1115,9 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Network</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -1136,16 +1127,15 @@
                                 <template x-for="inv in invoices" :key="inv.id">
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-6 py-4 text-sm font-mono text-gray-700" x-text="inv.request_ref"></td>
-                                        <td class="px-6 py-4">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                                                :class="operatorBadgeColor(inv.operator_name)"
-                                                x-text="inv.operator_name || '-'"></span>
-                                        </td>
                                         <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="formatAmount(inv.amount) + ' ' + (inv.currency || walletCurrency)"></td>
                                         <td class="px-6 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
                                                 :class="{'bg-gyellow-50 text-gyellow-700': inv.status==='waiting','bg-ggreen-50 text-ggreen-700': inv.status==='completed','bg-gred-50 text-gred-700': inv.status==='failed' || inv.status==='cancelled','bg-gblue-50 text-gblue-700': inv.status==='processing'}"
                                                 x-text="inv.status"></span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-600">
+                                            <span x-show="inv.operator_name" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="operatorBadgeColor(inv.operator_name)" x-text="inv.operator_name"></span>
+                                            <span x-show="!inv.operator_name" class="text-gray-400 text-xs">Pending</span>
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500" x-text="inv.error_message ? formatDate(inv.error_message) : '-'"></td>
                                         <td class="px-6 py-4 text-sm text-gray-500" x-text="formatDate(inv.created_at)"></td>
@@ -3391,7 +3381,7 @@ function dashboard() {
         // Invoices (Manual C2B)
         invoices: [], invoicesLoading: false, invoicePage: 1, invoicePagination: {},
         invoiceSearch: '', invoiceFilterStatus: '',
-        invoiceForm: { amount: '', operator: '', description: '', reference: '', expires_in: '' },
+        invoiceForm: { amount: '', description: '', reference: '', expires_in: '' },
         invoiceAmountDisplay: '',
         invoiceLoading: false, invoiceMsg: '', invoiceMsgType: '',
         invoiceDetailOpen: false, invoiceDetail: null,
@@ -3567,7 +3557,7 @@ function dashboard() {
                     }
                     break;
                 case 'settlements': this.fetchSettlements(); break;
-                case 'invoices': this.fetchInvoices(); this.fetchPayoutOperators(); break;
+                case 'invoices': this.fetchInvoices(); break;
                 case 'account': this.fetchKyc(); break;
                 case 'users': this.fetchAccountUsers(); break;
                 case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
@@ -5288,7 +5278,6 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             try {
                 const body = {
                     amount: this.invoiceForm.amount,
-                    operator: this.invoiceForm.operator,
                     currency: this.walletCurrency,
                 };
                 if (this.invoiceForm.reference) body.reference = this.invoiceForm.reference;
@@ -5307,7 +5296,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 }
                 this.invoiceMsg = `Invoice created! Reference: ${data.request_ref}`;
                 this.invoiceMsgType = 'success';
-                this.invoiceForm = { amount: '', operator: '', description: '', reference: '', expires_in: '' };
+                this.invoiceForm = { amount: '', description: '', reference: '', expires_in: '' };
                 this.invoiceAmountDisplay = '';
                 this.fetchInvoices();
             } catch (e) {

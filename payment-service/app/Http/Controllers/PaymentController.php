@@ -22,7 +22,6 @@ class PaymentController extends Controller
     {
         $request->validate([
             'amount'       => 'required|numeric|min:100',
-            'operator'     => 'required|string',
             'reference'    => 'nullable|string|max:100',
             'description'  => 'nullable|string|max:255',
             'currency'     => 'nullable|string|max:10',
@@ -37,20 +36,9 @@ class PaymentController extends Controller
             return response()->json(['message' => 'No account associated.'], 403);
         }
 
-        // Find the operator
-        $operator = Operator::where('code', strtolower($request->operator))
-            ->where('status', 'active')
-            ->first();
-
-        if (!$operator) {
-            return response()->json(['message' => 'Operator not found or inactive.'], 422);
-        }
-
-        // Calculate charges
-        $charges = $this->calculateCharges($accountId, $request->amount, $operator->code, 'collection');
-
         // Create payment request with status "waiting" — no push to operator
-        $requestRef = 'PAY' . strtoupper(Str::random(12));
+        // Operator will be determined when the callback arrives from Digivas
+        $requestRef = 'INV' . strtoupper(Str::random(12));
         $expiresAt = $request->expires_in
             ? now()->addMinutes($request->expires_in)->toDateTimeString()
             : now()->addDays(7)->toDateTimeString();
@@ -62,11 +50,11 @@ class PaymentController extends Controller
             'type'            => 'manual_c2b',
             'phone'           => $request->phone ? $this->normalizePhone($request->phone, $request->currency ?? 'TZS') : null,
             'amount'          => $request->amount,
-            'platform_charge' => $charges['platform_charge'] ?? 0,
-            'operator_charge' => $charges['operator_charge'] ?? 0,
+            'platform_charge' => 0,
+            'operator_charge' => 0,
             'currency'        => $request->currency ?? 'TZS',
-            'operator_code'   => $operator->code,
-            'operator_name'   => $operator->name,
+            'operator_code'   => null,
+            'operator_name'   => null,
             'status'          => 'waiting',
             'description'     => $request->description,
             'error_message'   => $expiresAt, // store expiry in error_message temporarily
@@ -74,12 +62,10 @@ class PaymentController extends Controller
 
         return response()->json([
             'success'     => true,
-            'message'     => 'Invoice created. Waiting for customer payment.',
+            'message'     => 'Invoice created. Customer should pay using reference: ' . $requestRef,
             'request_ref' => $requestRef,
-            'paybill'     => $operator->merchant_code,
             'amount'      => $paymentRequest->amount,
             'currency'    => $paymentRequest->currency,
-            'operator'    => $operator->name,
             'status'      => 'waiting',
             'expires_at'  => $expiresAt,
         ], 201);
@@ -387,18 +373,41 @@ class PaymentController extends Controller
             }
 
             Log::info("Manual C2B: invoice [{$paymentRequest->request_ref}] validated — accepting payment");
+
+            // Fill operator info from callback URL or payload (Digivas sends network in callback)
+            if (!$paymentRequest->operator_code && $operator_code) {
+                $op = Operator::where('code', strtolower($operator_code))->first();
+                if ($op) {
+                    $paymentRequest->operator_code = $op->code;
+                    $paymentRequest->operator_name = $op->name;
+                    // Calculate charges now that we know the operator
+                    $charges = $this->calculateCharges($paymentRequest->account_id, $paymentRequest->amount, $op->code, 'collection');
+                    $paymentRequest->platform_charge = $charges['platform_charge'] ?? 0;
+                    $paymentRequest->operator_charge = $charges['operator_charge'] ?? 0;
+                }
+            }
         }
 
         $newStatus = $parsed['status'] ?? 'processing';
 
-        $paymentRequest->update([
+        $updateData = [
             'callback_data'  => $payload,
             'receipt_number' => $parsed['receipt_number'] ?: $paymentRequest->receipt_number,
             'operator_ref'   => $parsed['operator_ref'] ?: $paymentRequest->operator_ref,
             'gateway_id'     => $parsed['gateway_id'] ? (string) $parsed['gateway_id'] : $paymentRequest->gateway_id,
             'status'         => $newStatus,
             'error_message'  => ($newStatus === 'failed') ? ($parsed['error_message'] ?? 'Operator returned failure') : null,
-        ]);
+        ];
+
+        // Persist operator info if it was set from callback
+        if ($paymentRequest->isDirty('operator_code')) {
+            $updateData['operator_code'] = $paymentRequest->operator_code;
+            $updateData['operator_name'] = $paymentRequest->operator_name;
+            $updateData['platform_charge'] = $paymentRequest->platform_charge;
+            $updateData['operator_charge'] = $paymentRequest->operator_charge;
+        }
+
+        $paymentRequest->update($updateData);
 
         // If completed, record the transaction and update wallet
         if ($newStatus === 'completed') {
