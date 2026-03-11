@@ -338,10 +338,10 @@ class PaymentController extends Controller
                 'parsed' => $parsed, 'operator_code' => $operator_code,
             ]);
             return response()->json([
-                'header' => ['responseCode' => '1', 'responseStatus' => 'REJECTED'],
-                'body' => ['response' => ['responseCode' => '1', 'responseStatus' => 'Reference not found']],
+                'header' => ['responseCode' => '999', 'responseStatus' => 'FAILED'],
+                'body' => ['response' => ['responseCode' => '999', 'responseStatus' => 'Reference not found']],
                 'message' => 'Payment request not found.',
-            ], 404);
+            ], 200);
         }
 
         // Step 3: Manual C2B validation — verify amount matches
@@ -355,10 +355,10 @@ class PaymentController extends Controller
                 Log::warning("Manual C2B: invoice expired [{$paymentRequest->request_ref}]");
                 $paymentRequest->update(['status' => 'expired', 'callback_data' => $payload]);
                 return response()->json([
-                    'header' => ['responseCode' => '1', 'responseStatus' => 'REJECTED'],
-                    'body' => ['response' => ['responseCode' => '1', 'responseStatus' => 'Invoice expired']],
+                    'header' => ['responseCode' => '999', 'responseStatus' => 'FAILED'],
+                    'body' => ['response' => ['responseCode' => '999', 'responseStatus' => 'Invoice expired']],
                     'message' => 'Invoice expired.',
-                ], 422);
+                ], 200);
             }
 
             // Validate amount matches
@@ -366,10 +366,10 @@ class PaymentController extends Controller
                 Log::warning("Manual C2B: amount mismatch [{$paymentRequest->request_ref}] expected={$expectedAmount} got={$callbackAmount}");
                 $paymentRequest->update(['callback_data' => $payload]);
                 return response()->json([
-                    'header' => ['responseCode' => '1', 'responseStatus' => 'REJECTED'],
-                    'body' => ['response' => ['responseCode' => '1', 'responseStatus' => 'Amount mismatch']],
+                    'header' => ['responseCode' => '999', 'responseStatus' => 'FAILED'],
+                    'body' => ['response' => ['responseCode' => '999', 'responseStatus' => 'Amount mismatch']],
                     'message' => 'Amount does not match invoice.',
-                ], 422);
+                ], 200);
             }
 
             Log::info("Manual C2B: invoice [{$paymentRequest->request_ref}] validated — accepting payment");
@@ -432,9 +432,13 @@ class PaymentController extends Controller
 
         Log::info("Callback processed for [{$paymentRequest->request_ref}] => {$newStatus} (format: {$parsed['format']})");
 
+        // Digivas acknowledgment codes: 0=accept/charge, 999=reject, 100=reconcile
+        $ackCode = ($newStatus === 'completed') ? '0' : (($newStatus === 'failed') ? '999' : '100');
+        $ackStatus = ($ackCode === '0') ? 'ACCEPTED' : (($ackCode === '999') ? 'FAILED' : 'RECONCILE');
+
         return response()->json([
-            'header' => ['responseCode' => '0', 'responseStatus' => 'ACCEPTED'],
-            'body' => ['response' => ['responseCode' => '0', 'responseStatus' => 'Accepted']],
+            'header' => ['responseCode' => $ackCode, 'responseStatus' => $ackStatus],
+            'body' => ['response' => ['responseCode' => $ackCode, 'responseStatus' => $ackStatus]],
             'message' => 'Callback processed successfully.',
             'request_ref' => $paymentRequest->request_ref,
             'status' => $newStatus,
