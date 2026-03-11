@@ -6071,17 +6071,21 @@ function adminPanel() {
         },
 
         async toggleTwoFactor() {
+            const pw = prompt('Enter your password to ' + (this.twoFactorEnabled ? 'disable' : 'enable') + ' Two-Factor Authentication:');
+            if (!pw) return;
             this.twoFactorToggling = true;
             try {
                 const res = await fetch('{{ config("services.auth_service.public_url") }}/api/two-factor/toggle', {
-                    method: 'POST', headers: this.getHeaders()
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ enabled: !this.twoFactorEnabled, password: pw })
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    this.twoFactorEnabled = data.two_factor_enabled;
-                }
-            } catch (e) { console.error('2FA toggle error', e); }
-            this.twoFactorToggling = false;
+                const data = await res.json();
+                if (this.handleUnauth(res)) return;
+                if (!res.ok) { alert(data.message || 'Failed to toggle 2FA.'); return; }
+                this.twoFactorEnabled = data.two_factor_enabled;
+                alert(data.message || '2FA updated.');
+            } catch (e) { alert('Unable to connect to auth service.'); }
+            finally { this.twoFactorToggling = false; }
         },
 
         async changePassword() {
