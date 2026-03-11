@@ -4260,11 +4260,24 @@
                                 <h4 class="text-xs font-semibold text-gray-800">Two-Factor Authentication</h4>
                                 <p class="text-xs text-gray-500 mt-0.5">Extra layer of security</p>
                             </div>
-                            <button @click="toggleTwoFactor()" :disabled="twoFactorToggling" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50" :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'">
+                            <button @click="tfaConfirmShow = true; tfaConfirmPw = ''; tfaConfirmError = '';" :disabled="twoFactorToggling" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50" :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'">
                                 <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"></span>
                             </button>
                         </div>
-                        <div class="text-center">
+                        <!-- 2FA Confirm Password Inline -->
+                        <div x-show="tfaConfirmShow" x-cloak class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="text-xs font-medium text-gray-700 mb-2" x-text="'Enter password to ' + (twoFactorEnabled ? 'disable' : 'enable') + ' 2FA'"></p>
+                            <div x-show="tfaConfirmError" x-cloak class="mb-2 p-2 rounded text-xs bg-red-50 text-red-700 border border-red-200" x-text="tfaConfirmError"></div>
+                            <input type="password" x-model="tfaConfirmPw" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-2" placeholder="Your password" @keydown.enter="toggleTwoFactor()">
+                            <div class="flex space-x-2">
+                                <button type="button" @click="tfaConfirmShow = false" class="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+                                <button type="button" @click="toggleTwoFactor()" :disabled="twoFactorToggling || !tfaConfirmPw" class="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+                                    <span x-show="!twoFactorToggling">Confirm</span>
+                                    <span x-show="twoFactorToggling">...</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div x-show="!tfaConfirmShow" class="text-center">
                             <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full" :class="twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="twoFactorEnabled ? '2FA Enabled' : '2FA Disabled'"></span>
                         </div>
 
@@ -4410,6 +4423,7 @@ function adminPanel() {
 
         // Two-Factor Auth
         twoFactorEnabled: false, twoFactorToggling: false,
+        tfaConfirmShow: false, tfaConfirmPw: '', tfaConfirmError: '',
 
         // Operators (admin)
         operatorsList: [], opLoading: false,
@@ -6071,20 +6085,21 @@ function adminPanel() {
         },
 
         async toggleTwoFactor() {
-            const pw = prompt('Enter your password to ' + (this.twoFactorEnabled ? 'disable' : 'enable') + ' Two-Factor Authentication:');
-            if (!pw) return;
+            if (!this.tfaConfirmPw) return;
+            this.tfaConfirmError = '';
             this.twoFactorToggling = true;
             try {
                 const res = await fetch('{{ config("services.auth_service.public_url") }}/api/two-factor/toggle', {
                     method: 'POST', headers: this.getHeaders(),
-                    body: JSON.stringify({ enabled: !this.twoFactorEnabled, password: pw })
+                    body: JSON.stringify({ enabled: !this.twoFactorEnabled, password: this.tfaConfirmPw })
                 });
                 const data = await res.json();
                 if (this.handleUnauth(res)) return;
-                if (!res.ok) { alert(data.message || 'Failed to toggle 2FA.'); return; }
+                if (!res.ok) { this.tfaConfirmError = data.message || 'Failed to toggle 2FA.'; return; }
                 this.twoFactorEnabled = data.two_factor_enabled;
-                alert(data.message || '2FA updated.');
-            } catch (e) { alert('Unable to connect to auth service.'); }
+                this.tfaConfirmShow = false;
+                this.tfaConfirmPw = '';
+            } catch (e) { this.tfaConfirmError = 'Unable to connect to auth service.'; }
             finally { this.twoFactorToggling = false; }
         },
 
