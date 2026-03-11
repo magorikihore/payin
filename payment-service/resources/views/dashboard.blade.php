@@ -17,8 +17,9 @@
                 <div class="flex items-center space-x-3">
                     <span class="text-sm text-gray-400 hidden sm:inline">Welcome, <span class="font-medium text-white" x-text="(user?.firstname || user?.name || 'User')"></span></span>
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role || ''"></span>
-                    <button @click="showPasswordModal = true" class="text-xs text-gray-400 hover:text-white transition" title="Change Password">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                    <button @click="goToTab('account-settings')" :class="activeTab === 'account-settings' ? 'text-white' : 'text-amber-400 hover:text-amber-300'" class="text-sm font-medium inline-flex items-center gap-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Settings
                     </button>
                     <button @click="logout()" class="text-xs text-red-400 hover:text-red-300 font-medium transition">Logout</button>
                 </div>
@@ -87,6 +88,12 @@
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'exchange' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                     Currency Exchange
+                </button>
+                <button @click="goToTab('account-settings')"
+                    :class="activeTab === 'account-settings' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'account-settings' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
                 </button>
             </nav>
 
@@ -2529,95 +2536,7 @@
                     </div>
                 </div>
 
-                <!-- Change Password -->
-                <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
-                    <div class="flex items-center mb-4">
-                        <svg class="w-6 h-6 text-gred-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold text-gray-800">Change Password</h3>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-4">Update your account password. Must be at least 8 characters with mixed case, numbers, and symbols.</p>
 
-                    <div x-show="pwSuccess" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
-                    <div x-show="pwError" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
-
-                    <form @submit.prevent="changePassword()">
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                                <input type="password" x-model="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Enter current password">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Min 8 chars, mixed case, numbers & symbols">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Confirm new password">
-                            </div>
-                        </div>
-                        <div class="flex justify-end mt-4">
-                            <button type="submit" :disabled="pwLoading" class="px-6 py-2 bg-gred-500 text-white rounded-lg hover:bg-gred-600 text-sm font-medium disabled:opacity-50 transition">
-                                <span x-show="!pwLoading">Update Password</span>
-                                <span x-show="pwLoading">Updating...</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Two-Factor Authentication -->
-                <div class="bg-white rounded-xl shadow-md border p-6 mt-6">
-                    <div class="flex items-center mb-4">
-                        <svg class="w-6 h-6 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                        <h3 class="text-lg font-semibold text-gray-800">Two-Factor Authentication (2FA)</h3>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-4">Add an extra layer of security to your account. When enabled, you'll receive a 6-digit verification code via email each time you log in after entering your password.</p>
-
-                    <div x-show="tfaMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm"
-                        :class="tfaMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'"
-                        x-text="tfaMsg"></div>
-
-                    <div class="flex items-center justify-between p-4 rounded-lg" :class="tfaEnabled ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3"
-                                :class="tfaEnabled ? 'bg-green-100' : 'bg-gray-200'">
-                                <svg class="w-5 h-5" :class="tfaEnabled ? 'text-green-600' : 'text-gray-500'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="text-sm font-semibold" :class="tfaEnabled ? 'text-green-800' : 'text-gray-700'" x-text="tfaEnabled ? 'Two-Factor Authentication is ON' : 'Two-Factor Authentication is OFF'"></p>
-                                <p class="text-xs" :class="tfaEnabled ? 'text-green-600' : 'text-gray-500'" x-text="tfaEnabled ? 'A verification code will be sent to your email on every login.' : 'Your account is protected by password only.'"></p>
-                            </div>
-                        </div>
-                        <button @click="tfaShowConfirm = true"
-                            class="px-4 py-2 rounded-lg text-sm font-medium transition"
-                            :class="tfaEnabled ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-indigo-600 text-white hover:bg-indigo-700'">
-                            <span x-text="tfaEnabled ? 'Disable' : 'Enable'"></span>
-                        </button>
-                    </div>
-
-                    <!-- Confirm password modal for 2FA toggle -->
-                    <div x-show="tfaShowConfirm" x-cloak class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                        <p class="text-sm text-gray-700 mb-3" x-text="tfaEnabled ? 'Enter your password to disable two-factor authentication:' : 'Enter your password to enable two-factor authentication:'"></p>
-                        <form @submit.prevent="toggleTwoFactor()">
-                            <div class="flex flex-col sm:flex-row gap-3">
-                                <input type="password" x-model="tfaPassword" placeholder="Enter your password"
-                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
-                                <button type="submit" :disabled="tfaLoading"
-                                    class="px-6 py-2 rounded-lg text-sm font-medium text-white transition disabled:opacity-50"
-                                    :class="tfaEnabled ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'">
-                                    <span x-show="!tfaLoading" x-text="tfaEnabled ? 'Confirm Disable' : 'Confirm Enable'"></span>
-                                    <span x-show="tfaLoading">Processing...</span>
-                                </button>
-                                <button type="button" @click="tfaShowConfirm = false; tfaPassword = ''" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -2859,40 +2778,117 @@
             </div>
         </div>
 
-    <!-- Change Password Modal -->
-    <div x-show="showPasswordModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closePasswordModal()">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-semibold text-gray-800">Change Password</h3>
-                <button @click="closePasswordModal()" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+        <!-- ==================== ACCOUNT SETTINGS TAB ==================== -->
+        <div x-show="activeTab === 'account-settings'" x-cloak>
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Settings</h2>
+                <p class="text-sm text-gray-500 mt-1">Manage your password and security preferences.</p>
             </div>
-            <div x-show="pwError" x-cloak class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" x-text="pwError"></div>
-            <div x-show="pwSuccess" x-cloak class="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm" x-text="pwSuccess"></div>
-            <form @submit.prevent="changePassword()">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                    <input type="password" x-model="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Current password">
+            <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- Card 1: Change Password -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                            <h3 class="text-sm font-bold text-white">Change Password</h3>
+                        </div>
+                        <p class="text-blue-100 text-xs mt-0.5">Min 8 chars, mixed case, numbers & symbols.</p>
+                    </div>
+                    <div class="p-4">
+                        <div x-show="pwSuccess" x-cloak class="mb-3 p-2 rounded text-xs bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
+                        <div x-show="pwError" x-cloak class="mb-3 p-2 rounded text-xs bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
+
+                        <form @submit.prevent="changePassword()">
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Current Password</label>
+                                <input type="password" x-model="currentPassword" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Current password">
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">New Password</label>
+                                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="New password">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Confirm password">
+                            </div>
+                            <button type="submit" :disabled="pwLoading" class="w-full bg-blue-600 text-white py-2 text-sm rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
+                                <span x-show="!pwLoading">Update Password</span>
+                                <span x-show="pwLoading" class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Updating...</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                    <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="New password">
+
+                <!-- Card 2: Security Settings -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <h3 class="text-sm font-bold text-white">Security Settings</h3>
+                        </div>
+                        <p class="text-emerald-100 text-xs mt-0.5">Manage your account security.</p>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <!-- Two-Factor Authentication -->
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <h4 class="text-xs font-semibold text-gray-800">Two-Factor Authentication</h4>
+                                <p class="text-xs text-gray-500 mt-0.5">Extra layer of security via email code</p>
+                            </div>
+                            <button @click="tfaShowConfirm = true; tfaPassword = ''; tfaMsg = '';" :disabled="tfaLoading" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50" :class="tfaEnabled ? 'bg-green-500' : 'bg-gray-300'">
+                                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="tfaEnabled ? 'translate-x-4' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                        <!-- 2FA Confirm Password Inline -->
+                        <div x-show="tfaShowConfirm" x-cloak class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="text-xs font-medium text-gray-700 mb-2" x-text="'Enter password to ' + (tfaEnabled ? 'disable' : 'enable') + ' 2FA'"></p>
+                            <div x-show="tfaMsg" x-cloak class="mb-2 p-2 rounded text-xs" :class="tfaMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="tfaMsg"></div>
+                            <input type="password" x-model="tfaPassword" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-2" placeholder="Your password" @keydown.enter="toggleTwoFactor()">
+                            <div class="flex space-x-2">
+                                <button type="button" @click="tfaShowConfirm = false" class="flex-1 px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+                                <button type="button" @click="toggleTwoFactor()" :disabled="tfaLoading || !tfaPassword" class="flex-1 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+                                    <span x-show="!tfaLoading">Confirm</span>
+                                    <span x-show="tfaLoading">...</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div x-show="!tfaShowConfirm" class="text-center">
+                            <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full" :class="tfaEnabled ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="tfaEnabled ? '2FA Enabled' : '2FA Disabled'"></span>
+                        </div>
+
+                        <!-- Account Info -->
+                        <div class="border-t pt-3">
+                            <h4 class="text-xs font-semibold text-gray-800 mb-2">Account Information</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-500">Name</span>
+                                    <span class="font-medium text-gray-800" x-text="(user?.firstname || '') + ' ' + (user?.lastname || '')"></span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-500">Email</span>
+                                    <span class="font-medium text-gray-800" x-text="user?.email || ''"></span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-500">Role</span>
+                                    <span class="font-medium text-gray-800 capitalize" x-text="user?.role || ''"></span>
+                                </div>
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-gray-500">Last Login</span>
+                                    <span class="font-medium text-gray-800" x-text="user?.last_login_at ? new Date(user.last_login_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'N/A'"></span>
+                                </div>
+                                <div x-show="user?.last_login_ip" class="flex justify-between text-xs">
+                                    <span class="text-gray-500">Last Login IP</span>
+                                    <span class="font-medium text-gray-800 font-mono text-xs" x-text="user?.last_login_ip || ''"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                    <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="Confirm password">
-                </div>
-                <div class="flex space-x-3">
-                    <button type="button" @click="closePasswordModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">Cancel</button>
-                    <button type="submit" :disabled="pwLoading" class="flex-1 bg-gblue-500 text-white py-2 rounded-lg hover:bg-gblue-600 transition font-medium disabled:opacity-50">
-                        <span x-show="!pwLoading">Update Password</span>
-                        <span x-show="pwLoading">Updating...</span>
-                    </button>
-                </div>
-            </form>
+
+            </div>
         </div>
-    </div>
+
         <!-- ==================== API DOCS TAB ==================== -->
         <div x-show="activeTab === 'api-docs'" x-cloak class="mt-6">
 
@@ -3239,7 +3235,7 @@ function dashboard() {
         bulkApprovalLoading: false,
 
         // Password
-        showPasswordModal: false, currentPassword: '', newPassword: '', confirmPassword: '',
+        currentPassword: '', newPassword: '', confirmPassword: '',
         pwError: '', pwSuccess: '', pwLoading: false,
 
         // Account Users
@@ -3321,7 +3317,7 @@ function dashboard() {
 
             // Restore tab from URL hash
             const hash = window.location.hash.replace('#', '');
-            const validTabs = ['dashboard','transactions','wallet','send-money','settlements','account','users','exchange','api-docs','settings'];
+            const validTabs = ['dashboard','transactions','wallet','send-money','settlements','account','users','exchange','api-docs','settings','account-settings'];
             if (hash && validTabs.includes(hash)) {
                 this.goToTab(hash, true);
             }
@@ -3383,6 +3379,7 @@ function dashboard() {
                 case 'users': this.fetchAccountUsers(); break;
                 case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
                 case 'settings': this.fetchCallback().then(() => this.fetchTwoFactorStatus()).then(() => this.fetchApiKeys()); break;
+                case 'account-settings': this.fetchTwoFactorStatus(); break;
             }
         },
 
@@ -4863,12 +4860,10 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 this.pwSuccess = data.message || 'Password updated successfully.';
                 this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = '';
                 if (data.token) { localStorage.setItem('auth_token', data.token); }
-                if (this.showPasswordModal) { setTimeout(() => this.closePasswordModal(), 2000); }
-                else { setTimeout(() => { this.pwSuccess = ''; }, 5000); }
+                setTimeout(() => { this.pwSuccess = ''; }, 5000);
             } catch (e) { this.pwError = 'Unable to connect to auth service.'; }
             finally { this.pwLoading = false; }
         },
-        closePasswordModal() { this.showPasswordModal = false; this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.pwError = ''; this.pwSuccess = ''; },
 
         // ---- Two-Factor Authentication ----
         async fetchTwoFactorStatus() {
