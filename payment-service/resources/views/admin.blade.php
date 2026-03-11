@@ -4208,35 +4208,35 @@
 
         <!-- ==================== SETTINGS TAB ==================== -->
         <div x-show="activeTab === 'settings'" x-cloak class="mt-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 <!-- Card 1: Change Password -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700">
                         <div class="flex items-center">
-                            <svg class="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                            <h3 class="text-lg font-bold text-white">Change Password</h3>
+                            <svg class="w-5 h-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                            <h3 class="text-sm font-bold text-white">Change Password</h3>
                         </div>
-                        <p class="text-blue-100 text-sm mt-1">Min 8 characters with mixed case, numbers, and symbols.</p>
+                        <p class="text-blue-100 text-xs mt-0.5">Min 8 chars, mixed case, numbers & symbols.</p>
                     </div>
-                    <div class="p-6">
-                        <div x-show="pwSuccess" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
-                        <div x-show="pwError" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
+                    <div class="p-4">
+                        <div x-show="pwSuccess" x-cloak class="mb-3 p-2 rounded text-xs bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
+                        <div x-show="pwError" x-cloak class="mb-3 p-2 rounded text-xs bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
 
                         <form @submit.prevent="changePassword()">
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                                <input type="password" x-model="currentPassword" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Enter current password">
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Current Password</label>
+                                <input type="password" x-model="currentPassword" required class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Current password">
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">New Password</label>
+                                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="New password">
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Enter new password">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Confirm password">
                             </div>
-                            <div class="mb-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Confirm new password">
-                            </div>
-                            <button type="submit" :disabled="pwLoading" class="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
+                            <button type="submit" :disabled="pwLoading" class="w-full bg-blue-600 text-white py-2 text-sm rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
                                 <span x-show="!pwLoading">Update Password</span>
                                 <span x-show="pwLoading" class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Updating...</span>
                             </button>
@@ -4245,50 +4245,50 @@
                 </div>
 
                 <!-- Card 2: Security Settings -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-4 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700">
                         <div class="flex items-center">
-                            <svg class="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                            <h3 class="text-lg font-bold text-white">Security Settings</h3>
+                            <svg class="w-5 h-5 text-white mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <h3 class="text-sm font-bold text-white">Security Settings</h3>
                         </div>
-                        <p class="text-emerald-100 text-sm mt-1">Manage your account security preferences.</p>
+                        <p class="text-emerald-100 text-xs mt-0.5">Manage your account security.</p>
                     </div>
-                    <div class="p-6 space-y-6">
+                    <div class="p-4 space-y-4">
                         <!-- Two-Factor Authentication -->
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div>
-                                <h4 class="text-sm font-semibold text-gray-800">Two-Factor Authentication</h4>
-                                <p class="text-xs text-gray-500 mt-1">Add an extra layer of security to your account</p>
+                                <h4 class="text-xs font-semibold text-gray-800">Two-Factor Authentication</h4>
+                                <p class="text-xs text-gray-500 mt-0.5">Extra layer of security</p>
                             </div>
-                            <button @click="toggleTwoFactor()" :disabled="twoFactorToggling" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50" :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'">
-                                <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="twoFactorEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
+                            <button @click="toggleTwoFactor()" :disabled="twoFactorToggling" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50" :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'">
+                                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="twoFactorEnabled ? 'translate-x-4' : 'translate-x-0'"></span>
                             </button>
                         </div>
-                        <div class="text-center py-1">
-                            <span class="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full" :class="twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="twoFactorEnabled ? '2FA Enabled' : '2FA Disabled'"></span>
+                        <div class="text-center">
+                            <span class="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full" :class="twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="twoFactorEnabled ? '2FA Enabled' : '2FA Disabled'"></span>
                         </div>
 
                         <!-- Account Info -->
-                        <div class="border-t pt-4">
-                            <h4 class="text-sm font-semibold text-gray-800 mb-3">Account Information</h4>
-                            <div class="space-y-3">
-                                <div class="flex justify-between text-sm">
+                        <div class="border-t pt-3">
+                            <h4 class="text-xs font-semibold text-gray-800 mb-2">Account Information</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-xs">
                                     <span class="text-gray-500">Name</span>
                                     <span class="font-medium text-gray-800" x-text="(user?.firstname || '') + ' ' + (user?.lastname || '')"></span>
                                 </div>
-                                <div class="flex justify-between text-sm">
+                                <div class="flex justify-between text-xs">
                                     <span class="text-gray-500">Email</span>
                                     <span class="font-medium text-gray-800" x-text="user?.email || ''"></span>
                                 </div>
-                                <div class="flex justify-between text-sm">
+                                <div class="flex justify-between text-xs">
                                     <span class="text-gray-500">Role</span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="user?.role === 'super_admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin User'"></span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium" :class="user?.role === 'super_admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin User'"></span>
                                 </div>
-                                <div class="flex justify-between text-sm">
+                                <div class="flex justify-between text-xs">
                                     <span class="text-gray-500">Last Login</span>
                                     <span class="font-medium text-gray-800" x-text="user?.last_login_at ? new Date(user.last_login_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'N/A'"></span>
                                 </div>
-                                <div x-show="user?.last_login_ip" class="flex justify-between text-sm">
+                                <div x-show="user?.last_login_ip" class="flex justify-between text-xs">
                                     <span class="text-gray-500">Last Login IP</span>
                                     <span class="font-medium text-gray-800 font-mono text-xs" x-text="user?.last_login_ip || ''"></span>
                                 </div>
