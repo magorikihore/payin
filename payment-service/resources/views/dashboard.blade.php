@@ -5272,7 +5272,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             this.invoiceLoading = true;
             this.invoiceMsg = '';
             try {
-                const ref = 'INV-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+                const ref = String(Date.now()).slice(-4) + String(Math.floor(1000 + Math.random() * 9000));
                 const body = {
                     amount: this.invoiceForm.amount,
                     currency: this.walletCurrency,
