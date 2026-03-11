@@ -13,6 +13,9 @@ Route::middleware(['auth.apikey', 'throttle.account'])->prefix('v1')->group(func
     // Push USSD Collection (payin)
     Route::post('/collection', [PaymentController::class, 'collection']);
 
+    // Manual C2B Invoice (customer pays with reference)
+    Route::post('/invoice', [PaymentController::class, 'invoice']);
+
     // Push Disbursement (payout)
     Route::post('/disbursement', [PaymentController::class, 'disbursement']);
 
@@ -40,6 +43,7 @@ Route::middleware('auth.service')->group(function () {
 
     // Can also push collection/disbursement via bearer token (dashboard use)
     Route::post('/collection', [PaymentController::class, 'collection']);
+    Route::post('/invoice', [PaymentController::class, 'invoice']);
     Route::post('/disbursement', [PaymentController::class, 'disbursement']);
     Route::post('/disbursement/batch', [PaymentController::class, 'batchDisbursement']);
 

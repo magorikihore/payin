@@ -14,6 +14,78 @@ use Illuminate\Support\Str;
 class PaymentController extends Controller
 {
     /**
+     * Manual C2B Invoice: Create a payment request that waits for the customer
+     * to pay manually via paybill/till number with a reference.
+     * No USSD push — customer initiates payment on their own.
+     */
+    public function invoice(Request $request): JsonResponse
+    {
+        $request->validate([
+            'amount'       => 'required|numeric|min:100',
+            'operator'     => 'required|string',
+            'reference'    => 'nullable|string|max:100',
+            'description'  => 'nullable|string|max:255',
+            'currency'     => 'nullable|string|max:10',
+            'phone'        => 'nullable|string|min:10|max:15',
+            'expires_in'   => 'nullable|integer|min:1|max:43200', // minutes, max 30 days
+        ]);
+
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        // Find the operator
+        $operator = Operator::where('code', strtolower($request->operator))
+            ->where('status', 'active')
+            ->first();
+
+        if (!$operator) {
+            return response()->json(['message' => 'Operator not found or inactive.'], 422);
+        }
+
+        // Calculate charges
+        $charges = $this->calculateCharges($accountId, $request->amount, $operator->code, 'collection');
+
+        // Create payment request with status "waiting" — no push to operator
+        $requestRef = 'PAY' . strtoupper(Str::random(12));
+        $expiresAt = $request->expires_in
+            ? now()->addMinutes($request->expires_in)->toDateTimeString()
+            : now()->addDays(7)->toDateTimeString();
+
+        $paymentRequest = PaymentRequest::create([
+            'account_id'      => $accountId,
+            'request_ref'     => $requestRef,
+            'external_ref'    => $request->reference,
+            'type'            => 'manual_c2b',
+            'phone'           => $request->phone ? $this->normalizePhone($request->phone, $request->currency ?? 'TZS') : null,
+            'amount'          => $request->amount,
+            'platform_charge' => $charges['platform_charge'] ?? 0,
+            'operator_charge' => $charges['operator_charge'] ?? 0,
+            'currency'        => $request->currency ?? 'TZS',
+            'operator_code'   => $operator->code,
+            'operator_name'   => $operator->name,
+            'status'          => 'waiting',
+            'description'     => $request->description,
+            'error_message'   => $expiresAt, // store expiry in error_message temporarily
+        ]);
+
+        return response()->json([
+            'success'     => true,
+            'message'     => 'Invoice created. Waiting for customer payment.',
+            'request_ref' => $requestRef,
+            'paybill'     => $operator->merchant_code,
+            'amount'      => $paymentRequest->amount,
+            'currency'    => $paymentRequest->currency,
+            'operator'    => $operator->name,
+            'status'      => 'waiting',
+            'expires_at'  => $expiresAt,
+        ], 201);
+    }
+
+    /**
      * Push USSD Collection: Merchant initiates a collection request.
      * Phone user receives a USSD prompt to confirm the payment.
      */
@@ -271,14 +343,50 @@ class PaymentController extends Controller
         $parsed = $this->detectAndParseCallback($payload);
         Log::info('Callback parsed result', $parsed);
 
-        // Step 2: Find payment request
+        // Step 2: Find payment request (check both processing and waiting statuses)
         $paymentRequest = $this->findPaymentRequestFromCallback($payload, $operator_code);
 
         if (!$paymentRequest) {
-            Log::warning('Callback: payment request not found', [
+            // Manual C2B: customer paid with a reference that doesn't exist — REJECT
+            Log::warning('Callback: payment request not found — rejecting', [
                 'parsed' => $parsed, 'operator_code' => $operator_code,
             ]);
-            return response()->json(['message' => 'Payment request not found.'], 404);
+            return response()->json([
+                'header' => ['responseCode' => '1', 'responseStatus' => 'REJECTED'],
+                'body' => ['response' => ['responseCode' => '1', 'responseStatus' => 'Reference not found']],
+                'message' => 'Payment request not found.',
+            ], 404);
+        }
+
+        // Step 3: Manual C2B validation — verify amount matches
+        if ($paymentRequest->type === 'manual_c2b' && $paymentRequest->status === 'waiting') {
+            $callbackAmount = (float) ($parsed['amount'] ?? 0);
+            $expectedAmount = (float) $paymentRequest->amount;
+
+            // Check expiry (stored in error_message field)
+            $expiresAt = $paymentRequest->error_message;
+            if ($expiresAt && now()->gt($expiresAt)) {
+                Log::warning("Manual C2B: invoice expired [{$paymentRequest->request_ref}]");
+                $paymentRequest->update(['status' => 'expired', 'callback_data' => $payload]);
+                return response()->json([
+                    'header' => ['responseCode' => '1', 'responseStatus' => 'REJECTED'],
+                    'body' => ['response' => ['responseCode' => '1', 'responseStatus' => 'Invoice expired']],
+                    'message' => 'Invoice expired.',
+                ], 422);
+            }
+
+            // Validate amount matches
+            if ($callbackAmount > 0 && abs($callbackAmount - $expectedAmount) > 0.01) {
+                Log::warning("Manual C2B: amount mismatch [{$paymentRequest->request_ref}] expected={$expectedAmount} got={$callbackAmount}");
+                $paymentRequest->update(['callback_data' => $payload]);
+                return response()->json([
+                    'header' => ['responseCode' => '1', 'responseStatus' => 'REJECTED'],
+                    'body' => ['response' => ['responseCode' => '1', 'responseStatus' => 'Amount mismatch']],
+                    'message' => 'Amount does not match invoice.',
+                ], 422);
+            }
+
+            Log::info("Manual C2B: invoice [{$paymentRequest->request_ref}] validated — accepting payment");
         }
 
         $newStatus = $parsed['status'] ?? 'processing';
@@ -305,6 +413,8 @@ class PaymentController extends Controller
         Log::info("Callback processed for [{$paymentRequest->request_ref}] => {$newStatus} (format: {$parsed['format']})");
 
         return response()->json([
+            'header' => ['responseCode' => '0', 'responseStatus' => 'ACCEPTED'],
+            'body' => ['response' => ['responseCode' => '0', 'responseStatus' => 'Accepted']],
             'message' => 'Callback processed successfully.',
             'request_ref' => $paymentRequest->request_ref,
             'status' => $newStatus,
@@ -890,14 +1000,14 @@ class PaymentController extends Controller
             if ($pr) return $pr;
         }
 
-        // Last resort: match by phone + operator + processing status
+        // Last resort: match by phone + operator + processing/waiting status
         $phone = data_get($payload, 'body.request.msisdn')
             ?? data_get($payload, 'transaction.msisdn')
             ?? data_get($payload, 'msisdn')
             ?? data_get($payload, 'Body.stkCallback.CallbackMetadata.Item.2.Value');
         if ($phone) {
             $query = PaymentRequest::where('phone', (string) $phone)
-                ->where('status', 'processing')
+                ->whereIn('status', ['processing', 'waiting'])
                 ->orderBy('created_at', 'desc');
             if ($operatorCode) {
                 $query->where('operator_code', $operatorCode);
