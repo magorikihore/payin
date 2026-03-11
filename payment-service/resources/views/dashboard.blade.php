@@ -1015,8 +1015,8 @@
                         <input type="text" inputmode="numeric" x-model="invoiceAmountDisplay" @input="formatAmountInput($event, 'invoice')" required placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Reference (optional)</label>
-                        <input type="text" x-model="invoiceForm.reference" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="e.g. INV-001, Order #123">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
+                        <input type="text" x-model="invoiceForm.reference" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="e.g. INV-001, Order #123">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Expires In</label>
@@ -5280,7 +5280,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     amount: this.invoiceForm.amount,
                     currency: this.walletCurrency,
                 };
-                if (this.invoiceForm.reference) body.reference = this.invoiceForm.reference;
+                body.reference = this.invoiceForm.reference;
                 if (this.invoiceForm.description) body.description = this.invoiceForm.description;
                 if (this.invoiceForm.expires_in) body.expires_in = parseInt(this.invoiceForm.expires_in);
 
