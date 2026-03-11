@@ -374,16 +374,26 @@ class PaymentController extends Controller
 
             Log::info("Manual C2B: invoice [{$paymentRequest->request_ref}] validated — accepting payment");
 
-            // Fill operator info from callback URL or payload (Digivas sends network in callback)
-            if (!$paymentRequest->operator_code && $operator_code) {
-                $op = Operator::where('code', strtolower($operator_code))->first();
-                if ($op) {
-                    $paymentRequest->operator_code = $op->code;
-                    $paymentRequest->operator_name = $op->name;
-                    // Calculate charges now that we know the operator
-                    $charges = $this->calculateCharges($paymentRequest->account_id, $paymentRequest->amount, $op->code, 'collection');
-                    $paymentRequest->platform_charge = $charges['platform_charge'] ?? 0;
-                    $paymentRequest->operator_charge = $charges['operator_charge'] ?? 0;
+            // Fill operator info from callback network field or URL operator_code
+            if (!$paymentRequest->operator_code) {
+                $networkMap = [
+                    'vodacom' => 'mpesa',
+                    'airtel'  => 'airtel',
+                    'tigo'    => 'tigopesa',
+                    'halotel' => 'halopesa',
+                ];
+                $network = strtolower(trim($parsed['network'] ?? ''));
+                $resolvedCode = $networkMap[$network] ?? $operator_code;
+
+                if ($resolvedCode) {
+                    $op = Operator::where('code', strtolower($resolvedCode))->first();
+                    if ($op) {
+                        $paymentRequest->operator_code = $op->code;
+                        $paymentRequest->operator_name = $op->name;
+                        $charges = $this->calculateCharges($paymentRequest->account_id, $paymentRequest->amount, $op->code, 'collection');
+                        $paymentRequest->platform_charge = $charges['platform_charge'] ?? 0;
+                        $paymentRequest->operator_charge = $charges['operator_charge'] ?? 0;
+                    }
                 }
             }
         }
@@ -395,6 +405,7 @@ class PaymentController extends Controller
             'receipt_number' => $parsed['receipt_number'] ?: $paymentRequest->receipt_number,
             'operator_ref'   => $parsed['operator_ref'] ?: $paymentRequest->operator_ref,
             'gateway_id'     => $parsed['gateway_id'] ? (string) $parsed['gateway_id'] : $paymentRequest->gateway_id,
+            'phone'          => $parsed['phone'] ?: $paymentRequest->phone,
             'status'         => $newStatus,
             'error_message'  => ($newStatus === 'failed') ? ($parsed['error_message'] ?? 'Operator returned failure') : null,
         ];
@@ -450,6 +461,7 @@ class PaymentController extends Controller
                 'reference'      => $bodyRequest['reference'] ?? null,
                 'phone'          => $bodyRequest['msisdn'] ?? null,
                 'amount'         => $bodyRequest['amount'] ?? null,
+                'network'        => $bodyRequest['network'] ?? null,
                 'error_message'  => $receiptNumber ? null : 'Collection callback without receipt number',
             ];
         }
