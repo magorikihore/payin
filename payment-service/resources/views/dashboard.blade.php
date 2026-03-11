@@ -89,12 +89,6 @@
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'exchange' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
                     Currency Exchange
                 </button>
-                <button @click="goToTab('account-settings')"
-                    :class="activeTab === 'account-settings' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
-                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
-                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'account-settings' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    Settings
-                </button>
             </nav>
 
             <!-- Divider -->
@@ -2892,6 +2886,14 @@
         <!-- ==================== API DOCS TAB ==================== -->
         <div x-show="activeTab === 'api-docs'" x-cloak class="mt-6">
 
+            <!-- Download PDF Button -->
+            <div class="flex justify-end mb-4">
+                <button @click="downloadApiDocsPdf()" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Download PDF
+                </button>
+            </div>
+
             <!-- Overview -->
             <div class="bg-white rounded-xl shadow-md border p-6 mb-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">API Overview</h3>
@@ -4863,6 +4865,24 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 setTimeout(() => { this.pwSuccess = ''; }, 5000);
             } catch (e) { this.pwError = 'Unable to connect to auth service.'; }
             finally { this.pwLoading = false; }
+        },
+
+        // ---- Download API Docs as PDF ----
+        downloadApiDocsPdf() {
+            const el = document.querySelector('[x-show="activeTab === \'api-docs\'"]');
+            if (!el) return;
+            const win = window.open('', '_blank');
+            win.document.write('<html><head><title>PayIn API Documentation</title>');
+            win.document.write('<style>body{font-family:Arial,sans-serif;margin:40px;color:#333}h3{margin-top:24px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{text-align:left;padding:6px 10px;border-bottom:1px solid #ddd}th{font-weight:600}code{background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:13px}pre{background:#1e293b;color:#4ade80;padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;white-space:pre-wrap}.bg-gblue-50,.bg-ggreen-50,.bg-gyellow-50,.bg-gblue-500,.bg-ggreen-500{padding:8px 12px;border-radius:6px;display:inline-block;margin:4px}@media print{body{margin:20px}pre{break-inside:avoid}}</style>');
+            win.document.write('</head><body>');
+            win.document.write('<h1 style="text-align:center;color:#1e40af">PayIn API Documentation</h1>');
+            win.document.write('<hr style="margin-bottom:24px">');
+            const clone = el.cloneNode(true);
+            clone.querySelectorAll('button').forEach(b => b.remove());
+            win.document.write(clone.innerHTML);
+            win.document.write('</body></html>');
+            win.document.close();
+            setTimeout(() => { win.print(); }, 500);
         },
 
         // ---- Two-Factor Authentication ----
