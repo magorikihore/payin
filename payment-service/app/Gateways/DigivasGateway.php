@@ -52,6 +52,7 @@ class DigivasGateway implements GatewayInterface
                     'msisdn'             => $paymentRequest->phone,
                     'amount'             => (string) $paymentRequest->amount,
                     'currency'           => $paymentRequest->currency,
+                    'callbackUrl'        => $operator->callback_url,
                 ], fn ($v) => $v !== null),
             ],
         ];

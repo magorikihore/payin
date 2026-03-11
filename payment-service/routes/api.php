@@ -25,7 +25,9 @@ Route::middleware(['auth.apikey', 'throttle.account'])->prefix('v1')->group(func
 
 // =====================================================================
 //  OPERATOR CALLBACK — Public (no auth), operators POST results here
+//  Single URL: matches payment request by reference/gateway_id from payload
 // =====================================================================
+Route::post('/callback', [PaymentController::class, 'callback']);
 Route::post('/callback/{operator_code}', [PaymentController::class, 'callback']);
 
 // =====================================================================

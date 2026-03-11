@@ -258,71 +258,25 @@ class PaymentController extends Controller
     }
 
     /**
-     * Operator Callback: Receives payment status updates from operator.
+     * Operator Callback: Receives payment status updates from any operator.
      * This endpoint is PUBLIC (no auth) — operators call it with their response.
-     * Uses the gateway adapter to parse and validate the callback payload.
+     * Auto-detects the payload format and parses accordingly.
      */
-    public function callback(Request $request, $operator_code): JsonResponse
+    public function callback(Request $request, $operator_code = null): JsonResponse
     {
-        Log::info("Operator callback received for [{$operator_code}]", $request->all());
-
-        $operator = Operator::where('code', $operator_code)->first();
-        if (!$operator) {
-            Log::warning("Callback from unknown operator: {$operator_code}");
-            return response()->json(['message' => 'Unknown operator.'], 404);
-        }
-
         $payload = $request->all();
+        Log::info('Operator callback received' . ($operator_code ? " for [{$operator_code}]" : ''), $payload);
 
-        // Resolve gateway adapter
-        try {
-            $gateway = GatewayFactory::make($operator->gateway_type ?? 'digivas');
-        } catch (\InvalidArgumentException $e) {
-            Log::error("Unsupported gateway type [{$operator->gateway_type}] for callback [{$operator_code}]");
-            return response()->json(['message' => 'Unsupported gateway type.'], 500);
-        }
+        // Step 1: Auto-detect payload format and parse into normalized data
+        $parsed = $this->detectAndParseCallback($payload);
+        Log::info('Callback parsed result', $parsed);
 
-        // Validate the callback (spPassword, signature, etc.)
-        if (!$gateway->validateCallback($operator, $payload)) {
-            Log::warning("Callback validation failed for [{$operator_code}]");
-            return response()->json(['message' => 'Invalid credentials.'], 403);
-        }
-
-        // Parse the callback into a normalized format
-        $parsed = $gateway->parseCallback($operator, $payload);
-
-        // Find payment request by gateway_id, operator_ref, or reference
-        $paymentRequest = null;
-        $searchFields = [
-            'gateway_id'   => $parsed['gateway_id'] ?? null,
-            'operator_ref' => $parsed['operator_ref'] ?? null,
-            'request_ref'  => $parsed['reference'] ?? null,
-        ];
-
-        foreach ($searchFields as $field => $value) {
-            if ($value && !$paymentRequest) {
-                $paymentRequest = PaymentRequest::where($field, (string) $value)
-                    ->where('operator_code', $operator_code)->first();
-            }
-        }
-
-        // Fallback: search by reference in operator_ref column
-        if (!$paymentRequest && !empty($parsed['reference'])) {
-            $paymentRequest = PaymentRequest::where('operator_ref', (string) $parsed['reference'])
-                ->where('operator_code', $operator_code)->first();
-        }
-
-        // Last resort: match by phone + operator + processing status
-        if (!$paymentRequest && !empty($parsed['phone'])) {
-            $paymentRequest = PaymentRequest::where('phone', $parsed['phone'])
-                ->where('operator_code', $operator_code)
-                ->where('status', 'processing')
-                ->orderBy('created_at', 'desc')->first();
-        }
+        // Step 2: Find payment request
+        $paymentRequest = $this->findPaymentRequestFromCallback($payload, $operator_code);
 
         if (!$paymentRequest) {
-            Log::warning("Callback: payment request not found", [
-                'parsed' => $parsed, 'operator' => $operator_code,
+            Log::warning('Callback: payment request not found', [
+                'parsed' => $parsed, 'operator_code' => $operator_code,
             ]);
             return response()->json(['message' => 'Payment request not found.'], 404);
         }
@@ -348,13 +302,205 @@ class PaymentController extends Controller
         // Send callback to merchant
         $this->sendMerchantCallback($paymentRequest);
 
-        Log::info("Callback processed for [{$paymentRequest->request_ref}] => {$newStatus}");
+        Log::info("Callback processed for [{$paymentRequest->request_ref}] => {$newStatus} (format: {$parsed['format']})");
 
         return response()->json([
             'message' => 'Callback processed successfully.',
             'request_ref' => $paymentRequest->request_ref,
             'status' => $newStatus,
         ]);
+    }
+
+    /**
+     * Auto-detect callback format from payload structure and parse into normalized data.
+     * Supports: Digivas, Safaricom Daraja, Airtel Africa, MTN MoMo.
+     */
+    private function detectAndParseCallback(array $payload): array
+    {
+        // --- Digivas collection: body.request with command ---
+        $bodyRequest = data_get($payload, 'body.request');
+        if ($bodyRequest && is_array($bodyRequest) && isset($bodyRequest['command'])) {
+            $receiptNumber = $bodyRequest['receiptNumber'] ?? null;
+            return [
+                'format'         => 'digivas_collection',
+                'type'           => 'collection',
+                'status'         => $receiptNumber ? 'completed' : 'failed',
+                'receipt_number' => $receiptNumber,
+                'operator_ref'   => $bodyRequest['gatewayId'] ?? null,
+                'gateway_id'     => $bodyRequest['gatewayId'] ?? null,
+                'reference'      => $bodyRequest['reference'] ?? null,
+                'phone'          => $bodyRequest['msisdn'] ?? null,
+                'amount'         => $bodyRequest['amount'] ?? null,
+                'error_message'  => $receiptNumber ? null : 'Collection callback without receipt number',
+            ];
+        }
+
+        // --- Digivas result/disbursement: body.result ---
+        $bodyResult = data_get($payload, 'body.result');
+        if ($bodyResult && is_array($bodyResult)) {
+            $resultCode = (string) ($bodyResult['resultCode'] ?? '');
+            $message = strtolower($bodyResult['message'] ?? '');
+            $status = 'processing';
+            if ($resultCode === '0' || $message === 'success') $status = 'completed';
+            elseif ($resultCode !== '' && $resultCode !== '0') $status = 'failed';
+
+            return [
+                'format'         => 'digivas_result',
+                'type'           => 'disbursement',
+                'status'         => $status,
+                'receipt_number' => $bodyResult['receiptNumber'] ?? null,
+                'operator_ref'   => $bodyResult['transactionNumber'] ?? ($bodyResult['referenceNumber'] ?? null),
+                'gateway_id'     => $bodyResult['gatewayId'] ?? null,
+                'reference'      => $bodyResult['referenceNumber'] ?? ($bodyResult['reference'] ?? null),
+                'phone'          => null,
+                'amount'         => $bodyResult['amount'] ?? null,
+                'error_message'  => $status === 'failed' ? ($bodyResult['resultStatus'] ?? 'Operator error: ' . $resultCode) : null,
+            ];
+        }
+
+        // --- Digivas body.response fallback ---
+        $bodyResponse = data_get($payload, 'body.response');
+        if ($bodyResponse && is_array($bodyResponse) && isset($bodyResponse['responseCode'])) {
+            $responseCode = (string) ($bodyResponse['responseCode'] ?? '');
+            $status = $responseCode === '0' ? 'completed' : 'failed';
+
+            return [
+                'format'         => 'digivas_response',
+                'type'           => 'collection',
+                'status'         => $status,
+                'receipt_number' => $bodyResponse['receiptNumber'] ?? null,
+                'operator_ref'   => $bodyResponse['transactionNumber'] ?? null,
+                'gateway_id'     => $bodyResponse['gatewayId'] ?? null,
+                'reference'      => $bodyResponse['reference'] ?? null,
+                'phone'          => null,
+                'amount'         => $bodyResponse['amount'] ?? null,
+                'error_message'  => $status === 'failed' ? ($bodyResponse['responseStatus'] ?? 'Error: ' . $responseCode) : null,
+            ];
+        }
+
+        // --- Safaricom Daraja STK Push: Body.stkCallback ---
+        $stkCallback = data_get($payload, 'Body.stkCallback');
+        if ($stkCallback && is_array($stkCallback)) {
+            $resultCode = (string) ($stkCallback['ResultCode'] ?? '');
+            $items = collect($stkCallback['CallbackMetadata']['Item'] ?? []);
+            $receipt = $items->firstWhere('Name', 'MpesaReceiptNumber')['Value'] ?? null;
+            $amount = $items->firstWhere('Name', 'Amount')['Value'] ?? null;
+            $phone = $items->firstWhere('Name', 'PhoneNumber')['Value'] ?? null;
+
+            return [
+                'format'         => 'daraja_stk',
+                'type'           => 'collection',
+                'status'         => $resultCode === '0' ? 'completed' : 'failed',
+                'receipt_number' => $receipt,
+                'operator_ref'   => $stkCallback['CheckoutRequestID'] ?? null,
+                'gateway_id'     => $stkCallback['MerchantRequestID'] ?? null,
+                'reference'      => null,
+                'phone'          => $phone ? (string) $phone : null,
+                'amount'         => $amount ? (string) $amount : null,
+                'error_message'  => $resultCode !== '0' ? ($stkCallback['ResultDesc'] ?? 'Payment failed') : null,
+            ];
+        }
+
+        // --- Safaricom Daraja B2C: Result ---
+        $darajaResult = data_get($payload, 'Result');
+        if ($darajaResult && is_array($darajaResult) && isset($darajaResult['ResultCode'])) {
+            $resultCode = (string) ($darajaResult['ResultCode'] ?? '');
+            $params = collect($darajaResult['ResultParameters']['ResultParameter'] ?? []);
+            $receipt = $params->firstWhere('Key', 'TransactionReceipt')['Value'] ?? null;
+            $amount = $params->firstWhere('Key', 'TransactionAmount')['Value'] ?? null;
+            $phone = $params->firstWhere('Key', 'ReceiverPartyPublicName')['Value'] ?? null;
+
+            return [
+                'format'         => 'daraja_b2c',
+                'type'           => 'disbursement',
+                'status'         => $resultCode === '0' ? 'completed' : 'failed',
+                'receipt_number' => $receipt,
+                'operator_ref'   => $darajaResult['ConversationID'] ?? null,
+                'gateway_id'     => $darajaResult['OriginatorConversationID'] ?? null,
+                'reference'      => $darajaResult['OriginatorConversationID'] ?? null,
+                'phone'          => $phone,
+                'amount'         => $amount ? (string) $amount : null,
+                'error_message'  => $resultCode !== '0' ? ($darajaResult['ResultDesc'] ?? 'Disbursement failed') : null,
+            ];
+        }
+
+        // --- MTN MoMo: has financialTransactionId or externalId + status ---
+        if (isset($payload['financialTransactionId']) || (isset($payload['externalId']) && isset($payload['status']))) {
+            $status = strtoupper(data_get($payload, 'status', ''));
+            $isSuccess = $status === 'SUCCESSFUL';
+            $isFailed = in_array($status, ['FAILED', 'REJECTED', 'TIMEOUT', 'EXPIRED']);
+            $type = isset($payload['payer']) ? 'collection' : 'disbursement';
+
+            return [
+                'format'         => 'mtn_momo',
+                'type'           => $type,
+                'status'         => $isSuccess ? 'completed' : ($isFailed ? 'failed' : 'processing'),
+                'receipt_number' => $payload['financialTransactionId'] ?? null,
+                'operator_ref'   => $payload['externalId'] ?? ($payload['referenceId'] ?? null),
+                'gateway_id'     => $payload['externalId'] ?? ($payload['referenceId'] ?? null),
+                'reference'      => $payload['externalId'] ?? ($payload['referenceId'] ?? null),
+                'phone'          => data_get($payload, 'payer.partyId') ?? data_get($payload, 'payee.partyId'),
+                'amount'         => $payload['amount'] ?? null,
+                'error_message'  => $isFailed ? ($payload['reason'] ?? 'Transaction failed') : null,
+            ];
+        }
+
+        // --- Airtel Africa: has transaction object ---
+        $transaction = data_get($payload, 'transaction');
+        if ($transaction && is_array($transaction)) {
+            $statusCode = data_get($transaction, 'status_code', data_get($payload, 'status_code', ''));
+            $isSuccess = in_array(strtoupper((string) $statusCode), ['TS', 'TIP', '200']);
+            $isFailed = in_array(strtoupper((string) $statusCode), ['TF', 'TE']);
+            $type = data_get($transaction, 'message', '') === 'Paid In' ? 'collection' : 'disbursement';
+
+            return [
+                'format'         => 'airtel_africa',
+                'type'           => $type,
+                'status'         => $isSuccess ? 'completed' : ($isFailed ? 'failed' : 'processing'),
+                'receipt_number' => data_get($transaction, 'airtel_money_id'),
+                'operator_ref'   => data_get($transaction, 'id'),
+                'gateway_id'     => data_get($transaction, 'id'),
+                'reference'      => data_get($transaction, 'reference', data_get($payload, 'reference')),
+                'phone'          => data_get($transaction, 'msisdn'),
+                'amount'         => data_get($transaction, 'amount') ? (string) data_get($transaction, 'amount') : null,
+                'error_message'  => $isFailed ? data_get($transaction, 'message', 'Transaction failed') : null,
+            ];
+        }
+
+        // --- Airtel Africa flat format (no transaction wrapper) ---
+        if (isset($payload['status_code']) || isset($payload['airtel_money_id'])) {
+            $statusCode = (string) ($payload['status_code'] ?? '');
+            $isSuccess = in_array(strtoupper($statusCode), ['TS', 'TIP', '200']);
+            $isFailed = in_array(strtoupper($statusCode), ['TF', 'TE']);
+
+            return [
+                'format'         => 'airtel_africa_flat',
+                'type'           => ($payload['message'] ?? '') === 'Paid In' ? 'collection' : 'disbursement',
+                'status'         => $isSuccess ? 'completed' : ($isFailed ? 'failed' : 'processing'),
+                'receipt_number' => $payload['airtel_money_id'] ?? null,
+                'operator_ref'   => $payload['id'] ?? null,
+                'gateway_id'     => $payload['id'] ?? null,
+                'reference'      => $payload['reference'] ?? null,
+                'phone'          => $payload['msisdn'] ?? null,
+                'amount'         => isset($payload['amount']) ? (string) $payload['amount'] : null,
+                'error_message'  => $isFailed ? ($payload['message'] ?? 'Transaction failed') : null,
+            ];
+        }
+
+        // --- Unknown format ---
+        Log::warning('Callback: unknown payload format', ['payload' => $payload]);
+        return [
+            'format'         => 'unknown',
+            'type'           => 'unknown',
+            'status'         => 'processing',
+            'receipt_number' => null,
+            'operator_ref'   => null,
+            'gateway_id'     => null,
+            'reference'      => null,
+            'phone'          => null,
+            'amount'         => null,
+            'error_message'  => null,
+        ];
     }
 
     /**
@@ -654,6 +800,148 @@ class PaymentController extends Controller
      *   }
      * }
      */
+    /**
+     * Extract reference IDs from a raw callback payload and find the matching PaymentRequest.
+     * Checks all known field paths across gateway formats (Digivas, Daraja, Airtel, MTN).
+     */
+    private function findPaymentRequestFromCallback(array $payload, ?string $operatorCode): ?PaymentRequest
+    {
+        // Collect all possible reference values from the raw payload
+        $references = array_values(array_unique(array_filter([
+            // Digivas collection: body.request.reference
+            data_get($payload, 'body.request.reference'),
+            // Digivas result/disbursement: body.result.referenceNumber, body.result.reference
+            data_get($payload, 'body.result.referenceNumber'),
+            data_get($payload, 'body.result.reference'),
+            // Airtel Africa: transaction.reference, transaction.id (top-level or nested)
+            data_get($payload, 'transaction.reference'),
+            data_get($payload, 'transaction.id'),
+            data_get($payload, 'reference'),
+            data_get($payload, 'id'),
+            // MTN MoMo: externalId, referenceId
+            data_get($payload, 'externalId'),
+            data_get($payload, 'referenceId'),
+            // Safaricom B2C: Result.OriginatorConversationID
+            data_get($payload, 'Result.OriginatorConversationID'),
+        ])));
+
+        $gatewayIds = array_values(array_unique(array_filter([
+            // Digivas: body.request.gatewayId, body.result.gatewayId
+            data_get($payload, 'body.request.gatewayId'),
+            data_get($payload, 'body.result.gatewayId'),
+            // Safaricom STK: Body.stkCallback.MerchantRequestID
+            data_get($payload, 'Body.stkCallback.MerchantRequestID'),
+            // Safaricom B2C: Result.OriginatorConversationID
+            data_get($payload, 'Result.OriginatorConversationID'),
+            // Airtel Africa: transaction.id, id (top-level)
+            data_get($payload, 'transaction.id'),
+            data_get($payload, 'id'),
+        ])));
+
+        $operatorRefs = array_values(array_unique(array_filter([
+            // Digivas: body.result.transactionNumber
+            data_get($payload, 'body.result.transactionNumber'),
+            // Safaricom STK: Body.stkCallback.CheckoutRequestID
+            data_get($payload, 'Body.stkCallback.CheckoutRequestID'),
+            // Safaricom B2C: Result.ConversationID
+            data_get($payload, 'Result.ConversationID'),
+            // Airtel Africa: transaction.id, id (top-level)
+            data_get($payload, 'transaction.id'),
+            data_get($payload, 'id'),
+            // MTN MoMo: externalId, referenceId
+            data_get($payload, 'externalId'),
+            data_get($payload, 'referenceId'),
+        ])));
+
+        Log::info('Callback lookup: extracted identifiers', [
+            'references' => $references,
+            'gateway_ids' => $gatewayIds,
+            'operator_refs' => $operatorRefs,
+            'operator_code' => $operatorCode,
+        ]);
+
+        // Search by request_ref (our internal reference — most reliable)
+        foreach ($references as $ref) {
+            $pr = PaymentRequest::where('request_ref', (string) $ref)->first();
+            if ($pr) return $pr;
+        }
+
+        // Search by gateway_id
+        foreach ($gatewayIds as $gid) {
+            $pr = PaymentRequest::where('gateway_id', (string) $gid)->first();
+            if ($pr) return $pr;
+        }
+
+        // Search by operator_ref
+        foreach ($operatorRefs as $oref) {
+            $pr = PaymentRequest::where('operator_ref', (string) $oref)->first();
+            if ($pr) return $pr;
+        }
+
+        // Cross-match: reference in operator_ref column
+        foreach ($references as $ref) {
+            $pr = PaymentRequest::where('operator_ref', (string) $ref)->first();
+            if ($pr) return $pr;
+        }
+
+        // Cross-match: gateway_id values in request_ref column
+        foreach ($gatewayIds as $gid) {
+            $pr = PaymentRequest::where('request_ref', (string) $gid)->first();
+            if ($pr) return $pr;
+        }
+
+        // Last resort: match by phone + operator + processing status
+        $phone = data_get($payload, 'body.request.msisdn')
+            ?? data_get($payload, 'transaction.msisdn')
+            ?? data_get($payload, 'msisdn')
+            ?? data_get($payload, 'Body.stkCallback.CallbackMetadata.Item.2.Value');
+        if ($phone) {
+            $query = PaymentRequest::where('phone', (string) $phone)
+                ->where('status', 'processing')
+                ->orderBy('created_at', 'desc');
+            if ($operatorCode) {
+                $query->where('operator_code', $operatorCode);
+            }
+            $pr = $query->first();
+            if ($pr) return $pr;
+        }
+
+        // Deep scan: extract ALL string values from the payload and try matching
+        $allValues = $this->extractAllValues($payload);
+        Log::info('Callback lookup: deep scan values', ['values' => $allValues]);
+
+        foreach ($allValues as $val) {
+            $pr = PaymentRequest::where('request_ref', $val)->first();
+            if ($pr) return $pr;
+        }
+        foreach ($allValues as $val) {
+            $pr = PaymentRequest::where('gateway_id', $val)->first();
+            if ($pr) return $pr;
+        }
+        foreach ($allValues as $val) {
+            $pr = PaymentRequest::where('operator_ref', $val)->first();
+            if ($pr) return $pr;
+        }
+
+        return null;
+    }
+
+    /**
+     * Recursively extract all non-empty string/numeric values from a nested array.
+     */
+    private function extractAllValues(array $data): array
+    {
+        $values = [];
+        array_walk_recursive($data, function ($value) use (&$values) {
+            if (is_string($value) && strlen($value) >= 3 && strlen($value) <= 100) {
+                $values[] = $value;
+            } elseif (is_numeric($value) && $value > 0) {
+                $values[] = (string) $value;
+            }
+        });
+        return array_values(array_unique($values));
+    }
+
     private function pushToOperator(Operator $operator, PaymentRequest $paymentRequest, string $type): array
     {
         try {

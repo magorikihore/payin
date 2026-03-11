@@ -22,28 +22,32 @@ class OperatorPrefixSeeder extends Seeder
     {
         $operators = [
             [
-                'name'     => 'M-Pesa',
-                'code'     => 'mpesa',
-                'prefixes' => ['074', '075', '076'],
-                'api_url'  => 'https://api.vodacom.co.tz',
+                'name'         => 'M-Pesa',
+                'code'         => 'mpesa',
+                'gateway_type' => 'digivas',
+                'prefixes'     => ['074', '075', '076'],
+                'api_url'      => 'https://api.vodacom.co.tz',
             ],
             [
-                'name'     => 'Tigo Pesa',
-                'code'     => 'tigopesa',
-                'prefixes' => ['065', '067', '071'],
-                'api_url'  => 'https://api.tigo.co.tz',
+                'name'         => 'Tigo Pesa',
+                'code'         => 'tigopesa',
+                'gateway_type' => 'digivas',
+                'prefixes'     => ['065', '067', '071'],
+                'api_url'      => 'https://api.tigo.co.tz',
             ],
             [
-                'name'     => 'Airtel Money',
-                'code'     => 'airtelmoney',
-                'prefixes' => ['068', '069', '078'],
-                'api_url'  => 'https://api.airtel.co.tz',
+                'name'         => 'Airtel Money',
+                'code'         => 'airtelmoney',
+                'gateway_type' => 'airtel_africa',
+                'prefixes'     => ['068', '069', '078'],
+                'api_url'      => 'https://api.airtel.co.tz',
             ],
             [
-                'name'     => 'Halopesa',
-                'code'     => 'halopesa',
-                'prefixes' => ['062', '061'],
-                'api_url'  => 'https://api.halotel.co.tz',
+                'name'         => 'Halopesa',
+                'code'         => 'halopesa',
+                'gateway_type' => 'digivas',
+                'prefixes'     => ['062', '061'],
+                'api_url'      => 'https://api.halotel.co.tz',
             ],
         ];
 
@@ -51,10 +55,11 @@ class OperatorPrefixSeeder extends Seeder
             Operator::updateOrCreate(
                 ['code' => $op['code']],
                 [
-                    'name'     => $op['name'],
-                    'prefixes' => $op['prefixes'],
-                    'api_url'  => $op['api_url'],
-                    'status'   => 'active',
+                    'name'         => $op['name'],
+                    'gateway_type' => $op['gateway_type'],
+                    'prefixes'     => $op['prefixes'],
+                    'api_url'      => $op['api_url'],
+                    'status'       => 'active',
                 ]
             );
         }
