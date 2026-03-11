@@ -1015,10 +1015,6 @@
                         <input type="text" inputmode="numeric" x-model="invoiceAmountDisplay" @input="formatAmountInput($event, 'invoice')" required placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
-                        <input type="text" x-model="invoiceForm.reference" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="e.g. INV-001, Order #123">
-                    </div>
-                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Expires In</label>
                         <select x-model="invoiceForm.expires_in" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
                             <option value="">7 days (default)</option>
@@ -3381,7 +3377,7 @@ function dashboard() {
         // Invoices (Manual C2B)
         invoices: [], invoicesLoading: false, invoicePage: 1, invoicePagination: {},
         invoiceSearch: '', invoiceFilterStatus: '',
-        invoiceForm: { amount: '', description: '', reference: '', expires_in: '' },
+        invoiceForm: { amount: '', description: '', expires_in: '' },
         invoiceAmountDisplay: '',
         invoiceLoading: false, invoiceMsg: '', invoiceMsgType: '',
         invoiceDetailOpen: false, invoiceDetail: null,
@@ -5276,11 +5272,12 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             this.invoiceLoading = true;
             this.invoiceMsg = '';
             try {
+                const ref = 'INV-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
                 const body = {
                     amount: this.invoiceForm.amount,
                     currency: this.walletCurrency,
+                    reference: ref,
                 };
-                body.reference = this.invoiceForm.reference;
                 if (this.invoiceForm.description) body.description = this.invoiceForm.description;
                 if (this.invoiceForm.expires_in) body.expires_in = parseInt(this.invoiceForm.expires_in);
 
@@ -5296,7 +5293,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 }
                 this.invoiceMsg = `Invoice created! Reference: ${data.request_ref}`;
                 this.invoiceMsgType = 'success';
-                this.invoiceForm = { amount: '', description: '', reference: '', expires_in: '' };
+                this.invoiceForm = { amount: '', description: '', expires_in: '' };
                 this.invoiceAmountDisplay = '';
                 this.fetchInvoices();
             } catch (e) {
