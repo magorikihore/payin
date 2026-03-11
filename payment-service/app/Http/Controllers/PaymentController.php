@@ -1027,6 +1027,14 @@ class PaymentController extends Controller
             if ($pr) return $pr;
         }
 
+        // Search by external_ref (customer-facing reference, e.g. 8-digit invoice number)
+        foreach ($references as $ref) {
+            $pr = PaymentRequest::where('external_ref', (string) $ref)
+                ->whereIn('status', ['processing', 'waiting'])
+                ->first();
+            if ($pr) return $pr;
+        }
+
         // Search by gateway_id
         foreach ($gatewayIds as $gid) {
             $pr = PaymentRequest::where('gateway_id', (string) $gid)->first();
