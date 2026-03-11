@@ -15,8 +15,8 @@
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-300">Welcome, <span class="font-medium text-white" x-text="user?.firstname || user?.name || 'Admin'"></span></span>
                     <span class="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full capitalize" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin'"></span>
-                    <!-- Settings Button (vanilla JS) -->
-                    <button id="settings-btn" type="button" class="text-sm text-amber-400 hover:text-amber-300 font-medium inline-flex items-center gap-1 transition">
+                    <!-- Settings Tab Link -->
+                    <button @click="goToTab('settings')" :class="activeTab === 'settings' ? 'text-white' : 'text-amber-400 hover:text-amber-300'" class="text-sm font-medium inline-flex items-center gap-1 transition">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Settings
                     </button>
@@ -25,40 +25,6 @@
             </div>
         </div>
     </nav>
-
-    <!-- Settings backdrop (vanilla JS controlled) -->
-    <div id="settings-backdrop" class="fixed inset-0 hidden" style="z-index:9998"></div>
-    <!-- Settings Panel (vanilla JS controlled, outside nav) -->
-    <div id="settings-panel" class="fixed top-16 right-4 w-64 bg-white rounded-xl shadow-2xl border overflow-hidden hidden" style="z-index:9999">
-        <div class="px-4 py-3 bg-gray-50 border-b">
-            <p id="settings-user-name" class="text-sm font-semibold text-gray-800"></p>
-            <p id="settings-user-email" class="text-xs text-gray-500"></p>
-        </div>
-        <div class="py-1">
-            <button id="settings-change-pw" class="w-full flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition">
-                <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                Change Password
-            </button>
-            <div class="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700">
-                <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                    Two-Factor Auth
-                </div>
-                <div class="relative">
-                    <button id="settings-2fa-toggle" class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full bg-gray-300 transition-colors duration-200 ease-in-out">
-                        <span id="settings-2fa-dot" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="border-t py-1">
-            <div class="px-4 py-2 text-xs text-gray-400">
-                <p>Role: <span id="settings-role" class="font-medium text-gray-600"></span></p>
-                <p class="mt-1">Last login: <span id="settings-last-login" class="font-medium text-gray-600"></span></p>
-                <p class="mt-1" id="settings-ip-row">IP: <span id="settings-ip" class="font-medium text-gray-600 font-mono"></span></p>
-            </div>
-        </div>
-    </div>
 
     <!-- Tab Navigation -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
@@ -102,9 +68,9 @@
                      x-show="hasPerm('admin_users') || hasPerm('admin_operators') || hasPerm('admin_payments') || user?.role === 'super_admin'"
                      >
                     <button @click="moreOpen = !moreOpen"
-                        :class="['users','operators','payments','admin_users','audit_trail','logs','mail_config','exchange_rates','referrals'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
+                        :class="['users','operators','payments','admin_users','audit_trail','logs','mail_config','exchange_rates','referrals','settings'].includes(activeTab) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white hover:border-white/50'"
                         class="py-4 px-1 border-b-2 font-medium text-sm transition whitespace-nowrap inline-flex items-center">
-                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'audit_trail' ? 'Audit Trail' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : activeTab === 'exchange_rates' ? 'Exchange Rates' : activeTab === 'referrals' ? 'Referrals' : 'More'"></span>
+                        <span x-text="activeTab === 'users' ? 'Users' : activeTab === 'operators' ? 'Operators' : activeTab === 'payments' ? 'Payment Requests' : activeTab === 'admin_users' ? 'Admin Users' : activeTab === 'audit_trail' ? 'Audit Trail' : activeTab === 'logs' ? 'Error Logs' : activeTab === 'mail_config' ? 'Mail Config' : activeTab === 'exchange_rates' ? 'Exchange Rates' : activeTab === 'referrals' ? 'Referrals' : activeTab === 'settings' ? 'Settings' : 'More'"></span>
                         <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="moreOpen" x-transition class="absolute left-0 top-full mt-1 w-48 bg-white rounded-md shadow-lg border z-50">
@@ -135,6 +101,10 @@
                         <button x-show="hasPerm('admin_charges')" @click="goToTab('referrals'); moreOpen = false"
                             :class="activeTab === 'referrals' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
                             class="block w-full text-left px-4 py-2 text-sm">Referrals</button>
+                        <div class="border-t"></div>
+                        <button @click="goToTab('settings'); moreOpen = false"
+                            :class="activeTab === 'settings' ? 'bg-red-50 text-red-600' : 'text-gray-700 hover:bg-gray-100'"
+                            class="block w-full text-left px-4 py-2 text-sm">Settings</button>
                     </div>
                 </div>
             </nav>
@@ -4236,42 +4206,100 @@
             </div>
         </div>
 
-    </div>
+        <!-- ==================== SETTINGS TAB ==================== -->
+        <div x-show="activeTab === 'settings'" x-cloak class="mt-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- Change Password Modal -->
-    <div x-show="showPwModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="closePwModal()">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
-            <div class="flex items-center mb-4">
-                <svg class="w-6 h-6 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                <h3 class="text-lg font-bold text-gray-800">Change Password</h3>
+                <!-- Card 1: Change Password -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                            <h3 class="text-lg font-bold text-white">Change Password</h3>
+                        </div>
+                        <p class="text-blue-100 text-sm mt-1">Min 8 characters with mixed case, numbers, and symbols.</p>
+                    </div>
+                    <div class="p-6">
+                        <div x-show="pwSuccess" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
+                        <div x-show="pwError" x-cloak class="mb-4 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
+
+                        <form @submit.prevent="changePassword()">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                                <input type="password" x-model="currentPassword" required class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Enter current password">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                                <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Enter new password">
+                            </div>
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                                <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Confirm new password">
+                            </div>
+                            <button type="submit" :disabled="pwLoading" class="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
+                                <span x-show="!pwLoading">Update Password</span>
+                                <span x-show="pwLoading" class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Updating...</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Card 2: Security Settings -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-white mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <h3 class="text-lg font-bold text-white">Security Settings</h3>
+                        </div>
+                        <p class="text-emerald-100 text-sm mt-1">Manage your account security preferences.</p>
+                    </div>
+                    <div class="p-6 space-y-6">
+                        <!-- Two-Factor Authentication -->
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-800">Two-Factor Authentication</h4>
+                                <p class="text-xs text-gray-500 mt-1">Add an extra layer of security to your account</p>
+                            </div>
+                            <button @click="toggleTwoFactor()" :disabled="twoFactorToggling" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out disabled:opacity-50" :class="twoFactorEnabled ? 'bg-green-500' : 'bg-gray-300'">
+                                <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="twoFactorEnabled ? 'translate-x-5' : 'translate-x-0'"></span>
+                            </button>
+                        </div>
+                        <div class="text-center py-1">
+                            <span class="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full" :class="twoFactorEnabled ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="twoFactorEnabled ? '2FA Enabled' : '2FA Disabled'"></span>
+                        </div>
+
+                        <!-- Account Info -->
+                        <div class="border-t pt-4">
+                            <h4 class="text-sm font-semibold text-gray-800 mb-3">Account Information</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Name</span>
+                                    <span class="font-medium text-gray-800" x-text="(user?.firstname || '') + ' ' + (user?.lastname || '')"></span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Email</span>
+                                    <span class="font-medium text-gray-800" x-text="user?.email || ''"></span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Role</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium" :class="user?.role === 'super_admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'" x-text="user?.role === 'super_admin' ? 'Super Admin' : 'Admin User'"></span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Last Login</span>
+                                    <span class="font-medium text-gray-800" x-text="user?.last_login_at ? new Date(user.last_login_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'N/A'"></span>
+                                </div>
+                                <div x-show="user?.last_login_ip" class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Last Login IP</span>
+                                    <span class="font-medium text-gray-800 font-mono text-xs" x-text="user?.last_login_ip || ''"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <p class="text-sm text-gray-500 mb-4">Min 8 characters with mixed case, numbers, and symbols.</p>
-
-            <div x-show="pwSuccess" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-green-50 text-green-700 border border-green-200" x-text="pwSuccess"></div>
-            <div x-show="pwError" x-cloak class="mb-3 p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200" x-text="pwError"></div>
-
-            <form @submit.prevent="changePassword()">
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
-                    <input type="password" x-model="currentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Current password">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                    <input type="password" x-model="newPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="New password">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
-                    <input type="password" x-model="confirmPassword" required minlength="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Confirm password">
-                </div>
-                <div class="flex space-x-3">
-                    <button type="button" @click="closePwModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-medium">Cancel</button>
-                    <button type="submit" :disabled="pwLoading" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium disabled:opacity-50">
-                        <span x-show="!pwLoading">Update Password</span>
-                        <span x-show="pwLoading">Updating...</span>
-                    </button>
-                </div>
-            </form>
         </div>
+
     </div>
 
 </div>
@@ -4377,7 +4405,7 @@ function adminPanel() {
         showDirectRevModal: false, directRevTxn: null, directRevReason: '', directRevLoading: false, directRevError: '', directRevSuccess: '',
 
         // Change Password
-        showPwModal: false, currentPassword: '', newPassword: '', confirmPassword: '',
+        currentPassword: '', newPassword: '', confirmPassword: '',
         pwLoading: false, pwError: '', pwSuccess: '',
 
         // Two-Factor Auth
@@ -4474,8 +4502,8 @@ function adminPanel() {
             }
             this.adminPerms = this.user.admin_permissions || [];
             // Set default tab to first permitted tab
-            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals', 'admin_users', 'audit_trail', 'logs', 'mail_config', 'exchange_rates'];
-            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals', admin_users: 'super_admin', audit_trail: 'super_admin', logs: 'super_admin', mail_config: 'super_admin', exchange_rates: 'super_admin' };
+            const tabOrder = ['overview', 'accounts', 'transactions', 'wallets', 'settlements', 'charges', 'ipwhitelist', 'transfers', 'operators', 'payments', 'users', 'reversals', 'admin_users', 'audit_trail', 'logs', 'mail_config', 'exchange_rates', 'settings'];
+            const permMap = { overview: 'admin_overview', accounts: 'admin_accounts', transactions: 'admin_transactions', wallets: 'admin_wallets', settlements: 'admin_settlements', charges: 'admin_charges', ipwhitelist: 'admin_ip_whitelist', transfers: 'admin_transfers', operators: 'admin_operators', payments: 'admin_payments', users: 'admin_users', reversals: 'admin_reversals', admin_users: 'super_admin', audit_trail: 'super_admin', logs: 'super_admin', mail_config: 'super_admin', exchange_rates: 'super_admin', settings: true };
             const hash = window.location.hash.replace('#', '');
             if (hash && tabOrder.includes(hash) && this.hasPerm(permMap[hash])) {
                 this.activeTab = hash;
@@ -4495,8 +4523,7 @@ function adminPanel() {
             if (this.hasPerm('admin_reversals')) this.fetchPendingReversalCount();
             this.fetchTwoFactorStatus();
 
-            // Settings dropdown - vanilla JS (CSP-safe, no eval)
-            this._initSettingsDropdown();
+
 
             // Sync hash on tab change
             this.$watch('activeTab', (tab) => {
@@ -4531,7 +4558,7 @@ function adminPanel() {
 
         // Permission helper
         adminPerms: [],
-        hasPerm(p) { return this.user?.role === 'super_admin' || this.adminPerms.includes(p); },
+        hasPerm(p) { return p === true || this.user?.role === 'super_admin' || this.adminPerms.includes(p); },
 
         /**
          * Navigate to a tab and trigger its data fetch.
@@ -6070,88 +6097,11 @@ function adminPanel() {
                 this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = '';
                 // Store new token if returned
                 if (data.token) { localStorage.setItem('auth_token', data.token); }
-                setTimeout(() => this.closePwModal(), 2000);
+                setTimeout(() => { this.pwSuccess = ''; }, 3000);
             } catch (e) { this.pwError = 'Unable to connect to auth service.'; }
             finally { this.pwLoading = false; }
         },
-        closePwModal() { this.showPwModal = false; this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.pwError = ''; this.pwSuccess = ''; },
-
-        _initSettingsDropdown() {
-            var self = this;
-            var btn = document.getElementById('settings-btn');
-            var panel = document.getElementById('settings-panel');
-            var backdrop = document.getElementById('settings-backdrop');
-            if (!btn || !panel || !backdrop) return;
-
-            function updateSettingsInfo() {
-                var u = self.user || {};
-                var nameEl = document.getElementById('settings-user-name');
-                var emailEl = document.getElementById('settings-user-email');
-                var roleEl = document.getElementById('settings-role');
-                var lastLoginEl = document.getElementById('settings-last-login');
-                var ipEl = document.getElementById('settings-ip');
-                var ipRow = document.getElementById('settings-ip-row');
-                if (nameEl) nameEl.textContent = (u.firstname || '') + ' ' + (u.lastname || '');
-                if (emailEl) emailEl.textContent = u.email || '';
-                if (roleEl) roleEl.textContent = u.role === 'super_admin' ? 'Super Admin' : 'Admin User';
-                if (lastLoginEl) lastLoginEl.textContent = u.last_login_at ? new Date(u.last_login_at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : 'N/A';
-                if (ipEl) ipEl.textContent = u.last_login_ip || '';
-                if (ipRow) ipRow.style.display = u.last_login_ip ? '' : 'none';
-            }
-
-            function update2FAVisual() {
-                var toggle = document.getElementById('settings-2fa-toggle');
-                var dot = document.getElementById('settings-2fa-dot');
-                if (toggle) {
-                    toggle.className = 'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out' + (self.twoFactorEnabled ? ' bg-green-500' : ' bg-gray-300');
-                }
-                if (dot) {
-                    dot.className = 'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out' + (self.twoFactorEnabled ? ' translate-x-4' : ' translate-x-0');
-                }
-            }
-
-            function openPanel() {
-                updateSettingsInfo();
-                update2FAVisual();
-                panel.classList.remove('hidden');
-                backdrop.classList.remove('hidden');
-            }
-
-            function closePanel() {
-                panel.classList.add('hidden');
-                backdrop.classList.add('hidden');
-            }
-
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (panel.classList.contains('hidden')) {
-                    openPanel();
-                } else {
-                    closePanel();
-                }
-            });
-
-            backdrop.addEventListener('click', function() {
-                closePanel();
-            });
-
-            // Change Password button
-            var pwBtn = document.getElementById('settings-change-pw');
-            if (pwBtn) {
-                pwBtn.addEventListener('click', function() {
-                    closePanel();
-                    self.showPwModal = true;
-                });
-            }
-
-            // 2FA toggle button
-            var tfaBtn = document.getElementById('settings-2fa-toggle');
-            if (tfaBtn) {
-                tfaBtn.addEventListener('click', function() {
-                    self.toggleTwoFactor().then(function() { update2FAVisual(); });
-                });
-            }
-        },
+        clearPwFields() { this.currentPassword = ''; this.newPassword = ''; this.confirmPassword = ''; this.pwError = ''; this.pwSuccess = ''; },
 
         logout() {
             fetch('{{ config("services.auth_service.public_url") }}/api/logout', { method: 'POST', headers: this.getHeaders() }).finally(() => {
