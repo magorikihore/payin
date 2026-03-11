@@ -1057,21 +1057,21 @@
                                         :class="{'bg-yellow-50 text-yellow-700 border border-yellow-200': invoiceDetail.status==='waiting','bg-green-50 text-green-700 border border-green-200': invoiceDetail.status==='completed','bg-red-50 text-red-700 border border-red-200': invoiceDetail.status==='failed' || invoiceDetail.status==='cancelled','bg-blue-50 text-blue-700 border border-blue-200': invoiceDetail.status==='processing'}"
                                         x-text="'Status: ' + invoiceDetail.status"></span>
                                 </div>
-                                <div class="bg-gray-50 rounded-lg p-3 text-center">
-                                    <div class="text-xs text-gray-500 mb-1">Reference</div>
-                                    <div class="text-sm font-mono font-bold text-gray-800 flex items-center justify-center gap-2">
-                                        <span x-text="invoiceDetail.request_ref"></span>
-                                        <button @click="copyToClipboard(invoiceDetail.request_ref)" class="text-gblue-500 hover:text-gblue-700" title="Copy">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+                                    <div class="text-xs font-medium text-amber-600 mb-1">Customer pays with this reference</div>
+                                    <div class="text-2xl font-bold text-gray-900 tracking-widest flex items-center justify-center gap-2">
+                                        <span x-text="invoiceDetail.external_ref"></span>
+                                        <button @click="copyToClipboard(invoiceDetail.external_ref)" class="text-gblue-500 hover:text-gblue-700" title="Copy">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="flex justify-between text-sm"><span class="text-gray-500">Network</span><span class="font-medium text-gray-800" x-text="invoiceDetail.operator_name || 'Pending payment'"></span></div>
                                 <div class="flex justify-between text-sm"><span class="text-gray-500">Amount</span><span class="font-medium text-gray-800" x-text="formatAmount(invoiceDetail.amount) + ' ' + (invoiceDetail.currency || walletCurrency)"></span></div>
-                                <div x-show="invoiceDetail.external_ref" class="flex justify-between text-sm"><span class="text-gray-500">Customer Reference</span><span class="font-medium text-gray-800" x-text="invoiceDetail.external_ref"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Network</span><span class="font-medium text-gray-800" x-text="invoiceDetail.operator_name || 'Pending payment'"></span></div>
                                 <div x-show="invoiceDetail.description" class="flex justify-between text-sm"><span class="text-gray-500">Description</span><span class="font-medium text-gray-800" x-text="invoiceDetail.description"></span></div>
                                 <div class="flex justify-between text-sm"><span class="text-gray-500">Expires</span><span class="font-medium text-gray-800" x-text="invoiceDetail.error_message ? formatDate(invoiceDetail.error_message) : 'N/A'"></span></div>
                                 <div class="flex justify-between text-sm"><span class="text-gray-500">Created</span><span class="font-medium text-gray-800" x-text="formatDate(invoiceDetail.created_at)"></span></div>
+                                <div class="flex justify-between text-sm text-gray-400"><span>System ID</span><span class="font-mono text-xs" x-text="invoiceDetail.request_ref"></span></div>
                             </div>
                             <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-between">
                                 <button x-show="invoiceDetail.status === 'waiting'" @click="cancelInvoice(invoiceDetail.request_ref)" class="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition">Cancel Invoice</button>
@@ -1122,7 +1122,7 @@
                             <tbody class="divide-y divide-gray-200">
                                 <template x-for="inv in invoices" :key="inv.id">
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm font-mono text-gray-700" x-text="inv.request_ref"></td>
+                                        <td class="px-6 py-4 text-sm font-mono font-bold text-gray-900 tracking-wide" x-text="inv.external_ref || inv.request_ref"></td>
                                         <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="formatAmount(inv.amount) + ' ' + (inv.currency || walletCurrency)"></td>
                                         <td class="px-6 py-4">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
