@@ -65,6 +65,12 @@
                     Send Money
                     <span x-show="pendingPayoutsCount > 0" x-cloak class="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" x-text="pendingPayoutsCount"></span>
                 </button>
+                <button x-show="hasPerm('view_transactions') || hasPerm('create_payout')" @click="goToTab('invoices')"
+                    :class="activeTab === 'invoices' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'invoices' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                    Invoices
+                </button>
                 <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="goToTab('settlements')"
                     :class="activeTab === 'settlements' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
@@ -987,6 +993,182 @@
                         <div class="flex space-x-2">
                             <button @click="goToStlPage(stlPagination.current_page-1)" :disabled="!stlPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
                             <button @click="goToStlPage(stlPagination.current_page+1)" :disabled="!stlPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== INVOICES TAB ==================== -->
+        <div x-show="activeTab === 'invoices'" x-cloak>
+            <!-- Create Invoice Form -->
+            <div class="bg-white rounded-xl shadow-md border p-6 mb-8">
+                <div class="flex items-center mb-4">
+                    <svg class="w-6 h-6 text-gblue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                    <h3 class="text-lg font-semibold text-gray-800">Create Invoice</h3>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">Generate an invoice for manual C2B payment. The customer pays using the paybill/till number and reference you provide.</p>
+                <div x-show="invoiceMsg" x-cloak class="mb-4 p-3 rounded-lg text-sm" :class="invoiceMsgType === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'" x-text="invoiceMsg"></div>
+                <form @submit.prevent="createInvoice()" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Operator</label>
+                        <select x-model="invoiceForm.operator" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <option value="">Select Operator</option>
+                            <template x-for="op in payoutOperators" :key="op.code">
+                                <option :value="op.code" x-text="op.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1" x-text="'Amount (' + walletCurrency + ')'"></label>
+                        <input type="text" inputmode="numeric" x-model="invoiceAmountDisplay" @input="formatAmountInput($event, 'invoice')" required placeholder="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Reference (optional)</label>
+                        <input type="text" x-model="invoiceForm.reference" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="e.g. INV-001, Order #123">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Expires In</label>
+                        <select x-model="invoiceForm.expires_in" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                            <option value="">7 days (default)</option>
+                            <option value="60">1 hour</option>
+                            <option value="360">6 hours</option>
+                            <option value="1440">24 hours</option>
+                            <option value="4320">3 days</option>
+                            <option value="10080">7 days</option>
+                            <option value="43200">30 days</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                        <input type="text" x-model="invoiceForm.description" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none" placeholder="e.g. Payment for services rendered">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" :disabled="invoiceLoading" class="bg-gblue-500 text-white px-6 py-2 rounded-lg hover:bg-gblue-600 transition text-sm font-medium disabled:opacity-50">
+                            <span x-show="!invoiceLoading">Create Invoice</span>
+                            <span x-show="invoiceLoading">Creating...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Invoice Detail Modal -->
+            <div x-show="invoiceDetailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @keydown.escape.window="invoiceDetailOpen = false">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md" @click.outside="invoiceDetailOpen = false">
+                    <div class="px-6 py-4 border-b bg-gradient-to-r from-gblue-600 to-gblue-700 rounded-t-2xl text-center">
+                        <div class="flex justify-center mb-2">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white">Invoice Details</h3>
+                        <p class="text-xs text-blue-100 mt-1">Share these details with your customer</p>
+                    </div>
+                    <template x-if="invoiceDetail">
+                        <div>
+                            <div class="px-6 py-5 space-y-3">
+                                <div class="text-center mb-3">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                                        :class="{'bg-yellow-50 text-yellow-700 border border-yellow-200': invoiceDetail.status==='waiting','bg-green-50 text-green-700 border border-green-200': invoiceDetail.status==='completed','bg-red-50 text-red-700 border border-red-200': invoiceDetail.status==='failed' || invoiceDetail.status==='cancelled','bg-blue-50 text-blue-700 border border-blue-200': invoiceDetail.status==='processing'}"
+                                        x-text="'Status: ' + invoiceDetail.status"></span>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-3 text-center">
+                                    <div class="text-xs text-gray-500 mb-1">Reference</div>
+                                    <div class="text-sm font-mono font-bold text-gray-800 flex items-center justify-center gap-2">
+                                        <span x-text="invoiceDetail.request_ref"></span>
+                                        <button @click="copyToClipboard(invoiceDetail.request_ref)" class="text-gblue-500 hover:text-gblue-700" title="Copy">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Operator</span><span class="font-medium text-gray-800" x-text="invoiceDetail.operator_name"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Amount</span><span class="font-medium text-gray-800" x-text="formatAmount(invoiceDetail.amount) + ' ' + (invoiceDetail.currency || walletCurrency)"></span></div>
+                                <div x-show="invoiceDetail.external_ref" class="flex justify-between text-sm"><span class="text-gray-500">Customer Reference</span><span class="font-medium text-gray-800" x-text="invoiceDetail.external_ref"></span></div>
+                                <div x-show="invoiceDetail.description" class="flex justify-between text-sm"><span class="text-gray-500">Description</span><span class="font-medium text-gray-800" x-text="invoiceDetail.description"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Expires</span><span class="font-medium text-gray-800" x-text="invoiceDetail.error_message ? formatDate(invoiceDetail.error_message) : 'N/A'"></span></div>
+                                <div class="flex justify-between text-sm"><span class="text-gray-500">Created</span><span class="font-medium text-gray-800" x-text="formatDate(invoiceDetail.created_at)"></span></div>
+                            </div>
+                            <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-between">
+                                <button x-show="invoiceDetail.status === 'waiting'" @click="cancelInvoice(invoiceDetail.request_ref)" class="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition">Cancel Invoice</button>
+                                <div x-show="invoiceDetail.status !== 'waiting'"></div>
+                                <button @click="invoiceDetailOpen = false" class="px-5 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition">Close</button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Invoices Table -->
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                <div class="px-6 py-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <h3 class="text-lg font-semibold text-gray-800">Invoice History</h3>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:flex-initial">
+                            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" x-model="invoiceSearch" @input.debounce.400ms="invoicePage = 1; fetchInvoices()" placeholder="Search ref, amount..." class="w-full sm:w-52 pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <select x-model="invoiceFilterStatus" @change="invoicePage = 1; fetchInvoices()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                            <option value="">All Status</option>
+                            <option value="waiting">Waiting</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div x-show="invoicesLoading" class="p-8 text-center text-gray-500">
+                    <svg class="animate-spin h-8 w-8 mx-auto text-gblue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                </div>
+                <div x-show="!invoicesLoading && invoices.length === 0" x-cloak class="p-8 text-center text-gray-500">No invoices found.</div>
+                <div x-show="!invoicesLoading && invoices.length > 0" x-cloak>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <template x-for="inv in invoices" :key="inv.id">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 text-sm font-mono text-gray-700" x-text="inv.request_ref"></td>
+                                        <td class="px-6 py-4">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                :class="operatorBadgeColor(inv.operator_name)"
+                                                x-text="inv.operator_name || '-'"></span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="formatAmount(inv.amount) + ' ' + (inv.currency || walletCurrency)"></td>
+                                        <td class="px-6 py-4">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                :class="{'bg-gyellow-50 text-gyellow-700': inv.status==='waiting','bg-ggreen-50 text-ggreen-700': inv.status==='completed','bg-gred-50 text-gred-700': inv.status==='failed' || inv.status==='cancelled','bg-gblue-50 text-gblue-700': inv.status==='processing'}"
+                                                x-text="inv.status"></span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500" x-text="inv.error_message ? formatDate(inv.error_message) : '-'"></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500" x-text="formatDate(inv.created_at)"></td>
+                                        <td class="px-6 py-4 flex items-center gap-2">
+                                            <button @click="viewInvoice(inv)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gblue-700 bg-gblue-50 hover:bg-gblue-100 border border-gblue-200 rounded-lg transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                View
+                                            </button>
+                                            <button x-show="inv.status === 'waiting'" @click="cancelInvoice(inv.request_ref)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                Cancel
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div x-show="invoicePagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
+                        <p class="text-sm text-gray-500">Showing <span x-text="invoicePagination.from||0"></span> to <span x-text="invoicePagination.to||0"></span> of <span x-text="invoicePagination.total||0"></span></p>
+                        <div class="flex space-x-2">
+                            <button @click="invoicePage--; fetchInvoices()" :disabled="!invoicePagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button @click="invoicePage++; fetchInvoices()" :disabled="!invoicePagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
                         </div>
                     </div>
                 </div>
@@ -3206,6 +3388,14 @@ function dashboard() {
         bankForm: { bank_name: '', account_name: '', account_number: '', swift_code: '', branch: '', label: '' },
         bankFormLoading: false, bankMsg: '', bankMsgType: '', showBankForm: false,
 
+        // Invoices (Manual C2B)
+        invoices: [], invoicesLoading: false, invoicePage: 1, invoicePagination: {},
+        invoiceSearch: '', invoiceFilterStatus: '',
+        invoiceForm: { amount: '', operator: '', description: '', reference: '', expires_in: '' },
+        invoiceAmountDisplay: '',
+        invoiceLoading: false, invoiceMsg: '', invoiceMsgType: '',
+        invoiceDetailOpen: false, invoiceDetail: null,
+
         // Crypto Wallets
         cryptoWallets: [], cryptoWalletsLoading: false,
         cryptoForm: { currency: '', network: '', wallet_address: '', label: '' },
@@ -3319,7 +3509,7 @@ function dashboard() {
 
             // Restore tab from URL hash
             const hash = window.location.hash.replace('#', '');
-            const validTabs = ['dashboard','transactions','wallet','send-money','settlements','account','users','exchange','api-docs','settings','account-settings'];
+            const validTabs = ['dashboard','transactions','wallet','send-money','invoices','settlements','account','users','exchange','api-docs','settings','account-settings'];
             if (hash && validTabs.includes(hash)) {
                 this.goToTab(hash, true);
             }
@@ -3377,6 +3567,7 @@ function dashboard() {
                     }
                     break;
                 case 'settlements': this.fetchSettlements(); break;
+                case 'invoices': this.fetchInvoices(); this.fetchPayoutOperators(); break;
                 case 'account': this.fetchKyc(); break;
                 case 'users': this.fetchAccountUsers(); break;
                 case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
@@ -4840,6 +5031,9 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 this.fxAmountDisplay = formatted;
                 this.fxPreview = null;
                 this.fxResult = null;
+            } else if (target === 'invoice') {
+                this.invoiceForm.amount = num > 0 ? num : '';
+                this.invoiceAmountDisplay = formatted;
             }
             event.target.value = formatted;
         },
@@ -5068,6 +5262,86 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 this.fxMsgType = 'error';
             }
             this.fxExecuting = false;
+        },
+
+        // ---- Invoices (Manual C2B) ----
+        async fetchInvoices() {
+            this.invoicesLoading = true;
+            try {
+                let url = `/api/payment-requests?type=manual_c2b&page=${this.invoicePage}`;
+                if (this.invoiceSearch) url += `&search=${encodeURIComponent(this.invoiceSearch)}`;
+                if (this.invoiceFilterStatus) url += `&status=${this.invoiceFilterStatus}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.invoices = data.data || [];
+                    this.invoicePagination = { current_page: data.current_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
+                }
+            } catch (e) { console.error('Failed to fetch invoices', e); }
+            this.invoicesLoading = false;
+        },
+
+        async createInvoice() {
+            this.invoiceLoading = true;
+            this.invoiceMsg = '';
+            try {
+                const body = {
+                    amount: this.invoiceForm.amount,
+                    operator: this.invoiceForm.operator,
+                    currency: this.walletCurrency,
+                };
+                if (this.invoiceForm.reference) body.reference = this.invoiceForm.reference;
+                if (this.invoiceForm.description) body.description = this.invoiceForm.description;
+                if (this.invoiceForm.expires_in) body.expires_in = parseInt(this.invoiceForm.expires_in);
+
+                const res = await fetch('/api/invoice', {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    this.invoiceMsg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'Failed to create invoice.');
+                    this.invoiceMsgType = 'error';
+                    return;
+                }
+                this.invoiceMsg = `Invoice created! Reference: ${data.request_ref}`;
+                this.invoiceMsgType = 'success';
+                this.invoiceForm = { amount: '', operator: '', description: '', reference: '', expires_in: '' };
+                this.invoiceAmountDisplay = '';
+                this.fetchInvoices();
+            } catch (e) {
+                this.invoiceMsg = 'Service unavailable.';
+                this.invoiceMsgType = 'error';
+            }
+            this.invoiceLoading = false;
+        },
+
+        viewInvoice(inv) {
+            this.invoiceDetail = inv;
+            this.invoiceDetailOpen = true;
+        },
+
+        async cancelInvoice(requestRef) {
+            if (!confirm('Cancel this invoice?')) return;
+            try {
+                const res = await fetch(`/api/invoice/${requestRef}/cancel`, {
+                    method: 'PUT', headers: this.getHeaders()
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Failed to cancel invoice.');
+                    return;
+                }
+                this.invoiceDetailOpen = false;
+                this.fetchInvoices();
+            } catch (e) { alert('Service unavailable.'); }
+        },
+
+        copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // brief visual feedback could be added here
+            }).catch(() => {});
         },
 
         async fetchExchangeHistory() {

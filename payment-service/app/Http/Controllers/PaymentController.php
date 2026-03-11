@@ -847,6 +847,32 @@ class PaymentController extends Controller
     }
 
     /**
+     * Cancel a waiting invoice (manual_c2b).
+     */
+    public function cancelInvoice(Request $request, string $requestRef): JsonResponse
+    {
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        $paymentRequest = PaymentRequest::where('account_id', $accountId)
+            ->where('request_ref', $requestRef)
+            ->where('type', 'manual_c2b')
+            ->first();
+
+        if (!$paymentRequest) {
+            return response()->json(['message' => 'Invoice not found.'], 404);
+        }
+
+        if ($paymentRequest->status !== 'waiting') {
+            return response()->json(['message' => 'Only waiting invoices can be cancelled.'], 422);
+        }
+
+        $paymentRequest->update(['status' => 'cancelled']);
+
+        return response()->json(['success' => true, 'message' => 'Invoice cancelled.']);
+    }
+
+    /**
      * User: List own payment requests.
      */
     public function myRequests(Request $request): JsonResponse

@@ -44,6 +44,7 @@ Route::middleware('auth.service')->group(function () {
     // Can also push collection/disbursement via bearer token (dashboard use)
     Route::post('/collection', [PaymentController::class, 'collection']);
     Route::post('/invoice', [PaymentController::class, 'invoice']);
+    Route::put('/invoice/{request_ref}/cancel', [PaymentController::class, 'cancelInvoice']);
     Route::post('/disbursement', [PaymentController::class, 'disbursement']);
     Route::post('/disbursement/batch', [PaymentController::class, 'batchDisbursement']);
 
