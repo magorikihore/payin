@@ -4211,7 +4211,6 @@
 
         <!-- ==================== CALLBACK LOGS TAB ==================== -->
         <div x-show="activeTab === 'callback_logs'" x-cloak class="mt-6">
-          <div class="mx-auto" style="max-width:910px">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-bold text-gray-800">Callback Logs</h3>
             </div>
@@ -4290,7 +4289,6 @@
                     </div>
                 </div>
             </div>
-          </div>
 
             <!-- Callback Log Detail Modal -->
             <div x-show="cbLogDetailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="cbLogDetailOpen = false">
