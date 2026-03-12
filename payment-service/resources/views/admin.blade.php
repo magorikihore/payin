@@ -4238,16 +4238,12 @@
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Format</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Response</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                             </tr>
@@ -4255,14 +4251,11 @@
                         <tbody class="divide-y divide-gray-100">
                             <template x-for="log in cbLogs" :key="log.id">
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-4 py-3 text-gray-500" x-text="log.id"></td>
                                     <td class="px-4 py-3 text-gray-700" x-text="log.operator_code || '—'"></td>
                                     <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                                            :class="log.format === 'unknown' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800'"
-                                            x-text="log.format || 'unknown'"></span>
+                                        <div class="font-mono text-xs text-gray-800" x-text="log.reference || '—'"></div>
+                                        <div x-show="log.format && log.format !== 'unknown'" class="text-[10px] text-gray-400" x-text="log.format"></div>
                                     </td>
-                                    <td class="px-4 py-3 font-mono text-xs text-gray-800" x-text="log.reference || '—'"></td>
                                     <td class="px-4 py-3 font-mono text-xs text-gray-700" x-text="log.phone || '—'"></td>
                                     <td class="px-4 py-3 font-semibold text-gray-800" x-text="log.amount ? formatAmount(log.amount) : '—'"></td>
                                     <td class="px-4 py-3 font-mono text-xs text-gray-600" x-text="log.receipt_number || '—'"></td>
@@ -4276,13 +4269,8 @@
                                                 'bg-gray-100 text-gray-800': !['processed','received','unmatched','error','rejected_expired','rejected_amount'].includes(log.status)
                                             }"
                                             x-text="log.status?.replace('_',' ') || 'unknown'"></span>
+                                        <span class="ml-1 text-[10px]" :class="log.response_code === '0' ? 'text-green-600' : 'text-red-500'" x-text="log.response_code ? '(' + log.response_code + ')' : ''"></span>
                                     </td>
-                                    <td class="px-4 py-3">
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                                            :class="log.response_code === '0' ? 'bg-green-100 text-green-800' : (log.response_code === '999' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800')"
-                                            x-text="log.response_code || '—'"></span>
-                                    </td>
-                                    <td class="px-4 py-3 text-xs text-gray-400 font-mono" x-text="log.ip_address || '—'"></td>
                                     <td class="px-4 py-3 text-gray-500" x-text="formatDate(log.created_at)"></td>
                                     <td class="px-4 py-3">
                                         <button @click="viewCallbackLog(log)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
