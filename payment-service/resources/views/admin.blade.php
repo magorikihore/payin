@@ -4212,24 +4212,24 @@
 
         <!-- ==================== CALLBACK LOGS TAB ==================== -->
         <div x-show="activeTab === 'callback_logs'" x-cloak class="mt-6">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-gray-800">Callback Logs</h3>
-            </div>
-
             <!-- Filters -->
-            <div class="flex flex-wrap gap-3 mb-4">
-                <input type="text" x-model="cbLogSearch" @input.debounce.400ms="cbLogPage = 1; fetchCallbackLogs()"
-                    placeholder="Search ref, phone, receipt..."
-                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-200 outline-none w-64">
-                <select x-model="cbLogFilterStatus" @change="cbLogPage = 1; fetchCallbackLogs()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                    <option value="">All Status</option>
-                    <option value="received">Received</option>
-                    <option value="processed">Processed</option>
-                    <option value="unmatched">Unmatched</option>
-                    <option value="rejected_expired">Expired</option>
-                    <option value="rejected_amount">Amount Mismatch</option>
-                    <option value="error">Error</option>
-                </select>
+            <div class="bg-white rounded-xl shadow-sm p-4 border mb-6">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <input type="text" x-model="cbLogSearch" @input.debounce.400ms="cbLogPage = 1; fetchCallbackLogs()"
+                            placeholder="Search ref, phone, receipt..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
+                    </div>
+                    <select x-model="cbLogFilterStatus" @change="cbLogPage = 1; fetchCallbackLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">All Status</option>
+                        <option value="received">Received</option>
+                        <option value="processed">Processed</option>
+                        <option value="unmatched">Unmatched</option>
+                        <option value="rejected_expired">Expired</option>
+                        <option value="rejected_amount">Amount Mismatch</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
