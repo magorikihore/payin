@@ -4271,21 +4271,21 @@
                                             x-text="log.status?.replace('_',' ') || 'unknown'"></span>
                                         <span class="ml-1 text-[10px]" :class="log.response_code === '0' ? 'text-green-600' : 'text-red-500'" x-text="log.response_code ? '(' + log.response_code + ')' : ''"></span>
                                     </td>
-                                    <td class="px-4 py-3 text-gray-500" x-text="formatDate(log.created_at)"></td>
+                                    <td class="px-4 py-3 text-xs text-gray-500" x-text="formatDate(log.created_at)"></td>
                                     <td class="px-4 py-3">
-                                        <button @click="viewCallbackLog(log)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                                        <button @click="viewCallbackLog(log)" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">View</button>
                                     </td>
                                 </tr>
                             </template>
                         </tbody>
                     </table>
-                </div>
-                <!-- Pagination -->
-                <div x-show="cbLogPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
-                    <p class="text-sm text-gray-500">Showing <span x-text="cbLogPagination.from||0"></span> to <span x-text="cbLogPagination.to||0"></span> of <span x-text="cbLogPagination.total||0"></span></p>
-                    <div class="flex space-x-2">
-                        <button @click="cbLogPage--; fetchCallbackLogs()" :disabled="!cbLogPagination.prev_page_url" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
-                        <button @click="cbLogPage++; fetchCallbackLogs()" :disabled="!cbLogPagination.next_page_url" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between px-4 py-3 border-t bg-gray-50 text-sm text-gray-600">
+                        <span>Showing <span x-text="cbLogPagination.from || 0"></span>-<span x-text="cbLogPagination.to || 0"></span> of <span x-text="cbLogPagination.total || 0"></span></span>
+                        <div class="space-x-2">
+                            <button @click="cbLogPage--; fetchCallbackLogs()" :disabled="!cbLogPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Previous</button>
+                            <button @click="cbLogPage++; fetchCallbackLogs()" :disabled="!cbLogPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Next</button>
+                        </div>
                     </div>
                 </div>
             </div>
