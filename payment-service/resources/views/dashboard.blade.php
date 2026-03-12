@@ -71,6 +71,12 @@
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'invoices' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
                     Invoices
                 </button>
+                <button x-show="hasPerm('view_transactions')" @click="goToTab('callback-logs')"
+                    :class="activeTab === 'callback-logs' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'callback-logs' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    Callback Logs
+                </button>
                 <button x-show="hasPerm('view_settlements') || hasPerm('create_settlement')" @click="goToTab('settlements')"
                     :class="activeTab === 'settlements' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
                     class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
@@ -1155,6 +1161,140 @@
                         <div class="flex space-x-2">
                             <button @click="invoicePage--; fetchInvoices()" :disabled="!invoicePagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
                             <button @click="invoicePage++; fetchInvoices()" :disabled="!invoicePagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== CALLBACK LOGS TAB ==================== -->
+        <div x-show="activeTab === 'callback-logs'" x-cloak>
+            <div class="bg-white rounded-xl shadow-md border overflow-hidden">
+                <div class="px-6 py-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <h3 class="text-lg font-semibold text-gray-800">Callback Logs</h3>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 sm:flex-initial">
+                            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" x-model="cbLogSearch" @input.debounce.400ms="cbLogPage = 1; fetchCallbackLogs()" placeholder="Search ref, phone, receipt..." class="w-full sm:w-52 pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                        </div>
+                        <select x-model="cbLogFilterStatus" @change="cbLogPage = 1; fetchCallbackLogs()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+                            <option value="">All Status</option>
+                            <option value="received">Received</option>
+                            <option value="processed">Processed</option>
+                            <option value="unmatched">Unmatched</option>
+                            <option value="rejected_expired">Expired</option>
+                            <option value="rejected_amount">Amount Mismatch</option>
+                            <option value="error">Error</option>
+                        </select>
+                    </div>
+                </div>
+                <div x-show="cbLogsLoading" class="p-8 text-center text-gray-500">
+                    <svg class="animate-spin h-8 w-8 mx-auto text-gblue-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                </div>
+                <div x-show="!cbLogsLoading && cbLogs.length === 0" x-cloak class="p-8 text-center text-gray-500">No callback logs found.</div>
+                <div x-show="!cbLogsLoading && cbLogs.length > 0" x-cloak>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Format</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Response</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <template x-for="log in cbLogs" :key="log.id">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 text-sm text-gray-500" x-text="log.id"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-700" x-text="log.operator_code || '-'"></td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                :class="log.format === 'unknown' ? 'bg-gray-100 text-gray-600' : 'bg-blue-50 text-blue-700'"
+                                                x-text="log.format || 'unknown'"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm font-mono text-gray-800" x-text="log.reference || '-'"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-600" x-text="log.phone || '-'"></td>
+                                        <td class="px-4 py-3 text-sm font-semibold text-gray-800" x-text="log.amount ? formatAmount(log.amount) : '-'"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-600" x-text="log.receipt_number || '-'"></td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                                                :class="{
+                                                    'bg-ggreen-50 text-ggreen-700': log.status==='processed',
+                                                    'bg-gyellow-50 text-gyellow-700': log.status==='received',
+                                                    'bg-gred-50 text-gred-700': log.status==='unmatched' || log.status==='error',
+                                                    'bg-orange-50 text-orange-700': log.status==='rejected_expired' || log.status==='rejected_amount',
+                                                    'bg-gray-100 text-gray-600': !['processed','received','unmatched','error','rejected_expired','rejected_amount'].includes(log.status)
+                                                }"
+                                                x-text="log.status?.replace('_',' ') || 'unknown'"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                                :class="log.response_code === '0' ? 'bg-ggreen-50 text-ggreen-700' : (log.response_code === '999' ? 'bg-gred-50 text-gred-700' : 'bg-gyellow-50 text-gyellow-700')"
+                                                x-text="log.response_code || '-'"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-xs text-gray-400 font-mono" x-text="log.ip_address || '-'"></td>
+                                        <td class="px-4 py-3 text-sm text-gray-500" x-text="formatDate(log.created_at)"></td>
+                                        <td class="px-4 py-3">
+                                            <button @click="viewCallbackLog(log)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gblue-700 bg-gblue-50 hover:bg-gblue-100 border border-gblue-200 rounded-lg transition">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div x-show="cbLogPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
+                        <p class="text-sm text-gray-500">Showing <span x-text="cbLogPagination.from||0"></span> to <span x-text="cbLogPagination.to||0"></span> of <span x-text="cbLogPagination.total||0"></span></p>
+                        <div class="flex space-x-2">
+                            <button @click="cbLogPage--; fetchCallbackLogs()" :disabled="!cbLogPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                            <button @click="cbLogPage++; fetchCallbackLogs()" :disabled="!cbLogPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Callback Log Detail Modal -->
+            <div x-show="cbLogDetailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="cbLogDetailOpen = false">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+                    <div class="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+                        <h3 class="text-lg font-semibold text-gray-800">Callback Detail</h3>
+                        <button @click="cbLogDetailOpen = false" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                    </div>
+                    <div class="px-6 py-4 space-y-4" x-show="cbLogDetail">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><span class="text-gray-500">ID:</span> <span class="font-medium" x-text="cbLogDetail?.id"></span></div>
+                            <div><span class="text-gray-500">Operator:</span> <span class="font-medium" x-text="cbLogDetail?.operator_code || '-'"></span></div>
+                            <div><span class="text-gray-500">Format:</span> <span class="font-medium" x-text="cbLogDetail?.format || 'unknown'"></span></div>
+                            <div><span class="text-gray-500">Reference:</span> <span class="font-mono font-medium" x-text="cbLogDetail?.reference || '-'"></span></div>
+                            <div><span class="text-gray-500">Phone:</span> <span class="font-medium" x-text="cbLogDetail?.phone || '-'"></span></div>
+                            <div><span class="text-gray-500">Amount:</span> <span class="font-semibold" x-text="cbLogDetail?.amount ? formatAmount(cbLogDetail.amount) : '-'"></span></div>
+                            <div><span class="text-gray-500">Receipt:</span> <span class="font-medium" x-text="cbLogDetail?.receipt_number || '-'"></span></div>
+                            <div><span class="text-gray-500">Status:</span> <span class="font-medium capitalize" x-text="cbLogDetail?.status?.replace('_',' ') || '-'"></span></div>
+                            <div><span class="text-gray-500">Response Code:</span> <span class="font-medium" x-text="cbLogDetail?.response_code || '-'"></span></div>
+                            <div><span class="text-gray-500">IP Address:</span> <span class="font-mono text-xs" x-text="cbLogDetail?.ip_address || '-'"></span></div>
+                            <div><span class="text-gray-500">Payment Request:</span> <span class="font-medium" x-text="cbLogDetail?.payment_request_id || 'Not matched'"></span></div>
+                            <div><span class="text-gray-500">Time:</span> <span class="font-medium" x-text="cbLogDetail?.created_at ? formatDate(cbLogDetail.created_at) : '-'"></span></div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Raw Payload</h4>
+                            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto max-h-60" x-text="JSON.stringify(cbLogDetail?.raw_payload, null, 2)"></pre>
+                        </div>
+
+                        <div x-show="cbLogDetail?.parsed_data">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Parsed Data</h4>
+                            <pre class="bg-gray-900 text-blue-400 p-4 rounded-lg text-xs overflow-x-auto max-h-60" x-text="JSON.stringify(cbLogDetail?.parsed_data, null, 2)"></pre>
                         </div>
                     </div>
                 </div>
@@ -3382,6 +3522,11 @@ function dashboard() {
         invoiceLoading: false, invoiceMsg: '', invoiceMsgType: '',
         invoiceDetailOpen: false, invoiceDetail: null,
 
+        // Callback Logs
+        cbLogs: [], cbLogsLoading: false, cbLogPage: 1, cbLogPagination: {},
+        cbLogSearch: '', cbLogFilterStatus: '',
+        cbLogDetailOpen: false, cbLogDetail: null,
+
         // Crypto Wallets
         cryptoWallets: [], cryptoWalletsLoading: false,
         cryptoForm: { currency: '', network: '', wallet_address: '', label: '' },
@@ -3554,6 +3699,7 @@ function dashboard() {
                     break;
                 case 'settlements': this.fetchSettlements(); break;
                 case 'invoices': this.fetchInvoices(); break;
+                case 'callback-logs': this.fetchCallbackLogs(); break;
                 case 'account': this.fetchKyc(); break;
                 case 'users': this.fetchAccountUsers(); break;
                 case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
@@ -5322,6 +5468,29 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 this.invoiceDetailOpen = false;
                 this.fetchInvoices();
             } catch (e) { alert('Service unavailable.'); }
+        },
+
+        // ---- Callback Logs ----
+        async fetchCallbackLogs() {
+            this.cbLogsLoading = true;
+            try {
+                let url = `/api/callback-logs?page=${this.cbLogPage}`;
+                if (this.cbLogSearch) url += `&search=${encodeURIComponent(this.cbLogSearch)}`;
+                if (this.cbLogFilterStatus) url += `&status=${this.cbLogFilterStatus}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.cbLogs = data.data || [];
+                    this.cbLogPagination = { current_page: data.current_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
+                }
+            } catch (e) { console.error('Failed to fetch callback logs', e); }
+            this.cbLogsLoading = false;
+        },
+
+        viewCallbackLog(log) {
+            this.cbLogDetail = log;
+            this.cbLogDetailOpen = true;
         },
 
         copyToClipboard(text) {

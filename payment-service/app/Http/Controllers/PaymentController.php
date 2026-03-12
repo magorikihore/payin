@@ -982,6 +982,39 @@ class PaymentController extends Controller
         return response()->json($requests);
     }
 
+    /**
+     * List callback logs for the authenticated user's account.
+     */
+    public function callbackLogs(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        $query = CallbackLog::query();
+
+        // Filter by payment requests belonging to this account (or show unmatched)
+        $query->where(function ($q) use ($accountId) {
+            $q->whereHas('paymentRequest', function ($sub) use ($accountId) {
+                $sub->where('account_id', $accountId);
+            })->orWhereNull('payment_request_id');
+        });
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('reference', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('receipt_number', 'like', "%{$search}%")
+                  ->orWhere('operator_code', 'like', "%{$search}%");
+            });
+        }
+        if ($request->filled('status')) { $query->where('status', $request->status); }
+
+        $logs = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return response()->json($logs);
+    }
+
     // ===================================================================
     //  PRIVATE HELPERS
     // ===================================================================
