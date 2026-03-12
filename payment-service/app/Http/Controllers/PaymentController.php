@@ -327,25 +327,27 @@ class PaymentController extends Controller
         $payload = $request->all();
         Log::info('Operator callback received' . ($operator_code ? " for [{$operator_code}]" : ''), $payload);
 
-        // Extract incoming header to echo back in response
+        // Extract incoming header and body.request to echo back in response
         $incomingHeader = data_get($payload, 'header', []);
         if (!is_array($incomingHeader)) $incomingHeader = [];
+        $incomingRequest = data_get($payload, 'body.request', []);
+        if (!is_array($incomingRequest)) $incomingRequest = [];
 
         try {
-            return $this->processCallback($payload, $operator_code, $incomingHeader);
+            return $this->processCallback($payload, $operator_code, $incomingHeader, $incomingRequest);
         } catch (\Throwable $e) {
             Log::error('Callback processing error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'payload' => $payload,
             ]);
-            return $this->digivasResponse('999', 'FAILED', $incomingHeader);
+            return $this->digivasResponse('999', 'FAILED', $incomingHeader, $incomingRequest);
         }
     }
 
     /**
      * Build a Digivas acknowledgment response — echo back the same spId/spPassword from the incoming request.
      */
-    private function digivasResponse(string $code, string $status, array $incomingHeader = []): JsonResponse
+    private function digivasResponse(string $code, string $status, array $incomingHeader = [], array $incomingRequest = []): JsonResponse
     {
         return response()->json([
             'header' => [
@@ -356,8 +358,11 @@ class PaymentController extends Controller
             ],
             'body' => [
                 'response' => [
-                    'responseCode' => $code,
+                    'gatewayId'      => $incomingRequest['gatewayId'] ?? null,
+                    'reference'      => $incomingRequest['reference'] ?? null,
+                    'responseCode'   => $code,
                     'responseStatus' => $status,
+                    'apiVersion'     => '5.0',
                 ],
             ],
         ], 200);
@@ -366,7 +371,7 @@ class PaymentController extends Controller
     /**
      * Process the callback payload internally.
      */
-    private function processCallback(array $payload, ?string $operator_code, array $incomingHeader): JsonResponse
+    private function processCallback(array $payload, ?string $operator_code, array $incomingHeader, array $incomingRequest): JsonResponse
     {
         // Step 1: Auto-detect payload format and parse into normalized data
         $parsed = $this->detectAndParseCallback($payload);
@@ -380,7 +385,7 @@ class PaymentController extends Controller
             Log::warning('Callback: payment request not found — rejecting', [
                 'parsed' => $parsed, 'operator_code' => $operator_code,
             ]);
-            return $this->digivasResponse('999', 'FAILED', $incomingHeader);
+            return $this->digivasResponse('999', 'FAILED', $incomingHeader, $incomingRequest);
         }
 
         // Step 3: Manual C2B validation — verify amount matches
@@ -393,14 +398,14 @@ class PaymentController extends Controller
             if ($expiresAt && now()->gt($expiresAt)) {
                 Log::warning("Manual C2B: invoice expired [{$paymentRequest->request_ref}]");
                 $paymentRequest->update(['status' => 'expired', 'callback_data' => $payload]);
-                return $this->digivasResponse('999', 'FAILED', $incomingHeader);
+                return $this->digivasResponse('999', 'FAILED', $incomingHeader, $incomingRequest);
             }
 
             // Validate amount matches
             if ($callbackAmount > 0 && abs($callbackAmount - $expectedAmount) > 0.01) {
                 Log::warning("Manual C2B: amount mismatch [{$paymentRequest->request_ref}] expected={$expectedAmount} got={$callbackAmount}");
                 $paymentRequest->update(['callback_data' => $payload]);
-                return $this->digivasResponse('999', 'FAILED', $incomingHeader);
+                return $this->digivasResponse('999', 'FAILED', $incomingHeader, $incomingRequest);
             }
 
             Log::info("Manual C2B: invoice [{$paymentRequest->request_ref}] validated — accepting payment");
@@ -469,7 +474,7 @@ class PaymentController extends Controller
 
         Log::info("Callback response: code={$ackCode} status={$ackStatus}");
 
-        return $this->digivasResponse($ackCode, $ackStatus, $incomingHeader);
+        return $this->digivasResponse($ackCode, $ackStatus, $incomingHeader, $incomingRequest);
     }
 
     /**
