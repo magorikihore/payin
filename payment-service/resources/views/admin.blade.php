@@ -4012,7 +4012,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
         <!-- ==================== EXCHANGE RATES TAB ==================== -->
         <div x-show="activeTab === 'exchange_rates'" x-cloak class="mt-6">
@@ -4434,9 +4433,9 @@
             </div>
         </div>
 
-    </div>
+    </div> <!-- /max-w-7xl -->
 
-</div>
+</div> <!-- /x-data adminPanel -->
 
 <script>
 function adminPanel() {
