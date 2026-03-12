@@ -45,7 +45,6 @@ Route::middleware('auth.service')->group(function () {
     Route::post('/collection', [PaymentController::class, 'collection']);
     Route::post('/invoice', [PaymentController::class, 'invoice']);
     Route::put('/invoice/{request_ref}/cancel', [PaymentController::class, 'cancelInvoice']);
-    Route::get('/callback-logs', [PaymentController::class, 'callbackLogs']);
     Route::post('/disbursement', [PaymentController::class, 'disbursement']);
     Route::post('/disbursement/batch', [PaymentController::class, 'batchDisbursement']);
 
@@ -77,4 +76,7 @@ Route::middleware('auth.service')->group(function () {
     // Logs (super_admin only)
     Route::get('/admin/logs', [LogController::class, 'index']);
     Route::delete('/admin/logs', [LogController::class, 'clear']);
+
+    // Callback logs
+    Route::get('/admin/callback-logs', [PaymentController::class, 'callbackLogs']);
 });

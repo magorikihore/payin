@@ -987,17 +987,7 @@ class PaymentController extends Controller
      */
     public function callbackLogs(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $accountId = $user->account_id ?? null;
-
         $query = CallbackLog::query();
-
-        // Filter by payment requests belonging to this account (or show unmatched)
-        $query->where(function ($q) use ($accountId) {
-            $q->whereHas('paymentRequest', function ($sub) use ($accountId) {
-                $sub->where('account_id', $accountId);
-            })->orWhereNull('payment_request_id');
-        });
 
         if ($request->filled('search')) {
             $search = $request->search;
