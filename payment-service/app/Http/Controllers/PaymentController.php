@@ -327,6 +327,42 @@ class PaymentController extends Controller
         $payload = $request->all();
         Log::info('Operator callback received' . ($operator_code ? " for [{$operator_code}]" : ''), $payload);
 
+        try {
+            return $this->processCallback($payload, $operator_code);
+        } catch (\Throwable $e) {
+            Log::error('Callback processing error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'payload' => $payload,
+            ]);
+            // Return 999 on any unhandled error so Digivas reverses the transaction
+            return $this->digivasResponse('999', 'FAILED');
+        }
+    }
+
+    /**
+     * Build a clean Digivas acknowledgment response.
+     */
+    private function digivasResponse(string $code, string $status): JsonResponse
+    {
+        return response()->json([
+            'header' => [
+                'responseCode' => $code,
+                'responseStatus' => $status,
+            ],
+            'body' => [
+                'response' => [
+                    'responseCode' => $code,
+                    'responseStatus' => $status,
+                ],
+            ],
+        ], 200);
+    }
+
+    /**
+     * Process the callback payload internally.
+     */
+    private function processCallback(array $payload, ?string $operator_code): JsonResponse
+    {
         // Step 1: Auto-detect payload format and parse into normalized data
         $parsed = $this->detectAndParseCallback($payload);
         Log::info('Callback parsed result', $parsed);
@@ -339,11 +375,7 @@ class PaymentController extends Controller
             Log::warning('Callback: payment request not found — rejecting', [
                 'parsed' => $parsed, 'operator_code' => $operator_code,
             ]);
-            return response()->json([
-                'header' => ['responseCode' => '999', 'responseStatus' => 'FAILED'],
-                'body' => ['response' => ['responseCode' => '999', 'responseStatus' => 'Reference not found']],
-                'message' => 'Payment request not found.',
-            ], 200);
+            return $this->digivasResponse('999', 'FAILED');
         }
 
         // Step 3: Manual C2B validation — verify amount matches
@@ -356,22 +388,14 @@ class PaymentController extends Controller
             if ($expiresAt && now()->gt($expiresAt)) {
                 Log::warning("Manual C2B: invoice expired [{$paymentRequest->request_ref}]");
                 $paymentRequest->update(['status' => 'expired', 'callback_data' => $payload]);
-                return response()->json([
-                    'header' => ['responseCode' => '999', 'responseStatus' => 'FAILED'],
-                    'body' => ['response' => ['responseCode' => '999', 'responseStatus' => 'Invoice expired']],
-                    'message' => 'Invoice expired.',
-                ], 200);
+                return $this->digivasResponse('999', 'FAILED');
             }
 
             // Validate amount matches
             if ($callbackAmount > 0 && abs($callbackAmount - $expectedAmount) > 0.01) {
                 Log::warning("Manual C2B: amount mismatch [{$paymentRequest->request_ref}] expected={$expectedAmount} got={$callbackAmount}");
                 $paymentRequest->update(['callback_data' => $payload]);
-                return response()->json([
-                    'header' => ['responseCode' => '999', 'responseStatus' => 'FAILED'],
-                    'body' => ['response' => ['responseCode' => '999', 'responseStatus' => 'Amount mismatch']],
-                    'message' => 'Amount does not match invoice.',
-                ], 200);
+                return $this->digivasResponse('999', 'FAILED');
             }
 
             Log::info("Manual C2B: invoice [{$paymentRequest->request_ref}] validated — accepting payment");
@@ -438,13 +462,9 @@ class PaymentController extends Controller
         $ackCode = ($newStatus === 'completed') ? '0' : (($newStatus === 'failed') ? '999' : '100');
         $ackStatus = ($ackCode === '0') ? 'ACCEPTED' : (($ackCode === '999') ? 'FAILED' : 'RECONCILE');
 
-        return response()->json([
-            'header' => ['responseCode' => $ackCode, 'responseStatus' => $ackStatus],
-            'body' => ['response' => ['responseCode' => $ackCode, 'responseStatus' => $ackStatus]],
-            'message' => 'Callback processed successfully.',
-            'request_ref' => $paymentRequest->request_ref,
-            'status' => $newStatus,
-        ]);
+        Log::info("Callback response: code={$ackCode} status={$ackStatus}");
+
+        return $this->digivasResponse($ackCode, $ackStatus);
     }
 
     /**
