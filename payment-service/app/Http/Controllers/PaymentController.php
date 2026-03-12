@@ -335,7 +335,7 @@ class PaymentController extends Controller
         $paymentRequest = $this->findPaymentRequestFromCallback($payload, $operator_code);
 
         if (!$paymentRequest) {
-            // Manual C2B: customer paid with a reference that doesn't exist — REJECT
+            // No matching invoice found — reject so customer gets refunded and can retry
             Log::warning('Callback: payment request not found — rejecting', [
                 'parsed' => $parsed, 'operator_code' => $operator_code,
             ]);
