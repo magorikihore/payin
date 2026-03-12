@@ -61,13 +61,15 @@ class PaymentController extends Controller
         ]);
 
         return response()->json([
-            'success'     => true,
-            'message'     => 'Invoice created. Customer should pay using reference: ' . $requestRef,
-            'request_ref' => $requestRef,
-            'amount'      => $paymentRequest->amount,
-            'currency'    => $paymentRequest->currency,
-            'status'      => 'waiting',
-            'expires_at'  => $expiresAt,
+            'success'      => true,
+            'message'      => 'Invoice created. Customer should pay using reference: ' . $request->reference,
+            'request_ref'  => $requestRef,
+            'external_ref' => $paymentRequest->external_ref,
+            'amount'       => $paymentRequest->amount,
+            'currency'     => $paymentRequest->currency,
+            'status'       => 'waiting',
+            'expires_at'   => $expiresAt,
+            'data'         => $paymentRequest,
         ], 201);
     }
 

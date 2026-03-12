@@ -5291,7 +5291,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     this.invoiceMsgType = 'error';
                     return;
                 }
-                this.invoiceMsg = `Invoice created! Reference: ${data.request_ref}`;
+                this.invoiceMsg = `Invoice created! Customer reference: ${data.external_ref}`;
                 this.invoiceMsgType = 'success';
                 this.invoiceForm = { amount: '', description: '', expires_in: '' };
                 this.invoiceAmountDisplay = '';
