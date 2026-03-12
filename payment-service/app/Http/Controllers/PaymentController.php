@@ -327,28 +327,53 @@ class PaymentController extends Controller
         $payload = $request->all();
         Log::info('Operator callback received' . ($operator_code ? " for [{$operator_code}]" : ''), $payload);
 
+        // Resolve operator for response credentials
+        $operator = null;
+        if ($operator_code) {
+            $operator = Operator::where('code', strtolower($operator_code))->first();
+        }
+        if (!$operator) {
+            // Try to find operator from incoming spId or merchantCode
+            $incomingSpId = data_get($payload, 'header.spId');
+            $incomingMerchantCode = data_get($payload, 'header.merchantCode');
+            if ($incomingSpId) {
+                $operator = Operator::where('sp_id', $incomingSpId)->first();
+            }
+            if (!$operator && $incomingMerchantCode) {
+                $operator = Operator::where('merchant_code', $incomingMerchantCode)->first();
+            }
+        }
+
         try {
-            return $this->processCallback($payload, $operator_code);
+            return $this->processCallback($payload, $operator_code, $operator);
         } catch (\Throwable $e) {
             Log::error('Callback processing error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'payload' => $payload,
             ]);
-            // Return 999 on any unhandled error so Digivas reverses the transaction
-            return $this->digivasResponse('999', 'FAILED');
+            return $this->digivasResponse('999', 'FAILED', $operator);
         }
     }
 
     /**
-     * Build a clean Digivas acknowledgment response.
+     * Build a Digivas acknowledgment response with proper spId/spPassword header.
      */
-    private function digivasResponse(string $code, string $status): JsonResponse
+    private function digivasResponse(string $code, string $status, ?Operator $operator = null): JsonResponse
     {
+        $timestamp = now()->format('YmdHis');
+
+        $header = $operator ? [
+            'spId'         => $operator->sp_id,
+            'merchantCode' => $operator->merchant_code,
+            'spPassword'   => $operator->generateSpPassword($timestamp),
+            'timestamp'    => $timestamp,
+        ] : [
+            'responseCode'   => $code,
+            'responseStatus' => $status,
+        ];
+
         return response()->json([
-            'header' => [
-                'responseCode' => $code,
-                'responseStatus' => $status,
-            ],
+            'header' => $header,
             'body' => [
                 'response' => [
                     'responseCode' => $code,
@@ -361,7 +386,7 @@ class PaymentController extends Controller
     /**
      * Process the callback payload internally.
      */
-    private function processCallback(array $payload, ?string $operator_code): JsonResponse
+    private function processCallback(array $payload, ?string $operator_code, ?Operator $operator): JsonResponse
     {
         // Step 1: Auto-detect payload format and parse into normalized data
         $parsed = $this->detectAndParseCallback($payload);
@@ -375,7 +400,7 @@ class PaymentController extends Controller
             Log::warning('Callback: payment request not found — rejecting', [
                 'parsed' => $parsed, 'operator_code' => $operator_code,
             ]);
-            return $this->digivasResponse('999', 'FAILED');
+            return $this->digivasResponse('999', 'FAILED', $operator);
         }
 
         // Step 3: Manual C2B validation — verify amount matches
@@ -388,14 +413,14 @@ class PaymentController extends Controller
             if ($expiresAt && now()->gt($expiresAt)) {
                 Log::warning("Manual C2B: invoice expired [{$paymentRequest->request_ref}]");
                 $paymentRequest->update(['status' => 'expired', 'callback_data' => $payload]);
-                return $this->digivasResponse('999', 'FAILED');
+                return $this->digivasResponse('999', 'FAILED', $operator);
             }
 
             // Validate amount matches
             if ($callbackAmount > 0 && abs($callbackAmount - $expectedAmount) > 0.01) {
                 Log::warning("Manual C2B: amount mismatch [{$paymentRequest->request_ref}] expected={$expectedAmount} got={$callbackAmount}");
                 $paymentRequest->update(['callback_data' => $payload]);
-                return $this->digivasResponse('999', 'FAILED');
+                return $this->digivasResponse('999', 'FAILED', $operator);
             }
 
             Log::info("Manual C2B: invoice [{$paymentRequest->request_ref}] validated — accepting payment");
@@ -464,7 +489,7 @@ class PaymentController extends Controller
 
         Log::info("Callback response: code={$ackCode} status={$ackStatus}");
 
-        return $this->digivasResponse($ackCode, $ackStatus);
+        return $this->digivasResponse($ackCode, $ackStatus, $operator);
     }
 
     /**
