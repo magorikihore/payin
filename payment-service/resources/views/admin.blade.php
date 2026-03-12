@@ -4211,98 +4211,93 @@
 
         <!-- ==================== CALLBACK LOGS TAB ==================== -->
         <div x-show="activeTab === 'callback_logs'" x-cloak class="mt-6">
-            <!-- Search & Filters -->
-            <div class="bg-white rounded-xl shadow-sm p-4 border mb-6">
-                <div class="flex flex-wrap items-center gap-4">
-                    <div class="flex-1 min-w-[200px]">
-                        <input type="text" x-model="cbLogSearch" @input.debounce.400ms="cbLogPage = 1; fetchCallbackLogs()"
-                            placeholder="Search ref, phone, receipt..."
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 outline-none">
-                    </div>
-                    <select x-model="cbLogFilterStatus" @change="cbLogPage = 1; fetchCallbackLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                        <option value="">All Status</option>
-                        <option value="received">Received</option>
-                        <option value="processed">Processed</option>
-                        <option value="unmatched">Unmatched</option>
-                        <option value="rejected_expired">Expired</option>
-                        <option value="rejected_amount">Amount Mismatch</option>
-                        <option value="error">Error</option>
-                    </select>
-                </div>
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-800">Callback Logs</h3>
             </div>
 
-            <!-- Callback Logs Table -->
+            <!-- Filters -->
+            <div class="flex flex-wrap gap-3 mb-4">
+                <input type="text" x-model="cbLogSearch" @input.debounce.400ms="cbLogPage = 1; fetchCallbackLogs()"
+                    placeholder="Search ref, phone, receipt..."
+                    class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-200 outline-none w-64">
+                <select x-model="cbLogFilterStatus" @change="cbLogPage = 1; fetchCallbackLogs()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    <option value="">All Status</option>
+                    <option value="received">Received</option>
+                    <option value="processed">Processed</option>
+                    <option value="unmatched">Unmatched</option>
+                    <option value="rejected_expired">Expired</option>
+                    <option value="rejected_amount">Amount Mismatch</option>
+                    <option value="error">Error</option>
+                </select>
+            </div>
+
             <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div x-show="cbLogsLoading" class="p-8 text-center text-gray-500">
-                    <svg class="animate-spin h-8 w-8 mx-auto text-red-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                </div>
-                <div x-show="!cbLogsLoading && cbLogs.length === 0" x-cloak class="p-8 text-center text-gray-500">No callback logs found.</div>
-                <div x-show="!cbLogsLoading && cbLogs.length > 0" x-cloak>
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Format</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Response</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <div x-show="cbLogsLoading" class="py-8 text-center text-gray-500 text-sm">Loading callback logs...</div>
+                <div x-show="!cbLogsLoading && cbLogs.length === 0" x-cloak class="py-8 text-center text-gray-500 text-sm">No callback logs found.</div>
+                <div x-show="!cbLogsLoading && cbLogs.length > 0" x-cloak class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Format</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receipt</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Response</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <template x-for="log in cbLogs" :key="log.id">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 text-gray-500" x-text="log.id"></td>
+                                    <td class="px-4 py-3 text-gray-700" x-text="log.operator_code || '—'"></td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                            :class="log.format === 'unknown' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800'"
+                                            x-text="log.format || 'unknown'"></span>
+                                    </td>
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-800" x-text="log.reference || '—'"></td>
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-700" x-text="log.phone || '—'"></td>
+                                    <td class="px-4 py-3 font-semibold text-gray-800" x-text="log.amount ? formatAmount(log.amount) : '—'"></td>
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-600" x-text="log.receipt_number || '—'"></td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                                            :class="{
+                                                'bg-green-100 text-green-800': log.status==='processed',
+                                                'bg-yellow-100 text-yellow-800': log.status==='received',
+                                                'bg-red-100 text-red-800': log.status==='unmatched' || log.status==='error',
+                                                'bg-orange-100 text-orange-800': log.status==='rejected_expired' || log.status==='rejected_amount',
+                                                'bg-gray-100 text-gray-800': !['processed','received','unmatched','error','rejected_expired','rejected_amount'].includes(log.status)
+                                            }"
+                                            x-text="log.status?.replace('_',' ') || 'unknown'"></span>
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                                            :class="log.response_code === '0' ? 'bg-green-100 text-green-800' : (log.response_code === '999' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800')"
+                                            x-text="log.response_code || '—'"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-xs text-gray-400 font-mono" x-text="log.ip_address || '—'"></td>
+                                    <td class="px-4 py-3 text-gray-500" x-text="formatDate(log.created_at)"></td>
+                                    <td class="px-4 py-3">
+                                        <button @click="viewCallbackLog(log)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                <template x-for="log in cbLogs" :key="log.id">
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm text-gray-500" x-text="log.id"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-700" x-text="log.operator_code || '—'"></td>
-                                        <td class="px-6 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                                :class="log.format === 'unknown' ? 'bg-gray-100 text-gray-800' : 'bg-blue-100 text-blue-800'"
-                                                x-text="log.format || 'unknown'"></span>
-                                        </td>
-                                        <td class="px-6 py-4 text-sm font-mono text-gray-800" x-text="log.reference || '—'"></td>
-                                        <td class="px-6 py-4 text-sm font-mono text-gray-700" x-text="log.phone || '—'"></td>
-                                        <td class="px-6 py-4 text-sm font-semibold text-gray-800" x-text="log.amount ? formatAmount(log.amount) : '—'"></td>
-                                        <td class="px-6 py-4 text-sm font-mono text-gray-600" x-text="log.receipt_number || '—'"></td>
-                                        <td class="px-6 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize"
-                                                :class="{
-                                                    'bg-green-100 text-green-800': log.status==='processed',
-                                                    'bg-yellow-100 text-yellow-800': log.status==='received',
-                                                    'bg-red-100 text-red-800': log.status==='unmatched' || log.status==='error',
-                                                    'bg-orange-100 text-orange-800': log.status==='rejected_expired' || log.status==='rejected_amount',
-                                                    'bg-gray-100 text-gray-800': !['processed','received','unmatched','error','rejected_expired','rejected_amount'].includes(log.status)
-                                                }"
-                                                x-text="log.status?.replace('_',' ') || 'unknown'"></span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                                                :class="log.response_code === '0' ? 'bg-green-100 text-green-800' : (log.response_code === '999' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800')"
-                                                x-text="log.response_code || '—'"></span>
-                                        </td>
-                                        <td class="px-6 py-4 text-xs text-gray-500 font-mono" x-text="log.ip_address || '—'"></td>
-                                        <td class="px-6 py-4 text-sm text-gray-600" x-text="formatDate(log.created_at)"></td>
-                                        <td class="px-6 py-4">
-                                            <button @click="viewCallbackLog(log)" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Pagination -->
-                    <div x-show="cbLogPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
-                        <p class="text-sm text-gray-500">Showing <span x-text="cbLogPagination.from||0"></span> to <span x-text="cbLogPagination.to||0"></span> of <span x-text="cbLogPagination.total||0"></span></p>
-                        <div class="flex space-x-2">
-                            <button @click="cbLogPage--; fetchCallbackLogs()" :disabled="!cbLogPagination.prev_page_url" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
-                            <button @click="cbLogPage++; fetchCallbackLogs()" :disabled="!cbLogPagination.next_page_url" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
-                        </div>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div x-show="cbLogPagination.total > 0" class="px-6 py-4 border-t flex items-center justify-between">
+                    <p class="text-sm text-gray-500">Showing <span x-text="cbLogPagination.from||0"></span> to <span x-text="cbLogPagination.to||0"></span> of <span x-text="cbLogPagination.total||0"></span></p>
+                    <div class="flex space-x-2">
+                        <button @click="cbLogPage--; fetchCallbackLogs()" :disabled="!cbLogPagination.prev_page_url" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+                        <button @click="cbLogPage++; fetchCallbackLogs()" :disabled="!cbLogPagination.next_page_url" class="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
                     </div>
                 </div>
             </div>
