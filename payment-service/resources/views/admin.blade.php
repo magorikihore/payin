@@ -4012,8 +4012,10 @@
                 </div>
             </div>
         </div>
+    </div>
 
         <!-- ==================== EXCHANGE RATES TAB ==================== -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div x-show="activeTab === 'exchange_rates'" x-cloak class="mt-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Add/Edit Exchange Rate -->
@@ -4433,7 +4435,7 @@
             </div>
         </div>
 
-    </div> <!-- /max-w-7xl -->
+        </div> <!-- /max-w-7xl wrapper for exchange rates, callback logs, settings -->
 
 </div> <!-- /x-data adminPanel -->
 
