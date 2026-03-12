@@ -25,18 +25,19 @@ class SyncTransactions extends Command
 
         foreach ($completed as $pr) {
             try {
+                $txnType = $pr->type === 'manual_c2b' ? 'collection' : $pr->type;
                 $response = Http::withHeaders(['X-Service-Key' => $serviceKey])
                     ->post("{$txnServiceUrl}/api/internal/transactions", [
                         'account_id'       => $pr->account_id,
                         'transaction_ref'  => $pr->request_ref,
                         'amount'           => $pr->amount,
-                        'type'             => $pr->type,
+                        'type'             => $txnType,
                         'operator'         => $pr->operator_name,
                         'status'           => 'completed',
                         'platform_charge'  => $pr->platform_charge ?? 0,
                         'operator_charge'  => $pr->operator_charge ?? 0,
                         'currency'         => $pr->currency ?? 'TZS',
-                        'description'      => $pr->description ?? ($pr->type === 'collection' ? 'USSD Collection' : 'Disbursement'),
+                        'description'      => $pr->description ?? ($txnType === 'collection' ? 'Invoice Collection' : 'Disbursement'),
                         'payment_method'   => 'mobile_money',
                         'operator_receipt' => $pr->operator_ref,
                     ]);

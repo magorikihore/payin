@@ -1243,18 +1243,21 @@ class PaymentController extends Controller
             $txnServiceUrl = config('services.transaction_service.url');
             $serviceKey = config('services.internal_service_key');
 
+            // Map manual_c2b to collection for the transaction service
+            $txnType = $paymentRequest->type === 'manual_c2b' ? 'collection' : $paymentRequest->type;
+
             $response = Http::withHeaders(['X-Service-Key' => $serviceKey])
                 ->post("{$txnServiceUrl}/api/internal/transactions", [
                     'account_id'       => $paymentRequest->account_id,
                     'transaction_ref'  => $paymentRequest->request_ref,
                     'amount'           => $paymentRequest->amount,
-                    'type'             => $paymentRequest->type,
+                    'type'             => $txnType,
                     'operator'         => $paymentRequest->operator_name,
                     'status'           => 'completed',
                     'platform_charge'  => $paymentRequest->platform_charge,
                     'operator_charge'  => $paymentRequest->operator_charge,
                     'currency'         => $paymentRequest->currency,
-                    'description'      => $paymentRequest->description ?? ($paymentRequest->type === 'collection' ? 'USSD Collection' : 'Disbursement'),
+                    'description'      => $paymentRequest->description ?? ($txnType === 'collection' ? 'Invoice Collection' : 'Disbursement'),
                     'payment_method'   => 'mobile_money',
                     'operator_receipt' => $paymentRequest->receipt_number ?: $paymentRequest->operator_ref,
                     'phone_number'     => $paymentRequest->phone,
