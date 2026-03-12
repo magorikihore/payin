@@ -1117,80 +1117,23 @@ class PaymentController extends Controller
             if ($pr) return $pr;
         }
 
-        // Search by gateway_id
+        // Search by gateway_id (only processing/waiting — operators may reuse IDs)
         foreach ($gatewayIds as $gid) {
-            $pr = PaymentRequest::where('gateway_id', (string) $gid)->first();
-            if ($pr) return $pr;
-        }
-
-        // Search by operator_ref
-        foreach ($operatorRefs as $oref) {
-            $pr = PaymentRequest::where('operator_ref', (string) $oref)->first();
-            if ($pr) return $pr;
-        }
-
-        // Cross-match: reference in operator_ref column
-        foreach ($references as $ref) {
-            $pr = PaymentRequest::where('operator_ref', (string) $ref)->first();
-            if ($pr) return $pr;
-        }
-
-        // Cross-match: gateway_id values in request_ref column
-        foreach ($gatewayIds as $gid) {
-            $pr = PaymentRequest::where('request_ref', (string) $gid)->first();
-            if ($pr) return $pr;
-        }
-
-        // Last resort: match by phone + operator + processing/waiting status
-        $phone = data_get($payload, 'body.request.msisdn')
-            ?? data_get($payload, 'transaction.msisdn')
-            ?? data_get($payload, 'msisdn')
-            ?? data_get($payload, 'Body.stkCallback.CallbackMetadata.Item.2.Value');
-        if ($phone) {
-            $query = PaymentRequest::where('phone', (string) $phone)
+            $pr = PaymentRequest::where('gateway_id', (string) $gid)
                 ->whereIn('status', ['processing', 'waiting'])
-                ->orderBy('created_at', 'desc');
-            if ($operatorCode) {
-                $query->where('operator_code', $operatorCode);
-            }
-            $pr = $query->first();
+                ->first();
             if ($pr) return $pr;
         }
 
-        // Deep scan: extract ALL string values from the payload and try matching
-        $allValues = $this->extractAllValues($payload);
-        Log::info('Callback lookup: deep scan values', ['values' => $allValues]);
-
-        foreach ($allValues as $val) {
-            $pr = PaymentRequest::where('request_ref', $val)->first();
-            if ($pr) return $pr;
-        }
-        foreach ($allValues as $val) {
-            $pr = PaymentRequest::where('gateway_id', $val)->first();
-            if ($pr) return $pr;
-        }
-        foreach ($allValues as $val) {
-            $pr = PaymentRequest::where('operator_ref', $val)->first();
+        // Search by operator_ref (only processing/waiting)
+        foreach ($operatorRefs as $oref) {
+            $pr = PaymentRequest::where('operator_ref', (string) $oref)
+                ->whereIn('status', ['processing', 'waiting'])
+                ->first();
             if ($pr) return $pr;
         }
 
         return null;
-    }
-
-    /**
-     * Recursively extract all non-empty string/numeric values from a nested array.
-     */
-    private function extractAllValues(array $data): array
-    {
-        $values = [];
-        array_walk_recursive($data, function ($value) use (&$values) {
-            if (is_string($value) && strlen($value) >= 3 && strlen($value) <= 100) {
-                $values[] = $value;
-            } elseif (is_numeric($value) && $value > 0) {
-                $values[] = (string) $value;
-            }
-        });
-        return array_values(array_unique($values));
     }
 
     private function pushToOperator(Operator $operator, PaymentRequest $paymentRequest, string $type): array
