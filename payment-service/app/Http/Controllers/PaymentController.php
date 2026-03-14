@@ -1478,12 +1478,36 @@ class PaymentController extends Controller
             $authServiceUrl = config('services.auth_service.url');
             $accountRes = Http::get("{$authServiceUrl}/api/admin/accounts/{$paymentRequest->account_id}");
 
-            if (!$accountRes->successful()) return;
+            if (!$accountRes->successful()) {
+                WebhookLog::create([
+                    'payment_request_id' => $paymentRequest->id,
+                    'account_id'         => $paymentRequest->account_id,
+                    'url'                => 'N/A',
+                    'request_payload'    => [],
+                    'status'             => 'error',
+                    'error_message'      => 'Failed to fetch account from auth-service (HTTP ' . $accountRes->status() . ')',
+                    'attempt_number'     => $attemptNumber,
+                ]);
+                $paymentRequest->update([
+                    'callback_status' => 'failed',
+                    'callback_attempts' => $attemptNumber,
+                ]);
+                return;
+            }
 
             $account = $accountRes->json()['account'] ?? null;
             $callbackUrl = $account['callback_url'] ?? null;
 
             if (!$callbackUrl) {
+                WebhookLog::create([
+                    'payment_request_id' => $paymentRequest->id,
+                    'account_id'         => $paymentRequest->account_id,
+                    'url'                => 'not_configured',
+                    'request_payload'    => [],
+                    'status'             => 'skipped',
+                    'error_message'      => 'No callback URL configured for this account',
+                    'attempt_number'     => $attemptNumber,
+                ]);
                 $paymentRequest->update(['callback_status' => 'pending']);
                 return;
             }

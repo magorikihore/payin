@@ -4347,13 +4347,7 @@
                         <option value="failed">Failed</option>
                         <option value="timeout">Timeout</option>
                         <option value="error">Error</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div x-show="whLogsLoading" class="py-8 text-center text-gray-500 text-sm">Loading webhook logs...</div>
+                        <option value="skipped">Skipped (No URL)</option> class="py-8 text-center text-gray-500 text-sm">Loading webhook logs...</div>
                 <div x-show="!whLogsLoading && whLogs.length === 0" x-cloak class="py-8 text-center text-gray-500 text-sm">No webhook delivery logs found.</div>
                 <div x-show="!whLogsLoading && whLogs.length > 0" x-cloak class="overflow-x-auto">
                     <table class="w-full text-sm">
@@ -4394,7 +4388,7 @@
                                                 'bg-red-100 text-red-800': log.status === 'failed',
                                                 'bg-yellow-100 text-yellow-800': log.status === 'timeout',
                                                 'bg-orange-100 text-orange-800': log.status === 'error',
-                                                'bg-gray-100 text-gray-800': !['success','failed','timeout','error'].includes(log.status)
+                                                'bg-gray-100 text-gray-800': log.status === 'skipped',
                                             }"
                                             x-text="log.status || 'unknown'"></span>
                                     </td>
