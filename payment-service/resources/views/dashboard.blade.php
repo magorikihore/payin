@@ -2729,7 +2729,14 @@
                         <option value="failed">Failed</option>
                         <option value="timeout">Timeout</option>
                         <option value="error">Error</option>
-                        <option value="skipped">Skipped (No URL)</option> class="py-8 text-center text-gray-500 text-sm">Loading webhook logs...</div>
+                        <option value="skipped">Skipped (No URL)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div x-show="myWhLogsLoading" class="py-8 text-center text-gray-500 text-sm">Loading webhook logs...</div>
                 <div x-show="!myWhLogsLoading && myWhLogs.length === 0" x-cloak class="py-8 text-center text-gray-500 text-sm">No webhook delivery logs found.</div>
                 <div x-show="!myWhLogsLoading && myWhLogs.length > 0" x-cloak class="overflow-x-auto">
                     <table class="w-full text-sm">
