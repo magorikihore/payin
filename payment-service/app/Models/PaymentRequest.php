@@ -59,4 +59,9 @@ class PaymentRequest extends Model
     {
         return Operator::where('code', $this->operator_code)->first();
     }
+
+    public function webhookLogs()
+    {
+        return $this->hasMany(WebhookLog::class);
+    }
 }

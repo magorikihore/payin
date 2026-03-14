@@ -79,4 +79,10 @@ Route::middleware('auth.service')->group(function () {
 
     // Callback logs
     Route::get('/admin/callback-logs', [PaymentController::class, 'callbackLogs']);
+
+    // Webhook delivery logs (outgoing merchant callbacks)
+    Route::get('/admin/webhook-logs', [PaymentController::class, 'webhookLogs']);
+
+    // Dashboard: merchant's own webhook logs
+    Route::get('/webhook-logs', [PaymentController::class, 'myWebhookLogs']);
 });

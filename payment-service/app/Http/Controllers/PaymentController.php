@@ -6,6 +6,7 @@ use App\Gateways\GatewayFactory;
 use App\Models\CallbackLog;
 use App\Models\Operator;
 use App\Models\PaymentRequest;
+use App\Models\WebhookLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -1005,6 +1006,78 @@ class PaymentController extends Controller
         return response()->json($logs);
     }
 
+    /**
+     * Admin: List outgoing merchant webhook delivery logs.
+     */
+    public function webhookLogs(Request $request): JsonResponse
+    {
+        $query = WebhookLog::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('paymentRequest', function ($pq) use ($search) {
+                    $pq->where('request_ref', 'like', "%{$search}%")
+                       ->orWhere('external_ref', 'like', "%{$search}%")
+                       ->orWhere('phone', 'like', "%{$search}%");
+                })->orWhere('url', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('account_id')) {
+            $query->where('account_id', $request->account_id);
+        }
+
+        if ($request->filled('payment_request_id')) {
+            $query->where('payment_request_id', $request->payment_request_id);
+        }
+
+        $logs = $query->with('paymentRequest:id,request_ref,external_ref,phone,amount,type,status')
+                      ->orderBy('created_at', 'desc')
+                      ->paginate(20);
+
+        return response()->json($logs);
+    }
+
+    /**
+     * Dashboard: List webhook delivery logs scoped to the merchant's own account.
+     */
+    public function myWebhookLogs(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        if (!$accountId) {
+            return response()->json(['message' => 'No account associated.'], 403);
+        }
+
+        $query = WebhookLog::where('account_id', $accountId);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('paymentRequest', function ($pq) use ($search) {
+                    $pq->where('request_ref', 'like', "%{$search}%")
+                       ->orWhere('external_ref', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $logs = $query->with('paymentRequest:id,request_ref,external_ref,phone,amount,type,status')
+                      ->orderBy('created_at', 'desc')
+                      ->paginate(20);
+
+        return response()->json($logs);
+    }
+
     // ===================================================================
     //  PRIVATE HELPERS
     // ===================================================================
@@ -1399,6 +1472,8 @@ class PaymentController extends Controller
      */
     private function sendMerchantCallback(PaymentRequest $paymentRequest): void
     {
+        $attemptNumber = ($paymentRequest->callback_attempts ?? 0) + 1;
+
         try {
             $authServiceUrl = config('services.auth_service.url');
             $accountRes = Http::get("{$authServiceUrl}/api/admin/accounts/{$paymentRequest->account_id}");
@@ -1433,18 +1508,58 @@ class PaymentController extends Controller
                 'timestamp'      => now()->toIso8601String(),
             ];
 
+            $startTime = microtime(true);
             $response = Http::timeout(10)->post($callbackUrl, $payload);
+            $responseTimeMs = (int) round((microtime(true) - $startTime) * 1000);
+
+            $webhookStatus = $response->successful() ? 'success' : 'failed';
+
+            WebhookLog::create([
+                'payment_request_id' => $paymentRequest->id,
+                'account_id'         => $paymentRequest->account_id,
+                'url'                => $callbackUrl,
+                'request_payload'    => $payload,
+                'http_status'        => $response->status(),
+                'response_body'      => mb_substr((string) $response->body(), 0, 2000),
+                'response_time_ms'   => $responseTimeMs,
+                'status'             => $webhookStatus,
+                'attempt_number'     => $attemptNumber,
+            ]);
 
             $paymentRequest->update([
                 'callback_status' => $response->successful() ? 'sent' : 'failed',
-                'callback_attempts' => $paymentRequest->callback_attempts + 1,
+                'callback_attempts' => $attemptNumber,
                 'callback_sent_at' => now(),
             ]);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            WebhookLog::create([
+                'payment_request_id' => $paymentRequest->id,
+                'account_id'         => $paymentRequest->account_id,
+                'url'                => $callbackUrl ?? 'unknown',
+                'request_payload'    => $payload ?? [],
+                'status'             => 'timeout',
+                'error_message'      => mb_substr($e->getMessage(), 0, 2000),
+                'attempt_number'     => $attemptNumber,
+            ]);
+            Log::error("Merchant callback timeout for {$paymentRequest->request_ref}: " . $e->getMessage());
+            $paymentRequest->update([
+                'callback_status' => 'failed',
+                'callback_attempts' => $attemptNumber,
+            ]);
         } catch (\Exception $e) {
+            WebhookLog::create([
+                'payment_request_id' => $paymentRequest->id,
+                'account_id'         => $paymentRequest->account_id,
+                'url'                => $callbackUrl ?? 'unknown',
+                'request_payload'    => $payload ?? [],
+                'status'             => 'error',
+                'error_message'      => mb_substr($e->getMessage(), 0, 2000),
+                'attempt_number'     => $attemptNumber,
+            ]);
             Log::error("Merchant callback failed for {$paymentRequest->request_ref}: " . $e->getMessage());
             $paymentRequest->update([
                 'callback_status' => 'failed',
-                'callback_attempts' => $paymentRequest->callback_attempts + 1,
+                'callback_attempts' => $attemptNumber,
             ]);
         }
     }

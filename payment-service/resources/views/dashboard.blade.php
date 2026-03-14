@@ -117,6 +117,12 @@
                     <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'settings' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.11 2.37-2.37.996.608 2.296.07 2.573-1.066z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     Webhook & API Keys
                 </button>
+                <button x-show="hasPerm('view_settings')" @click="goToTab('webhook-logs')"
+                    :class="activeTab === 'webhook-logs' ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'"
+                    class="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-l-lg transition-colors group">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" :class="activeTab === 'webhook-logs' ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    Webhook Logs
+                </button>
             </nav>
 
             <!-- Bottom account info -->
@@ -2702,6 +2708,123 @@
             </div>
         </div>
 
+        <!-- ==================== WEBHOOK DELIVERY LOGS TAB ==================== -->
+        <div x-show="activeTab === 'webhook-logs'" x-cloak class="mt-6">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-gray-800">Webhook Delivery Logs</h2>
+                <p class="text-sm text-gray-500 mt-1">Track every webhook notification sent to your callback URL.</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-xl shadow-sm p-4 border mb-6">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <input type="text" x-model="myWhLogSearch" @input.debounce.400ms="myWhLogPage = 1; fetchMyWebhookLogs()"
+                            placeholder="Search by payment ref..."
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <select x-model="myWhLogFilterStatus" @change="myWhLogPage = 1; fetchMyWebhookLogs()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <option value="">All Status</option>
+                        <option value="success">Success</option>
+                        <option value="failed">Failed</option>
+                        <option value="timeout">Timeout</option>
+                        <option value="error">Error</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div x-show="myWhLogsLoading" class="py-8 text-center text-gray-500 text-sm">Loading webhook logs...</div>
+                <div x-show="!myWhLogsLoading && myWhLogs.length === 0" x-cloak class="py-8 text-center text-gray-500 text-sm">No webhook delivery logs found.</div>
+                <div x-show="!myWhLogsLoading && myWhLogs.length > 0" x-cloak class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Ref</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">HTTP Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Response Time</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Attempt</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <template x-for="log in myWhLogs" :key="log.id">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-800" x-text="log.payment_request?.request_ref || '—'"></td>
+                                    <td class="px-4 py-3 text-xs text-gray-600 capitalize" x-text="log.payment_request?.type || '—'"></td>
+                                    <td class="px-4 py-3">
+                                        <span class="font-mono text-xs font-semibold"
+                                            :class="log.http_status >= 200 && log.http_status < 300 ? 'text-green-700' : 'text-red-600'"
+                                            x-text="log.http_status || '—'"></span>
+                                    </td>
+                                    <td class="px-4 py-3 font-mono text-xs text-gray-700" x-text="log.response_time_ms != null ? log.response_time_ms + ' ms' : '—'"></td>
+                                    <td class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize"
+                                            :class="{
+                                                'bg-green-100 text-green-800': log.status === 'success',
+                                                'bg-red-100 text-red-800': log.status === 'failed',
+                                                'bg-yellow-100 text-yellow-800': log.status === 'timeout',
+                                                'bg-orange-100 text-orange-800': log.status === 'error'
+                                            }"
+                                            x-text="log.status || 'unknown'"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-center text-xs text-gray-700" x-text="log.attempt_number"></td>
+                                    <td class="px-4 py-3 text-xs text-gray-500" x-text="formatDate(log.created_at)"></td>
+                                    <td class="px-4 py-3">
+                                        <button @click="viewMyWebhookLog(log)" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">View</button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between px-4 py-3 border-t bg-gray-50 text-sm text-gray-600">
+                        <span>Showing <span x-text="myWhLogPagination.from || 0"></span>-<span x-text="myWhLogPagination.to || 0"></span> of <span x-text="myWhLogPagination.total || 0"></span></span>
+                        <div class="space-x-2">
+                            <button @click="myWhLogPage--; fetchMyWebhookLogs()" :disabled="!myWhLogPagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Previous</button>
+                            <button @click="myWhLogPage++; fetchMyWebhookLogs()" :disabled="!myWhLogPagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Webhook Log Detail Modal -->
+            <div x-show="myWhLogDetailOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" @click.self="myWhLogDetailOpen = false">
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+                    <div class="px-6 py-4 border-b flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+                        <h3 class="text-lg font-semibold text-gray-800">Webhook Delivery Detail</h3>
+                        <button @click="myWhLogDetailOpen = false" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                    </div>
+                    <div class="px-6 py-4 space-y-4" x-show="myWhLogDetail">
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><span class="text-gray-500">Payment Ref:</span> <span class="font-mono font-medium" x-text="myWhLogDetail?.payment_request?.request_ref || '—'"></span></div>
+                            <div><span class="text-gray-500">Type:</span> <span class="font-medium capitalize" x-text="myWhLogDetail?.payment_request?.type || '—'"></span></div>
+                            <div><span class="text-gray-500">HTTP Status:</span> <span class="font-semibold" :class="myWhLogDetail?.http_status >= 200 && myWhLogDetail?.http_status < 300 ? 'text-green-700' : 'text-red-600'" x-text="myWhLogDetail?.http_status || '—'"></span></div>
+                            <div><span class="text-gray-500">Response Time:</span> <span class="font-medium" x-text="myWhLogDetail?.response_time_ms != null ? myWhLogDetail.response_time_ms + ' ms' : '—'"></span></div>
+                            <div><span class="text-gray-500">Status:</span> <span class="font-medium capitalize" x-text="myWhLogDetail?.status || '—'"></span></div>
+                            <div><span class="text-gray-500">Attempt:</span> <span class="font-medium" x-text="myWhLogDetail?.attempt_number || '—'"></span></div>
+                            <div class="col-span-2"><span class="text-gray-500">URL:</span> <span class="font-mono text-xs break-all" x-text="myWhLogDetail?.url || '—'"></span></div>
+                            <div><span class="text-gray-500">Sent At:</span> <span class="font-medium" x-text="myWhLogDetail?.created_at ? formatDate(myWhLogDetail.created_at) : '—'"></span></div>
+                        </div>
+
+                        <div x-show="myWhLogDetail?.error_message">
+                            <h4 class="text-sm font-semibold text-red-700 mb-2">Error</h4>
+                            <pre class="bg-red-50 text-red-700 p-4 rounded-lg text-xs overflow-x-auto max-h-40" x-text="myWhLogDetail?.error_message"></pre>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Payload Sent</h4>
+                            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs overflow-x-auto max-h-60" x-text="JSON.stringify(myWhLogDetail?.request_payload, null, 2)"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ==================== CURRENCY EXCHANGE TAB ==================== -->
         <div x-show="activeTab === 'exchange'" x-cloak>
             <div class="mb-6">
@@ -3423,6 +3546,11 @@ function dashboard() {
         allPermissions: ['view_transactions', 'create_settlement', 'view_settlements', 'wallet_transfer', 'create_payout', 'approve_payout', 'add_user', 'view_users', 'view_account_info', 'view_settings'],
         editingPermUserId: null, editingPerms: [],
 
+        // Webhook Delivery Logs
+        myWhLogs: [], myWhLogsLoading: false, myWhLogPage: 1, myWhLogPagination: {},
+        myWhLogSearch: '', myWhLogFilterStatus: '',
+        myWhLogDetailOpen: false, myWhLogDetail: null,
+
         // Pending KYC
         accountPending: false,
 
@@ -3558,6 +3686,7 @@ function dashboard() {
                 case 'users': this.fetchAccountUsers(); break;
                 case 'exchange': this.fetchExchangeRates(); this.fetchExchangeHistory(); break;
                 case 'settings': this.fetchCallback().then(() => this.fetchTwoFactorStatus()).then(() => this.fetchApiKeys()); break;
+                case 'webhook-logs': this.fetchMyWebhookLogs(); break;
                 case 'account-settings': this.fetchTwoFactorStatus(); break;
             }
         },
@@ -3623,6 +3752,28 @@ function dashboard() {
                 }
             } catch (e) { console.error(e); }
             this.fetchIps();
+        },
+
+        async fetchMyWebhookLogs() {
+            this.myWhLogsLoading = true;
+            try {
+                let url = `/api/webhook-logs?page=${this.myWhLogPage}`;
+                if (this.myWhLogSearch) url += `&search=${encodeURIComponent(this.myWhLogSearch)}`;
+                if (this.myWhLogFilterStatus) url += `&status=${this.myWhLogFilterStatus}`;
+                const res = await fetch(url, { headers: this.getHeaders() });
+                if (this.handleUnauth(res)) return;
+                if (res.ok) {
+                    const data = await res.json();
+                    this.myWhLogs = data.data || [];
+                    this.myWhLogPagination = { current_page: data.current_page, from: data.from, to: data.to, total: data.total, prev_page_url: data.prev_page_url, next_page_url: data.next_page_url };
+                }
+            } catch (e) { console.error('Failed to fetch webhook logs', e); }
+            this.myWhLogsLoading = false;
+        },
+
+        viewMyWebhookLog(log) {
+            this.myWhLogDetail = log;
+            this.myWhLogDetailOpen = true;
         },
 
         async fetchKyc() {
