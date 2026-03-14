@@ -990,11 +990,9 @@ class WalletController extends Controller
     private function sendWebhook(string $token, int $accountId, array $payload): void
     {
         try {
-            // Fetch account's callback URL from auth-service
-            $accountRes = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $token,
-                'Accept' => 'application/json',
-            ])->get(config('services.auth_service.url') . '/api/admin/accounts/' . $accountId);
+            // Fetch account's callback URL from auth-service (internal endpoint, no auth needed)
+            $accountRes = Http::acceptJson()
+                ->get(config('services.auth_service.url') . '/api/internal/accounts/' . $accountId);
 
             if (!$accountRes->ok()) return;
 

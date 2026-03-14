@@ -87,6 +87,20 @@ class AdminController extends Controller
     }
 
     /**
+     * Internal: Get account details by ID (called by other services, no auth required).
+     */
+    public function internalAccountDetail(Request $request, $id): JsonResponse
+    {
+        $account = Account::find($id);
+
+        if (!$account) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        return response()->json(['account' => $account]);
+    }
+
+    /**
      * Get single account details with users and KYC info.
      */
     public function accountDetail(Request $request, $id): JsonResponse

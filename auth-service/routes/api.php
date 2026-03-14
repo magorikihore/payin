@@ -48,6 +48,9 @@ Route::get('/referral-code/{code}', [AdminController::class, 'lookupByReferralCo
 // Internal: Lookup account by referral code (called by other services)
 Route::get('/internal/referral-code/{code}', [AdminController::class, 'lookupByReferralCode']);
 
+// Internal: Get account details by ID (called by payment-service, wallet-service)
+Route::get('/internal/accounts/{id}', [AdminController::class, 'internalAccountDetail']);
+
 Route::middleware('auth:api')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);

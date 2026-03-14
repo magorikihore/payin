@@ -1476,7 +1476,7 @@ class PaymentController extends Controller
 
         try {
             $authServiceUrl = config('services.auth_service.url');
-            $accountRes = Http::get("{$authServiceUrl}/api/admin/accounts/{$paymentRequest->account_id}");
+            $accountRes = Http::get("{$authServiceUrl}/api/internal/accounts/{$paymentRequest->account_id}");
 
             if (!$accountRes->successful()) {
                 WebhookLog::create([
