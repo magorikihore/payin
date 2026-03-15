@@ -41,6 +41,7 @@ class PaymentController extends Controller
         // Create payment request with status "waiting" — no push to operator
         // Operator will be determined when the callback arrives from Digivas
         $requestRef = 'INV' . strtoupper(Str::random(12));
+        $paymentToken = bin2hex(random_bytes(24));
         $expiresAt = $request->expires_in
             ? now()->addMinutes($request->expires_in)->toDateTimeString()
             : now()->addDays(7)->toDateTimeString();
@@ -49,6 +50,7 @@ class PaymentController extends Controller
             'account_id'      => $accountId,
             'request_ref'     => $requestRef,
             'external_ref'    => $request->reference,
+            'payment_token'   => $paymentToken,
             'type'            => 'manual_c2b',
             'phone'           => $request->phone ? $this->normalizePhone($request->phone, $request->currency ?? 'TZS') : null,
             'amount'          => $request->amount,
@@ -71,6 +73,8 @@ class PaymentController extends Controller
             'currency'     => $paymentRequest->currency,
             'status'       => 'waiting',
             'expires_at'   => $expiresAt,
+            'payment_token' => $paymentToken,
+            'pay_url'      => url('/pay/' . $paymentToken),
             'data'         => $paymentRequest,
         ], 201);
     }
@@ -995,6 +999,7 @@ class PaymentController extends Controller
                     'currency' => $paymentRequest->currency ?? 'TZS',
                     'description' => $paymentRequest->description,
                     'expires_at' => $paymentRequest->error_message,
+                    'pay_url' => $paymentRequest->payment_token ? url('/pay/' . $paymentRequest->payment_token) : null,
                 ],
             ]);
 

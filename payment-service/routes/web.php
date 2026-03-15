@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\PublicPaymentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect('/login');
 });
+
+// Public payment page (QR code destination — no auth)
+Route::get('/pay/{token}', [PublicPaymentController::class, 'show']);
 
 Route::get('/login', function () {
     return view('auth.login');

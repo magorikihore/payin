@@ -1,10 +1,20 @@
 <?php
 
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PublicPaymentController;
 use App\Http\Controllers\OperatorController;
 use App\Http\Controllers\LogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// =====================================================================
+//  PUBLIC PAYMENT (QR code invoice) — No auth, token-based
+// =====================================================================
+Route::prefix('pay')->group(function () {
+    Route::get('/{token}', [PublicPaymentController::class, 'details']);
+    Route::post('/{token}/initiate', [PublicPaymentController::class, 'initiate']);
+    Route::get('/{token}/status', [PublicPaymentController::class, 'status']);
+});
 
 // =====================================================================
 //  MERCHANT API — Authenticated with API Key (X-API-Key + X-API-Secret)

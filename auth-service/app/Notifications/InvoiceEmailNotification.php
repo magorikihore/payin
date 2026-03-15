@@ -71,6 +71,10 @@ class InvoiceEmailNotification extends Notification
             $mail->line('**Expires:** ' . $this->details['expires_at']);
         }
 
+        if (!empty($this->details['pay_url'])) {
+            $mail->action('Pay Now', $this->details['pay_url']);
+        }
+
         $mail->line('Please use the reference above when making your payment.')
             ->salutation('— Payin Team');
 

@@ -1084,6 +1084,22 @@
                                 <div class="flex justify-between text-sm"><span class="text-gray-500">Created</span><span class="font-medium text-gray-800" x-text="formatDate(invoiceDetail.created_at)"></span></div>
                                 <div class="flex justify-between text-sm text-gray-400"><span>System ID</span><span class="font-mono text-xs" x-text="invoiceDetail.request_ref"></span></div>
                             </div>
+
+                            <!-- QR Code for payment -->
+                            <div x-show="invoiceDetail.payment_token && invoiceDetail.status === 'waiting'" class="px-6 pb-4">
+                                <div class="bg-white border border-gray-200 rounded-xl p-4 text-center">
+                                    <div class="text-xs font-medium text-gray-500 mb-2">Scan to pay</div>
+                                    <div class="flex justify-center" x-ref="invoiceQr"></div>
+                                    <div class="mt-2">
+                                        <a :href="getPayUrl(invoiceDetail.payment_token)" target="_blank" class="text-xs text-gblue-600 hover:text-gblue-700 underline break-all" x-text="getPayUrl(invoiceDetail.payment_token)"></a>
+                                    </div>
+                                    <button @click="copyToClipboard(getPayUrl(invoiceDetail.payment_token))" class="mt-1.5 inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gblue-600 transition">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        Copy link
+                                    </button>
+                                </div>
+                            </div>
+
                             <div class="px-6 py-4 border-t bg-gray-50">
                                 <!-- Send via Email -->
                                 <div x-show="invoiceDetail.status === 'waiting'" class="mb-3">
@@ -5468,6 +5484,9 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                     return;
                 }
                 this.invoiceMsg = `Invoice created! Customer reference: ${data.external_ref}`;
+                if (data.pay_url) {
+                    this.invoiceMsg += ` | Payment link: ${data.pay_url}`;
+                }
                 this.invoiceMsgType = 'success';
                 this.invoiceForm = { amount: '', description: '', expires_in: '' };
                 this.invoiceAmountDisplay = '';
@@ -5482,6 +5501,23 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         viewInvoice(inv) {
             this.invoiceDetail = inv;
             this.invoiceDetailOpen = true;
+            this.$nextTick(() => { this.renderInvoiceQr(); });
+        },
+
+        getPayUrl(token) {
+            return window.location.origin + '/pay/' + token;
+        },
+
+        renderInvoiceQr() {
+            const el = this.$refs.invoiceQr;
+            if (!el || !this.invoiceDetail?.payment_token || this.invoiceDetail.status !== 'waiting') return;
+            el.innerHTML = '';
+            if (typeof QRCode !== 'undefined') {
+                const url = this.getPayUrl(this.invoiceDetail.payment_token);
+                QRCode.toCanvas(url, { width: 180, margin: 1 }, (err, canvas) => {
+                    if (!err && canvas) el.appendChild(canvas);
+                });
+            }
         },
 
         async cancelInvoice(requestRef) {

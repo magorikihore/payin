@@ -13,6 +13,7 @@ class PaymentRequest extends Model
         'account_id',
         'request_ref',
         'external_ref',
+        'payment_token',
         'operator_ref',
         'receipt_number',
         'gateway_id',
