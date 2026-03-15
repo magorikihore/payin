@@ -1263,19 +1263,19 @@
 
             <!-- QR Code Popup Modal -->
             <div x-show="invoiceQrPopupOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3" @keydown.escape.window="invoiceQrPopupOpen = false">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs" @click.outside="invoiceQrPopupOpen = false">
-                    <div class="px-5 py-4 border-b bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-2xl text-center">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm" @click.outside="invoiceQrPopupOpen = false">
+                    <div class="px-5 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-2xl text-center">
                         <div class="flex justify-center mb-1">
                             <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                         </div>
                         <h3 class="text-base font-bold text-white">Payment QR Code</h3>
                         <p class="text-[11px] text-purple-100" x-text="'Ref: ' + invoiceQrPopupRef"></p>
                     </div>
-                    <div class="px-5 py-5 text-center">
-                        <div x-show="invoiceQrPopupUrl" class="flex justify-center bg-white rounded-lg p-3 border border-gray-100 mb-3">
-                            <img :src="invoiceQrPopupUrl" alt="Scan QR code to pay" style="width:220px;height:220px">
-                        </div>
-                        <p class="text-xs text-gray-500 mb-3">Scan with phone camera to open payment page</p>
+                    <div x-show="invoiceQrPopupUrl" class="flex justify-center bg-gray-50 p-4">
+                        <img :src="invoiceQrPopupUrl" alt="Scan QR code to pay" style="width:280px;height:280px">
+                    </div>
+                    <div class="px-5 py-4 text-center">
+                        <p class="text-sm text-gray-500 mb-3">Scan with phone camera to open payment page</p>
                         <div class="flex items-center justify-center gap-2">
                             <button @click="copyToClipboard(getPayUrl(invoiceQrPopupToken))" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -5618,7 +5618,7 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             this.invoiceQrPopupOpen = true;
             if (typeof QRCode === 'undefined') return;
             const url = this.getPayUrl(inv.payment_token);
-            QRCode.toDataURL(url, { width: 240, margin: 2, errorCorrectionLevel: 'M' }, (err, dataUrl) => {
+            QRCode.toDataURL(url, { width: 300, margin: 2, errorCorrectionLevel: 'M' }, (err, dataUrl) => {
                 if (!err && dataUrl) {
                     this.invoiceQrPopupUrl = dataUrl;
                 }
