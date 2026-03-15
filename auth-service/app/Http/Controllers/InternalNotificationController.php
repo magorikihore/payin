@@ -9,6 +9,7 @@ use App\Notifications\TransferApprovedNotification;
 use App\Notifications\SettlementApprovedNotification;
 use App\Notifications\AdminSettlementRequestedNotification;
 use App\Notifications\AdminTransferRequestedNotification;
+use App\Notifications\InvoiceEmailNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -23,8 +24,9 @@ class InternalNotificationController extends Controller
     {
         $request->validate([
             'account_id' => 'required|integer',
-            'type' => 'required|string|in:transfer_approved,settlement_approved,settlement_requested,transfer_requested',
+            'type' => 'required|string|in:transfer_approved,settlement_approved,settlement_requested,transfer_requested,invoice_email',
             'data' => 'required|array',
+            'recipient_email' => 'required_if:type,invoice_email|nullable|email|max:255',
         ]);
 
         $account = Account::find($request->account_id);
@@ -45,6 +47,16 @@ class InternalNotificationController extends Controller
                     } else {
                         $owner->notify(new SettlementApprovedNotification($request->data));
                     }
+                    break;
+
+                case 'invoice_email':
+                    $recipientEmail = $request->recipient_email;
+                    $data = array_merge($request->data, [
+                        'business_name' => $account->business_name ?? 'Payin Merchant',
+                        'paybill' => $account->paybill ?? 'N/A',
+                    ]);
+                    Notification::route('mail', $recipientEmail)
+                        ->notify(new InvoiceEmailNotification($data));
                     break;
 
                 case 'settlement_requested':

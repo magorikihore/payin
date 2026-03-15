@@ -1084,10 +1084,27 @@
                                 <div class="flex justify-between text-sm"><span class="text-gray-500">Created</span><span class="font-medium text-gray-800" x-text="formatDate(invoiceDetail.created_at)"></span></div>
                                 <div class="flex justify-between text-sm text-gray-400"><span>System ID</span><span class="font-mono text-xs" x-text="invoiceDetail.request_ref"></span></div>
                             </div>
-                            <div class="px-6 py-4 border-t bg-gray-50 rounded-b-2xl flex justify-between">
-                                <button x-show="invoiceDetail.status === 'waiting'" @click="cancelInvoice(invoiceDetail.request_ref)" class="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition">Cancel Invoice</button>
-                                <div x-show="invoiceDetail.status !== 'waiting'"></div>
-                                <button @click="invoiceDetailOpen = false" class="px-5 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition">Close</button>
+                            <div class="px-6 py-4 border-t bg-gray-50">
+                                <!-- Send via Email -->
+                                <div x-show="invoiceDetail.status === 'waiting'" class="mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <div class="relative flex-1">
+                                            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                            <input type="email" x-model="invoiceEmailTo" placeholder="customer@email.com" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                        </div>
+                                        <button @click="sendInvoiceEmail(invoiceDetail.request_ref)" :disabled="invoiceEmailSending || !invoiceEmailTo" class="px-4 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap">
+                                            <svg x-show="!invoiceEmailSending" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                            <svg x-show="invoiceEmailSending" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                            <span x-text="invoiceEmailSending ? 'Sending...' : 'Send'"></span>
+                                        </button>
+                                    </div>
+                                    <p x-show="invoiceEmailMsg" x-cloak class="mt-1.5 text-xs" :class="invoiceEmailMsgType === 'success' ? 'text-green-600' : 'text-red-600'" x-text="invoiceEmailMsg"></p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <button x-show="invoiceDetail.status === 'waiting'" @click="cancelInvoice(invoiceDetail.request_ref)" class="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition">Cancel Invoice</button>
+                                    <div x-show="invoiceDetail.status !== 'waiting'"></div>
+                                    <button @click="invoiceDetailOpen = false" class="px-5 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition">Close</button>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -3511,6 +3528,7 @@ function dashboard() {
         invoiceAmountDisplay: '',
         invoiceLoading: false, invoiceMsg: '', invoiceMsgType: '',
         invoiceDetailOpen: false, invoiceDetail: null,
+        invoiceEmailTo: '', invoiceEmailSending: false, invoiceEmailMsg: '', invoiceEmailMsgType: '',
 
         // Crypto Wallets
         cryptoWallets: [], cryptoWalletsLoading: false,
@@ -5480,6 +5498,31 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 this.invoiceDetailOpen = false;
                 this.fetchInvoices();
             } catch (e) { alert('Service unavailable.'); }
+        },
+
+        async sendInvoiceEmail(requestRef) {
+            if (!this.invoiceEmailTo) return;
+            this.invoiceEmailSending = true;
+            this.invoiceEmailMsg = '';
+            try {
+                const res = await fetch(`/api/invoice/${requestRef}/send-email`, {
+                    method: 'POST', headers: this.getHeaders(),
+                    body: JSON.stringify({ email: this.invoiceEmailTo })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    this.invoiceEmailMsg = data.message || 'Invoice sent!';
+                    this.invoiceEmailMsgType = 'success';
+                    this.invoiceEmailTo = '';
+                } else {
+                    this.invoiceEmailMsg = data.message || 'Failed to send.';
+                    this.invoiceEmailMsgType = 'error';
+                }
+            } catch (e) {
+                this.invoiceEmailMsg = 'Service unavailable.';
+                this.invoiceEmailMsgType = 'error';
+            }
+            this.invoiceEmailSending = false;
         },
 
         async fetchExchangeHistory() {

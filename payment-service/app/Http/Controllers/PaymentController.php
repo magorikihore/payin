@@ -958,6 +958,54 @@ class PaymentController extends Controller
     }
 
     /**
+     * Send an invoice to a customer via email.
+     */
+    public function sendInvoiceEmail(Request $request, string $requestRef): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|max:255',
+        ]);
+
+        $user = $request->user();
+        $accountId = $user->account_id ?? null;
+
+        $paymentRequest = PaymentRequest::where('account_id', $accountId)
+            ->where('request_ref', $requestRef)
+            ->where('type', 'manual_c2b')
+            ->first();
+
+        if (!$paymentRequest) {
+            return response()->json(['message' => 'Invoice not found.'], 404);
+        }
+
+        if ($paymentRequest->status !== 'waiting') {
+            return response()->json(['message' => 'Can only email waiting invoices.'], 422);
+        }
+
+        try {
+            $authServiceUrl = config('services.auth_service.url');
+
+            Http::timeout(10)->post("{$authServiceUrl}/api/internal/send-notification", [
+                'account_id' => $accountId,
+                'type' => 'invoice_email',
+                'recipient_email' => $request->email,
+                'data' => [
+                    'reference' => $paymentRequest->external_ref,
+                    'amount' => $paymentRequest->amount,
+                    'currency' => $paymentRequest->currency ?? 'TZS',
+                    'description' => $paymentRequest->description,
+                    'expires_at' => $paymentRequest->error_message,
+                ],
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Invoice sent to ' . $request->email]);
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to send invoice email: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send email. Please try again.'], 500);
+        }
+    }
+
+    /**
      * User: List own payment requests.
      */
     public function myRequests(Request $request): JsonResponse
