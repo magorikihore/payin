@@ -1086,18 +1086,46 @@
                                 <div class="flex justify-between text-sm text-gray-400"><span>System ID</span><span class="font-mono text-xs" x-text="invoiceDetail.request_ref"></span></div>
                             </div>
 
-                            <!-- QR Code for payment -->
-                            <div x-show="invoiceDetail.payment_token && invoiceDetail.status === 'waiting'" class="px-5 pb-3">
-                                <div class="bg-white border border-gray-200 rounded-xl p-3 text-center">
-                                    <div class="text-[11px] font-medium text-gray-500 mb-1">Scan to pay</div>
-                                    <div class="flex justify-center" x-ref="invoiceQr" x-effect="if(invoiceDetail && invoiceDetail.payment_token && invoiceDetailOpen) { setTimeout(() => renderInvoiceQr(), 150); }"></div>
-                                    <div class="mt-2">
-                                        <a :href="getPayUrl(invoiceDetail.payment_token)" target="_blank" class="text-xs text-gblue-600 hover:text-gblue-700 underline break-all" x-text="getPayUrl(invoiceDetail.payment_token)"></a>
+                            <!-- QR Code for scanning -->
+                            <div x-show="invoiceDetail.payment_token && invoiceDetail.status === 'waiting' && invoiceQrDataUrl" class="px-5 pb-2">
+                                <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
+                                    <div class="flex items-center justify-center gap-1.5 mb-2">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                        <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Scan QR Code</span>
                                     </div>
-                                    <button @click="copyToClipboard(getPayUrl(invoiceDetail.payment_token))" class="mt-1.5 inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gblue-600 transition">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                                        Copy link
-                                    </button>
+                                    <div class="flex justify-center bg-white rounded-lg p-2 border border-gray-100">
+                                        <img :src="invoiceQrDataUrl" alt="Scan QR code to pay" class="mx-auto" style="width:200px;height:200px">
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-1.5">Point your phone camera at the QR code</p>
+                                </div>
+                            </div>
+
+                            <!-- OR divider -->
+                            <div x-show="invoiceDetail.payment_token && invoiceDetail.status === 'waiting' && invoiceQrDataUrl" class="px-5 pb-2">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex-1 border-t border-gray-200"></div>
+                                    <span class="text-[10px] font-semibold text-gray-400 uppercase">or</span>
+                                    <div class="flex-1 border-t border-gray-200"></div>
+                                </div>
+                            </div>
+
+                            <!-- Payment link (clickable) -->
+                            <div x-show="invoiceDetail.payment_token && invoiceDetail.status === 'waiting'" class="px-5 pb-3">
+                                <div class="bg-gblue-50 border border-gblue-200 rounded-xl p-3 text-center">
+                                    <div class="flex items-center justify-center gap-1.5 mb-2">
+                                        <svg class="w-4 h-4 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                        <span class="text-xs font-semibold text-gblue-600 uppercase tracking-wide">Click to Pay</span>
+                                    </div>
+                                    <a :href="getPayUrl(invoiceDetail.payment_token)" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 bg-gblue-600 text-white text-sm font-medium rounded-lg hover:bg-gblue-700 transition">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        Open Payment Page
+                                    </a>
+                                    <div class="mt-2 flex items-center justify-center gap-1.5">
+                                        <span class="text-[10px] text-gray-400 truncate max-w-[180px]" x-text="getPayUrl(invoiceDetail.payment_token)"></span>
+                                        <button @click="copyToClipboard(getPayUrl(invoiceDetail.payment_token))" class="text-gblue-500 hover:text-gblue-700 transition" title="Copy link">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div><!-- end scrollable area -->
@@ -1209,6 +1237,10 @@
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                 View
                                             </button>
+                                            <button x-show="inv.status === 'waiting' && inv.payment_token" @click="showInvoiceQrPopup(inv)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-lg transition" title="Show QR Code">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                                                QR
+                                            </button>
                                             <button x-show="inv.status === 'waiting'" @click="cancelInvoice(inv.request_ref)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                                 Cancel
@@ -1224,6 +1256,32 @@
                         <div class="flex space-x-2">
                             <button @click="invoicePage--; fetchInvoices()" :disabled="!invoicePagination.prev_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
                             <button @click="invoicePage++; fetchInvoices()" :disabled="!invoicePagination.next_page_url" class="px-3 py-1 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Code Popup Modal -->
+            <div x-show="invoiceQrPopupOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3" @keydown.escape.window="invoiceQrPopupOpen = false">
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs" @click.outside="invoiceQrPopupOpen = false">
+                    <div class="px-5 py-4 border-b bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-2xl text-center">
+                        <div class="flex justify-center mb-1">
+                            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+                        </div>
+                        <h3 class="text-base font-bold text-white">Payment QR Code</h3>
+                        <p class="text-[11px] text-purple-100" x-text="'Ref: ' + invoiceQrPopupRef"></p>
+                    </div>
+                    <div class="px-5 py-5 text-center">
+                        <div x-show="invoiceQrPopupUrl" class="flex justify-center bg-white rounded-lg p-3 border border-gray-100 mb-3">
+                            <img :src="invoiceQrPopupUrl" alt="Scan QR code to pay" style="width:220px;height:220px">
+                        </div>
+                        <p class="text-xs text-gray-500 mb-3">Scan with phone camera to open payment page</p>
+                        <div class="flex items-center justify-center gap-2">
+                            <button @click="copyToClipboard(getPayUrl(invoiceQrPopupToken))" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                Copy Link
+                            </button>
+                            <button @click="invoiceQrPopupOpen = false" class="inline-flex items-center gap-1 px-4 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition">Close</button>
                         </div>
                     </div>
                 </div>
@@ -3569,6 +3627,8 @@ function dashboard() {
         invoiceAmountDisplay: '',
         invoiceLoading: false, invoiceMsg: '', invoiceMsgType: '',
         invoiceDetailOpen: false, invoiceDetail: null,
+        invoiceQrDataUrl: '',
+        invoiceQrPopupOpen: false, invoiceQrPopupUrl: '', invoiceQrPopupRef: '', invoiceQrPopupToken: '',
         invoiceEmailTo: '', invoiceEmailSending: false, invoiceEmailMsg: '', invoiceEmailMsgType: '',
         invoiceShareMode: '', invoiceLinkCopied: false,
 
@@ -5529,8 +5589,8 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
             this.invoiceDetailOpen = true;
             this.invoiceShareMode = '';
             this.invoiceEmailMsg = '';
-            // Allow template x-if to render DOM before accessing refs
-            setTimeout(() => { this.renderInvoiceQr(); }, 100);
+            this.invoiceQrDataUrl = '';
+            this.renderInvoiceQr();
         },
 
         getPayUrl(token) {
@@ -5538,15 +5598,31 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         },
 
         renderInvoiceQr() {
-            const el = this.$refs.invoiceQr;
-            if (!el || !this.invoiceDetail?.payment_token || this.invoiceDetail.status !== 'waiting') return;
-            el.innerHTML = '';
-            if (typeof QRCode !== 'undefined') {
-                const url = this.getPayUrl(this.invoiceDetail.payment_token);
-                QRCode.toCanvas(url, { width: 140, margin: 1 }, (err, canvas) => {
-                    if (!err && canvas) el.appendChild(canvas);
-                });
+            if (!this.invoiceDetail?.payment_token || this.invoiceDetail.status !== 'waiting') return;
+            if (typeof QRCode === 'undefined') {
+                console.warn('QRCode library not loaded');
+                return;
             }
+            const url = this.getPayUrl(this.invoiceDetail.payment_token);
+            QRCode.toDataURL(url, { width: 200, margin: 2, errorCorrectionLevel: 'M' }, (err, dataUrl) => {
+                if (!err && dataUrl) {
+                    this.invoiceQrDataUrl = dataUrl;
+                }
+            });
+        },
+
+        showInvoiceQrPopup(inv) {
+            this.invoiceQrPopupRef = inv.external_ref || inv.request_ref;
+            this.invoiceQrPopupToken = inv.payment_token;
+            this.invoiceQrPopupUrl = '';
+            this.invoiceQrPopupOpen = true;
+            if (typeof QRCode === 'undefined') return;
+            const url = this.getPayUrl(inv.payment_token);
+            QRCode.toDataURL(url, { width: 240, margin: 2, errorCorrectionLevel: 'M' }, (err, dataUrl) => {
+                if (!err && dataUrl) {
+                    this.invoiceQrPopupUrl = dataUrl;
+                }
+            });
         },
 
         async cancelInvoice(requestRef) {
