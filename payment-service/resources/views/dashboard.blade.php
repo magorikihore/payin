@@ -1101,20 +1101,43 @@
                             </div>
 
                             <div class="px-6 py-4 border-t bg-gray-50">
-                                <!-- Send via Email -->
+                                <!-- Share Invoice -->
                                 <div x-show="invoiceDetail.status === 'waiting'" class="mb-3">
-                                    <div class="flex items-center gap-2">
-                                        <div class="relative flex-1">
-                                            <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                            <input type="email" x-model="invoiceEmailTo" placeholder="customer@email.com" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
-                                        </div>
-                                        <button @click="sendInvoiceEmail(invoiceDetail.request_ref)" :disabled="invoiceEmailSending || !invoiceEmailTo" class="px-4 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap">
-                                            <svg x-show="!invoiceEmailSending" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-                                            <svg x-show="invoiceEmailSending" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                                            <span x-text="invoiceEmailSending ? 'Sending...' : 'Send'"></span>
+                                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Share Invoice</div>
+                                    <!-- Share channel buttons -->
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <button @click="shareInvoiceWhatsApp()" class="flex-1 flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border border-gray-200 hover:border-green-400 hover:bg-green-50 transition group" title="WhatsApp">
+                                            <svg class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                                            <span class="text-[10px] font-medium text-gray-500 group-hover:text-green-600">WhatsApp</span>
+                                        </button>
+                                        <button @click="shareInvoiceSms()" class="flex-1 flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition group" title="SMS">
+                                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                                            <span class="text-[10px] font-medium text-gray-500 group-hover:text-blue-600">SMS</span>
+                                        </button>
+                                        <button @click="invoiceShareMode = invoiceShareMode === 'email' ? '' : 'email'" :class="invoiceShareMode === 'email' ? 'border-gblue-400 bg-gblue-50' : 'border-gray-200 hover:border-gblue-400 hover:bg-gblue-50'" class="flex-1 flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border transition group" title="Email">
+                                            <svg class="w-5 h-5 text-gblue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                            <span class="text-[10px] font-medium" :class="invoiceShareMode === 'email' ? 'text-gblue-600' : 'text-gray-500 group-hover:text-gblue-600'">Email</span>
+                                        </button>
+                                        <button @click="copyInvoiceLink()" class="flex-1 flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border border-gray-200 hover:border-amber-400 hover:bg-amber-50 transition group" title="Copy Link">
+                                            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                            <span class="text-[10px] font-medium text-gray-500 group-hover:text-amber-600" x-text="invoiceLinkCopied ? 'Copied!' : 'Copy Link'"></span>
                                         </button>
                                     </div>
-                                    <p x-show="invoiceEmailMsg" x-cloak class="mt-1.5 text-xs" :class="invoiceEmailMsgType === 'success' ? 'text-green-600' : 'text-red-600'" x-text="invoiceEmailMsg"></p>
+                                    <!-- Email input (expandable) -->
+                                    <div x-show="invoiceShareMode === 'email'" x-cloak x-transition class="mt-2">
+                                        <div class="flex items-center gap-2">
+                                            <div class="relative flex-1">
+                                                <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                <input type="email" x-model="invoiceEmailTo" placeholder="customer@email.com" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gblue-500 outline-none">
+                                            </div>
+                                            <button @click="sendInvoiceEmail(invoiceDetail.request_ref)" :disabled="invoiceEmailSending || !invoiceEmailTo" class="px-4 py-2 text-sm font-medium text-white bg-gblue-600 rounded-lg hover:bg-gblue-700 transition disabled:opacity-50 flex items-center gap-1.5 whitespace-nowrap">
+                                                <svg x-show="!invoiceEmailSending" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                                <svg x-show="invoiceEmailSending" x-cloak class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                <span x-text="invoiceEmailSending ? 'Sending...' : 'Send'"></span>
+                                            </button>
+                                        </div>
+                                        <p x-show="invoiceEmailMsg" x-cloak class="mt-1.5 text-xs" :class="invoiceEmailMsgType === 'success' ? 'text-green-600' : 'text-red-600'" x-text="invoiceEmailMsg"></p>
+                                    </div>
                                 </div>
                                 <div class="flex justify-between">
                                     <button x-show="invoiceDetail.status === 'waiting'" @click="cancelInvoice(invoiceDetail.request_ref)" class="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition">Cancel Invoice</button>
@@ -3545,6 +3568,7 @@ function dashboard() {
         invoiceLoading: false, invoiceMsg: '', invoiceMsgType: '',
         invoiceDetailOpen: false, invoiceDetail: null,
         invoiceEmailTo: '', invoiceEmailSending: false, invoiceEmailMsg: '', invoiceEmailMsgType: '',
+        invoiceShareMode: '', invoiceLinkCopied: false,
 
         // Crypto Wallets
         cryptoWallets: [], cryptoWalletsLoading: false,
@@ -5534,6 +5558,37 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
                 this.invoiceDetailOpen = false;
                 this.fetchInvoices();
             } catch (e) { alert('Service unavailable.'); }
+        },
+
+        getInvoiceShareText() {
+            const d = this.invoiceDetail;
+            if (!d) return '';
+            const amt = this.formatAmount(d.amount) + ' ' + (d.currency || this.walletCurrency);
+            const url = d.payment_token ? this.getPayUrl(d.payment_token) : '';
+            let msg = `Invoice from PayIn\nAmount: ${amt}\nRef: ${d.external_ref}`;
+            if (d.description) msg += `\nDescription: ${d.description}`;
+            if (url) msg += `\n\nPay here: ${url}`;
+            return msg;
+        },
+
+        shareInvoiceWhatsApp() {
+            const text = encodeURIComponent(this.getInvoiceShareText());
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        },
+
+        shareInvoiceSms() {
+            const text = encodeURIComponent(this.getInvoiceShareText());
+            // sms: URI — works on mobile and desktop
+            window.open(`sms:?body=${text}`, '_self');
+        },
+
+        copyInvoiceLink() {
+            const d = this.invoiceDetail;
+            if (!d?.payment_token) return;
+            const url = this.getPayUrl(d.payment_token);
+            this.copyToClipboard(url);
+            this.invoiceLinkCopied = true;
+            setTimeout(() => { this.invoiceLinkCopied = false; }, 2000);
         },
 
         async sendInvoiceEmail(requestRef) {
