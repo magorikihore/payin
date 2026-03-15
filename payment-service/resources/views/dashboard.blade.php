@@ -35,6 +35,9 @@
            class="fixed top-14 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-40 lg:z-10 transform transition-transform duration-200">
         <div class="py-5 flex flex-col h-full">
 
+            <!-- Scrollable sidebar content -->
+            <div class="flex-1 overflow-hidden sidebar-scroll">
+
             <!-- Business Section -->
             <div class="px-4 mb-2">
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Business</h3>
@@ -124,6 +127,8 @@
                     Webhook Logs
                 </button>
             </nav>
+
+            </div><!-- /sidebar-scroll -->
 
             <!-- Bottom account info -->
             <div class="mt-auto px-4 pt-4 pb-3 border-t border-gray-200">

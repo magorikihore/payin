@@ -27,6 +27,38 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
+
+        /* Professional sidebar scrollbar */
+        .sidebar-scroll {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;
+        }
+        .sidebar-scroll:hover {
+            scrollbar-color: rgba(156,163,175,.35) transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 8px 0;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: transparent;
+            border-radius: 9999px;
+            transition: background .2s;
+        }
+        .sidebar-scroll:hover::-webkit-scrollbar-thumb {
+            background: rgba(156,163,175,.35);
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(107,114,128,.5);
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:active {
+            background: rgba(75,85,99,.6);
+        }
+
         @keyframes payin-spin { to { transform: rotate(360deg); } }
         .payin-loader { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); transition: opacity .4s ease; }
         .payin-loader.fade-out { opacity: 0; pointer-events: none; }
