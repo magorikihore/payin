@@ -1090,7 +1090,7 @@
                             <div x-show="invoiceDetail.payment_token && invoiceDetail.status === 'waiting'" class="px-5 pb-3">
                                 <div class="bg-white border border-gray-200 rounded-xl p-3 text-center">
                                     <div class="text-[11px] font-medium text-gray-500 mb-1">Scan to pay</div>
-                                    <div class="flex justify-center" x-ref="invoiceQr"></div>
+                                    <div class="flex justify-center" x-ref="invoiceQr" x-effect="if(invoiceDetail && invoiceDetail.payment_token && invoiceDetailOpen) { setTimeout(() => renderInvoiceQr(), 150); }"></div>
                                     <div class="mt-2">
                                         <a :href="getPayUrl(invoiceDetail.payment_token)" target="_blank" class="text-xs text-gblue-600 hover:text-gblue-700 underline break-all" x-text="getPayUrl(invoiceDetail.payment_token)"></a>
                                     </div>
@@ -5527,7 +5527,10 @@ th{padding:8px 12px;text-align:left;font-size:10px;text-transform:uppercase;lett
         viewInvoice(inv) {
             this.invoiceDetail = inv;
             this.invoiceDetailOpen = true;
-            this.$nextTick(() => { this.renderInvoiceQr(); });
+            this.invoiceShareMode = '';
+            this.invoiceEmailMsg = '';
+            // Allow template x-if to render DOM before accessing refs
+            setTimeout(() => { this.renderInvoiceQr(); }, 100);
         },
 
         getPayUrl(token) {
