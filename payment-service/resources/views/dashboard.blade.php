@@ -36,7 +36,7 @@
         <div class="py-5 flex flex-col h-full">
 
             <!-- Scrollable sidebar content -->
-            <div class="flex-1 overflow-hidden sidebar-scroll">
+            <div class="flex-1 min-h-0 overflow-y-auto sidebar-scroll">
 
             <!-- Business Section -->
             <div class="px-4 mb-2">
